@@ -14,10 +14,11 @@ PWM.cleanup()
 GPIO.cleanup()
 
 # motor pin map
-pin_fl="P9_31"
-pin_rl="P9_16"
-pin_rr="P8_19"
 pin_fr="P9_28"
+pin_rr="P8_19"
+pin_rl="P9_16"
+pin_fl="P9_31"
+
 
 # stay off
 GPIO.setup(pin_fl,GPIO.OUT,0)
