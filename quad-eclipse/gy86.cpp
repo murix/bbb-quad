@@ -19,6 +19,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include <jsoncpp/json/json.h>
+
 namespace gy86 {
 
 
@@ -399,7 +401,7 @@ public:
 
 
 class quaternion_imu {
-private:
+public:
 	float input_acc[3];
 	float input_gyro[3];
 	float input_mag[3];
@@ -451,7 +453,10 @@ private:
 		   return NULL;
 	}
 
-
+	void start_server(){
+		pthread_t id;
+		pthread_create(&id, 0, (void* (*)(void*))&quaternion_imu::imu_udp_server, this);
+	}
 
 	void arr3_rad_to_deg(float * arr) {
 		arr[0] *= 180/M_PI;
@@ -506,10 +511,7 @@ public:
 		input_baro_t=baro_t;
 	}
 
-	void start_server(){
-		pthread_t id;
-		pthread_create(&id, 0, (void* (*)(void*))&quaternion_imu::imu_udp_server, this);
-	}
+
 
 	quaternion_imu(){
 
@@ -624,10 +626,12 @@ public:
 		arr3_rad_to_deg(ypr);
 	}
 	void getYawPitchRollRad(float * ypr){
-		float q[4]; // quaternion
-		float gx, gy, gz; // estimated gravity direction
-		getQ(q);
 
+		float gx, gy, gz; // estimated gravity direction
+
+
+		float q[4]; // quaternion
+		getQ(q);
 
 		gx = 2 * (q[1]*q[3] - q[0]*q[2]);
 		gy = 2 * (q[0]*q[1] + q[2]*q[3]);
@@ -968,6 +972,54 @@ void test_quaternion(char* title,bool use_mag){
 	}
 }
 
+typedef struct {
+	float angles[3];
+	float dt;
+	float hz;
+} imu_data_t;
+
+void *udpserver(void *arg)
+{
+	imu_data_t* pdata=(imu_data_t*) arg;
+
+	   int sockfd,n;
+	   struct sockaddr_in servaddr,cliaddr;
+	   socklen_t len;
+	   char mesg[1000];
+
+	   sockfd=socket(AF_INET,SOCK_DGRAM,0);
+
+	   bzero(&servaddr,sizeof(servaddr));
+	   servaddr.sin_family = AF_INET;
+	   servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
+	   servaddr.sin_port=htons(32000);
+	   bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
+
+	   for (;;)
+	   {
+	      len = sizeof(cliaddr);
+	      n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
+	      mesg[n] = 0;
+	      printf("-------------------------------------------------------\r\n");
+	      printf("Received the following:\r\n");
+	      printf("%s\r\n",mesg);
+	      printf("-------------------------------------------------------\r\n");
+	      printf("Response with following:\r\n");
+
+	      Json::Value fromScratch;
+	      fromScratch["pitch"]=pdata->angles[0];
+	      fromScratch["roll"]=pdata->angles[1];
+	      fromScratch["yaw"]=pdata->angles[2];
+	      fromScratch["hz"]=pdata->hz;
+	      fromScratch["dt"]=pdata->dt;
+	      std::string txt = fromScratch.toStyledString();
+	      sendto(sockfd,txt.c_str(),txt.length(),0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
+
+	   }
+
+	   return NULL;
+}
+
 
 
 void test_accel_only_imu(char* title){
@@ -993,9 +1045,10 @@ void test_accel_only_imu(char* title){
 	sensor_hmc5883 mag(file);
 	sensor_ms5611 baro(file);
 
-	//vmodem support
-	int fd=get_vmodem_fd();
-	char buf[1024];
+	float angles[3];
+
+	pthread_t id;
+	pthread_create(&id, 0, udpserver, angles);
 
 	while(1){
 		acc_gyro.update();
@@ -1003,16 +1056,16 @@ void test_accel_only_imu(char* title){
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
 
-		float pitch=atan2f(acc_gyro.acc[1], sqrt(acc_gyro.acc[0]*acc_gyro.acc[0]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
-		float roll=-atan2f(acc_gyro.acc[0], sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
-		float yaw=atan2f(sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[0]*acc_gyro.acc[0]) ,acc_gyro.acc[2]);
-		yaw=0;
+		angles[0]=atan2f(acc_gyro.acc[1], acc_gyro.acc[2] );
+		angles[1]=-atan2f(acc_gyro.acc[0], acc_gyro.acc[2] );
+
+		//angles[0]=atan2f(acc_gyro.acc[1], sqrt(acc_gyro.acc[0]*acc_gyro.acc[0]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
+		//angles[1]=-atan2f(acc_gyro.acc[0], sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
+		//angles[2]=atan2f(sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[0]*acc_gyro.acc[0]) ,acc_gyro.acc[2]);
+		angles[2]=0;
 
 		//vmodem print
-		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",title,pitch,roll,yaw,0,0,0);
-		write(fd,buf,len);
-
-		printf("%s\n",buf);
+		printf("%s|%f|%f|%f|%f|%f|%f|\r\n",title,angles[0],angles[1],angles[2],0,0,0);
 	}
 }
 
@@ -1024,12 +1077,9 @@ double get_timestamp_in_seconds(){
 }
 
 void test_gyro_only_imu(char* title){
-	printf("gyroscope only cube-test\r\n");
 
-	//load capes
-	printf("enable I2C-2 overlay\r\n");
+
 	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
-	printf("wait I2C-2 overlay to be ready\r\n");
 
 	//wait capes apply
 	usleep(1000000);
@@ -1043,13 +1093,13 @@ void test_gyro_only_imu(char* title){
 
 	//start raw sensors
 	sensor_mpu6050 acc_gyro(file);
-	sensor_hmc5883 mag(file);
-	sensor_ms5611 baro(file);
 
-	//vmodem support
-	int fd=get_vmodem_fd();
-	char buf[1024];
+	imu_data_t idata;
+	pthread_t id;
+	pthread_create(&id, 0, udpserver, &idata);
 
+	////////////////////////////////////////////
+	/////
 	float goff[3]={0,0,0};
 	int gsample=10;
 	for(int i=0;i<gsample;i++){
@@ -1061,39 +1111,41 @@ void test_gyro_only_imu(char* title){
 	for(int i=0;i<3;i++){
 		goff[i]/=gsample;
 	}
+	/////////////////////////////////////////////
 
 	float gint[3]={0,0,0};
 
 	double tback=get_timestamp_in_seconds();
 	double tnow=get_timestamp_in_seconds();
-
 	float gstep[3]={0,0,0};
 
 	while(1){
 
+		//
 		tback=tnow;
 		tnow=get_timestamp_in_seconds();
 		double tdiff=tnow-tback;
 
+		idata.dt = tdiff;
+		idata.hz = 1/tdiff;
+
+		//
 		acc_gyro.update();
 
+		//
 		for(int i=0;i<3;i++){
 			gstep[i]= (acc_gyro.gyro[i]-goff[i])*tdiff;
 		}
 
+		//
 		for(int i=0;i<3;i++){
 			gint[i]+=gstep[i];
 		}
 
-		float rx=to_radian(gint[0]);
-		float ry=to_radian(gint[1]);
-		float rz=to_radian(gint[2]);
+		for(int i=0;i<3;i++){
+			idata.angles[i]=to_radian(gint[i]);
+		}
 
-		//vmodem print
-		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",title,rx,ry,rz,0,0,0);
-		write(fd,buf,len);
-
-		printf("%s\n",buf);
 	}
 }
 
@@ -1476,7 +1528,8 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 
 
 
-
+//libjsoncpp-dev
+//thrift-compiler
 
 int main(int argc,char** argv){
 
