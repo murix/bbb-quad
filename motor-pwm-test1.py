@@ -16,27 +16,34 @@ GPIO.cleanup()
 # motor pin map
 pin_fl="P9_42"
 pin_fr="P8_13"
-pin_rl="P9_21"
+pin_rl="P9_29"
 pin_rr="P9_14"
 
 # stay off
 GPIO.setup(pin_fl,GPIO.OUT,0)
+#time.sleep(0.5)
 GPIO.setup(pin_fr,GPIO.OUT,0)
+#time.sleep(0.5)
 GPIO.setup(pin_rl,GPIO.OUT,0)
+#time.sleep(0.5)
 GPIO.setup(pin_rr,GPIO.OUT,0)
-time.sleep(1)
+#time.sleep(0.5)
 
 # pwm to arm motor
-arm_fl=46
-arm_fr=46
-arm_rl=46
-arm_rr=46
+arm_fl=40
+arm_fr=40
+arm_rl=40
+arm_rr=40
 
 # setup PWM to arm motors
 PWM.start(pin_fl,arm_fl,490)
+#time.sleep(0.5)
 PWM.start(pin_fr,arm_fr,490)
+#time.sleep(0.5)
 PWM.start(pin_rl,arm_rl,490)
+#time.sleep(0.5)
 PWM.start(pin_rr,arm_rr,490)
+#time.sleep(0.5)
 
 # init PWM control vars
 pwm_fl=arm_fl
@@ -78,10 +85,10 @@ try:
 
   # START ALL
   if key == 's':
-   pwm_fl=49
-   pwm_fr=51
-   pwm_rl=58
-   pwm_rr=58
+   pwm_fl=47
+   pwm_fr=47
+   pwm_rl=47
+   pwm_rr=47
 
   # ARM
   if key == 'a':

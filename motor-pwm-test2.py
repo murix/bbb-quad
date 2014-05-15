@@ -29,10 +29,10 @@ time.sleep(1)
 
 
 # pwm to arm motor
-arm_fl=46
-arm_fr=46
-arm_rl=46
-arm_rr=46
+arm_fl=40
+arm_fr=40
+arm_rl=40
+arm_rr=40
 
 # setup PWM to arm motors
 PWM.start(pin_fl,arm_fl,490)
@@ -80,10 +80,10 @@ try:
 
   # START ALL
   if key == 's':
-   pwm_fl=49
-   pwm_fr=51
-   pwm_rl=58
-   pwm_rr=58
+   pwm_fl=47
+   pwm_fr=47
+   pwm_rl=47
+   pwm_rr=47
 
   # ARM
   if key == 'a':
