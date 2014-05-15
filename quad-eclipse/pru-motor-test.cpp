@@ -65,11 +65,19 @@ void set_all(PRUPWM* myPWM,uint32_t* dutyns){
 	myPWM->setChannelValue(7,dutyns[7]);
 }
 
+//
 #define PWM_HZ          50
-#define PWM_ARM     900000
-#define PWM_MIN    1000000 
-#define PWM_MAX    2000000
-#define PWM_STEP      1000
+
+// deve ser menos de que o minimo da calibracao
+#define PWM_NORMAL_STOP   900000
+#define PWM_NORMAL_MIN   1050000
+#define PWM_NORMAL_MAX   1950000
+#define PWM_NORMAL_STEP     1000
+
+// calibration only
+#define PWM_CALIB_MIN    1000000 
+#define PWM_CALIB_MAX    2000000
+
 
 uint32_t dutyns[8];
 
@@ -88,25 +96,26 @@ int main() {
 	myPWM->start();
 
 	//
-	for(int i=0;i<8;i++) dutyns[i]=PWM_ARM;
+	for(int i=0;i<8;i++) 
+           dutyns[i]=PWM_NORMAL_ARM;
 	//
 	set_all(myPWM,dutyns);
 
 	while(1){
 	   printf("PWM frequency %d Hz\r\n",PWM_HZ);
-	   printf("cmd +: increase      duty by %8d ns\r\n",PWM_STEP);
-	   printf("cmd -: decrease      duty by %8d ns\r\n",PWM_STEP);
-	   printf("cmd d: motor max     -> duty=%8d ns\r\n",PWM_MAX);
-	   printf("cmd c: motor min     -> duty=%8d ns\r\n",PWM_MIN);
-	   printf("cmd space: motor arm -> duty=%8d ns\r\n",PWM_ARM);
+	   printf("cmd +: increase      duty by %8d ns, max=%d ns\r\n",PWM_NORMAL_STEP,PWM_NORMAL_MAX);
+	   printf("cmd -: decrease      duty by %8d ns, min=%d ns\r\n",PWM_NORMAL_STEP,PWM_NORMAL_MIN);
+	   printf("cmd d: esc calibration max -> duty=%8d ns\r\n",PWM_MAX);
+	   printf("cmd c: esc calibration min -> duty=%8d ns\r\n",PWM_MIN);
+	   printf("cmd s: motor arm -> duty=%8d ns\r\n",PWM_NORMAL_STOP);
 	   printf("cmd x: quit\r\n");
 	
 	   char c = getch();
-	   if (c =='+') for(int i=0;i<8;i++) dutyns[i]+=PWM_STEP;
-	   if (c =='-') for(int i=0;i<8;i++) dutyns[i]-=PWM_STEP;
-	   if (c =='d') for(int i=0;i<8;i++) dutyns[i]=PWM_MAX;
-	   if (c =='c') for(int i=0;i<8;i++) dutyns[i]=PWM_MIN;
-	   if (c ==' ') for(int i=0;i<8;i++) dutyns[i]=PWM_ARM;
+	   if (c =='+'){ for(int i=0;i<8;i++) dutyns[i]+=PWM_STEP; }
+	   if (c =='-'){ for(int i=0;i<8;i++) dutyns[i]-=PWM_STEP; }
+	   if (c =='d'){ for(int i=0;i<8;i++) dutyns[i]=PWM_MAX; }
+	   if (c =='c'){ for(int i=0;i<8;i++) dutyns[i]=PWM_MIN; }
+	   if (c ==' '){ for(int i=0;i<8;i++) dutyns[i]=PWM_ARM; }
 	   if (c =='x') break;
 	   //
 	   if (c =='1') dutyns[0]+=PWM_STEP;//FL H
