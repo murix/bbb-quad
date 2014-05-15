@@ -33,7 +33,7 @@ apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
 apt-get -y upgrade
 
 # install new
-apt-get -y $INSTALL
+apt-get -y install $INSTALL
 
 # clean download cache
 apt-get clean
