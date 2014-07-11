@@ -4,10 +4,8 @@ bbb-scripts
 Tested in xUbuntu 14.04 64-bit
 
 
-
-
-initial setup in PC
-===================
+Create Debian SD Card
+=====================
 
 git clone https://github.com/RobertCNelson/omap-image-builder
 
@@ -15,7 +13,17 @@ git clone https://github.com/RobertCNelson/omap-image-builder
 
 ./setup_sdcard.sh --img-1gb debian --dtb beaglebone --bbb-flasher --enable-systemd --offline
 
-cat debian-1gb.img > /dev/sdx
+xz -v debian-1gb.img
+
+xzcat debian-1gb.img.xz > /dev/sdx
+
+1. Power down BBB
+2. Insert SD Card in BBB with S2 button pressed
+3. Wait all users leds to be active
+4. Power cycle BBB without SD Card.
+
+Setup PC as internet USB router
+===============================
 
 sysctl -w net.ipv4.ip_forward=1
 
