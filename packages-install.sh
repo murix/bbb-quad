@@ -1,13 +1,13 @@
 
-# network ip
-ifconfig usb0 192.168.7.2
-# network gateway
-route add default gw 192.168.7.1
-# network DNS
-echo nameserver 8.8.8.8 > /etc/resolv.conf
 
 # other packages
-apt-get -y install udhcpd cape-firmware mc less dbus ipython sshfs firmware-linux am335x-pru-package firmware-am335x-pm
+apt-get -y install udhcpd cape-firmware dbus python-dbus
+#
+apt-get -y install mc less ipython sshfs 
+# firmware
+apt-get -y install firmware-linux firmware-am335x-pm
+# PRU
+apt-get -y install am335x-pru-package 
 
 # adafruit python  BBIO
 apt-get install -y build-essential python-dev python-setuptools python-pip python-smbus
