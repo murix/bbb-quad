@@ -1,6 +1,7 @@
 bbb-scripts
 ===========
 
+Tested in xUbuntu 14.04 64-bit
 
 
 
