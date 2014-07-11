@@ -40,18 +40,13 @@ git clone git@github.com:murix/bbb-scripts.git
 
 
 
-SSH setup
-=========
+SSH & GIT setup
+===============
 
-ssh-keygen
+./git-config.sh
 
-cat ~/.ssh/id_rsa.pub
 
-git config --global user.name "murix"
 
-git config --global user.email murilopontes@gmail.com
-
-git commit --amend --reset-author
 
 
 
