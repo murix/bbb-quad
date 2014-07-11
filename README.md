@@ -7,7 +7,10 @@ bbb-scripts
 
 initial setup in PC
 ===================
-
+git clone https://github.com/RobertCNelson/omap-image-builder
+./RootStock-NG.sh -c bb.org-console-debian-stable
+./setup_sdcard.sh --img-1gb debian --dtb beaglebone --bbb-flasher --enable-systemd --offline
+cat debian-1gb.img > /dev/sdx
 
 
 sysctl -w net.ipv4.ip_forward=1
