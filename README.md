@@ -46,14 +46,17 @@ Connect BBB serial TTL - J1 header
 minicom -c on -o -D /dev/ttyACM0
 
 
-initial setup in beaglebone
-===========================
+Connect BBB to internet via USB
+===============================
 
 ifconfig usb0 192.168.7.2
 
 route add default gw 192.168.7.1
 
 echo nameserver 8.8.8.8 > /etc/resolv.conf
+
+Cleanup/Upgrade BBB Debian
+==========================
 
 git clone git@github.com:murix/bbb-scripts.git
 
