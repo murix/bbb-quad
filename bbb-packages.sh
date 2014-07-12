@@ -1,3 +1,21 @@
+
+# get new list of packages
+apt-get update
+
+# remove unused packages
+apt-get -y purge nodejs
+apt-get -y purge freepats vim-runtime locales lxde-core libgl1-mesa-dri libicu48 libopencv-dev
+apt-get -y purge desktop-base libruby1.9.1 gnome-icon-theme libavcodec53 
+apt-get -y purge  apache2.2-common 
+apt-get -y purge libflite1 libavcodec-extra-53  libx11-doc
+apt-get -y purge libgtk-3-common libgtk2.0-common
+
+# remove any trash
+apt-get -y autoremove
+
+# upgrade existing packages
+apt-get -y upgrade
+
 # other packages
 apt-get -y install udhcpd cape-firmware dbus python-dbus
 #
@@ -14,4 +32,9 @@ pip install Adafruit_BBIO
 apt-get -y install libgps-dev libmodbus-dev libnl-dev libpthread-stubs0-dev libsnmp-dev libncurses5-dev libmodbus-dev
 # image builder
 apt-get -y install dosfstools git-core kpartx u-boot-tools wget parted pv
+
+# clean download cache
+apt-get clean
+
+
 
