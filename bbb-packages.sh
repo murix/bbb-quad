@@ -3,29 +3,29 @@
 #apt-get update
 
 # remove unused packages
-apt-get -y purge nodejs
-apt-get -y purge freepats 
-apt-get -y purge vim-runtime 
-apt-get -y purge locales 
-apt-get -y purge libgl1-mesa-dri 
-apt-get -y purge libicu48 
-apt-get -y purge libopencv-dev
-apt-get -y purge desktop-base 
-apt-get -y purge libruby1.9.1 
-apt-get -y purge gnome-icon-theme 
-apt-get -y purge apache2.2-common 
-apt-get -y purge libavcodec-extra-53  
-apt-get -y purge libx11-doc
-apt-get -y purge libgtk-3-common
+#apt-get -y purge nodejs
+#apt-get -y purge freepats 
+#apt-get -y purge vim-runtime 
+#apt-get -y purge locales 
+#apt-get -y purge libgl1-mesa-dri 
+#apt-get -y purge libicu48 
+#apt-get -y purge libopencv-dev
+#apt-get -y purge desktop-base 
+#apt-get -y purge libruby1.9.1 
+#apt-get -y purge gnome-icon-theme 
+#apt-get -y purge apache2.2-common 
+#apt-get -y purge libavcodec-extra-53  
+#apt-get -y purge libx11-doc
+#apt-get -y purge libgtk-3-common
 
 # purge remain trash
-apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
+#apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
 
 # remove any trash
-apt-get -y autoremove
+#apt-get -y autoremove
 
 # upgrade existing packages
-apt-get -y upgrade
+#apt-get -y upgrade
 
 # other packages
 apt-get -y install udhcpd cape-firmware dbus python-dbus
@@ -47,7 +47,7 @@ apt-get -y install libgps-dev libmodbus-dev libnl-dev libpthread-stubs0-dev libs
 apt-get -y install dosfstools git-core kpartx u-boot-tools wget parted pv
 
 # clean download cache
-apt-get clean
+#apt-get clean
 
 
 
