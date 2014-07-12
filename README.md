@@ -3,6 +3,9 @@ bbb-scripts
 
 Tested in xUbuntu 14.04 64-bit
 
+Lastest images
+==============
+http://beagleboard.org/latest-images/
 
 Create Debian SD Card
 =====================
@@ -17,10 +20,12 @@ xz -v debian-1gb.img
 
 xzcat debian-1gb.img.xz > /dev/sdx
 
+
 1. Power down BBB
 2. Insert SD Card in BBB with S2 button pressed
 3. Wait all users leds to be active
 4. Power cycle BBB without SD Card.
+
 
 Setup PC as internet USB router
 ===============================
