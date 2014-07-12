@@ -51,3 +51,4 @@ apt-get -y install dosfstools git-core kpartx u-boot-tools wget parted pv
 
 
 
+apt-get remove freepats libicu48 libflite1 libgtk-3-common iso-codes libwebkitgtk-1.0-0 libavcodec53 gstreamer0.10-ffmpeg gstreamer0.10-plugins-bad gstreamer0.10-plugins-base gstreamer0.10-plugins-good libopencore-amrnb0 libopencore-amrwb0 libavcodec-extra-53
