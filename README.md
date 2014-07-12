@@ -11,6 +11,7 @@ Create Debian SD Card
 =====================
 
 git clone https://github.com/RobertCNelson/omap-image-builder
+git checkout -b v2014.07
 
 ./RootStock-NG.sh -c bb.org-console-debian-stable
 
