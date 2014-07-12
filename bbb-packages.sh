@@ -1,12 +1,12 @@
 
 # get new list of packages
-apt-get update
+#apt-get update
 
 # remove unused packages
 apt-get -y purge nodejs
-apt-get -y purge freepats vim-runtime locales lxde-core libgl1-mesa-dri libicu48 libopencv-dev
+apt-get -y purge freepats vim-runtime locales libgl1-mesa-dri libicu48 libopencv-dev
 apt-get -y purge desktop-base libruby1.9.1 gnome-icon-theme libavcodec53 
-apt-get -y purge  apache2.2-common 
+apt-get -y purge apache2.2-common 
 apt-get -y purge libflite1 libavcodec-extra-53  libx11-doc
 apt-get -y purge libgtk-3-common
 
@@ -24,7 +24,7 @@ apt-get -y install udhcpd cape-firmware dbus python-dbus
 #
 apt-get -y install mc less ipython sshfs aptitude python-matplotlib
 #
-apt-get -y install xterm icewm xrdp tightvncserver
+apt-get -y install xterm icewm xrdp tightvncserver lxde-core
 # firmware
 apt-get -y install firmware-linux firmware-am335x-pm
 # PRU
