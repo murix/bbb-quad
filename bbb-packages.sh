@@ -10,6 +10,9 @@ apt-get -y purge  apache2.2-common
 apt-get -y purge libflite1 libavcodec-extra-53  libx11-doc
 apt-get -y purge libgtk-3-common libgtk2.0-common
 
+# purge remain trash
+apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
+
 # remove any trash
 apt-get -y autoremove
 
@@ -19,7 +22,7 @@ apt-get -y upgrade
 # other packages
 apt-get -y install udhcpd cape-firmware dbus python-dbus
 #
-apt-get -y install mc less ipython sshfs 
+apt-get -y install mc less ipython sshfs xterm
 # firmware
 apt-get -y install firmware-linux firmware-am335x-pm
 # PRU
