@@ -22,7 +22,9 @@ apt-get -y upgrade
 # other packages
 apt-get -y install udhcpd cape-firmware dbus python-dbus
 #
-apt-get -y install mc less ipython sshfs xterm
+apt-get -y install mc less ipython sshfs aptitude
+#
+apt-get -y install xterm icewm xrdp tightvncserver
 # firmware
 apt-get -y install firmware-linux firmware-am335x-pm
 # PRU
