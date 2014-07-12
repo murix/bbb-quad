@@ -3,12 +3,12 @@ bbb-scripts
 
 Tested in xUbuntu 14.04 64-bit
 
-Lastest images
-==============
+Official Lastest images
+=======================
 http://beagleboard.org/latest-images/
 
-Create Debian SD Card
-=====================
+Create custom images (advanced)
+===============================
 
 git clone https://github.com/RobertCNelson/omap-image-builder
 git checkout -b v2014.07
@@ -21,6 +21,8 @@ xz -v debian-1gb.img
 
 xzcat debian-1gb.img.xz > /dev/sdx
 
+Install official or custom images
+=================================
 
 1. Power down BBB
 2. Insert SD Card in BBB with S2 button pressed
@@ -51,8 +53,7 @@ echo nameserver 8.8.8.8 > /etc/resolv.conf
 
 git clone git@github.com:murix/bbb-scripts.git
 
-./bbb-scripts/checkup.sh
-
+./bbb-scripts/bbb-packages.sh
 
 
 SSH & GIT setup
