@@ -14,7 +14,6 @@ apt-get -y purge desktop-base
 apt-get -y purge libruby1.9.1 
 apt-get -y purge gnome-icon-theme 
 apt-get -y purge apache2.2-common 
-apt-get -y purge libflite1 
 apt-get -y purge libavcodec-extra-53  
 apt-get -y purge libx11-doc
 apt-get -y purge libgtk-3-common
