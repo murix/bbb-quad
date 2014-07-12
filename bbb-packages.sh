@@ -8,7 +8,7 @@ apt-get -y purge freepats vim-runtime locales lxde-core libgl1-mesa-dri libicu48
 apt-get -y purge desktop-base libruby1.9.1 gnome-icon-theme libavcodec53 
 apt-get -y purge  apache2.2-common 
 apt-get -y purge libflite1 libavcodec-extra-53  libx11-doc
-apt-get -y purge libgtk-3-common libgtk2.0-common
+apt-get -y purge libgtk-3-common
 
 # purge remain trash
 apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
@@ -22,7 +22,7 @@ apt-get -y upgrade
 # other packages
 apt-get -y install udhcpd cape-firmware dbus python-dbus
 #
-apt-get -y install mc less ipython sshfs aptitude
+apt-get -y install mc less ipython sshfs aptitude python-matplotlib
 #
 apt-get -y install xterm icewm xrdp tightvncserver
 # firmware
