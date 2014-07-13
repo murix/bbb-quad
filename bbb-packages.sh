@@ -18,7 +18,7 @@ apt-get -y upgrade
 apt-get -y install udhcpd cape-firmware dbus python-dbus
 
 #
-apt-get -y install mc less ipython sshfs aptitude python-matplotlib minicom
+apt-get -y install mc less ipython sshfs aptitude python-matplotlib minicom gpsd python-gps
 
 #
 apt-get -y install xterm icewm xrdp tightvncserver lxde-core
