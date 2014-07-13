@@ -5,6 +5,9 @@ apt-get update
 # remove unwanted
 apt-get -y remove nodejs apache2.2-common gnome-icon-theme libx11-doc libopencv-dev libgl1-mesa-dri locales vim vim-runtime freepats libicu48 libflite1 libgtk-3-common iso-codes libwebkitgtk-1.0-0 libavcodec53 gstreamer0.10-ffmpeg gstreamer0.10-plugins-bad gstreamer0.10-plugins-base gstreamer0.10-plugins-good libopencore-amrnb0 libopencore-amrwb0 libavcodec-extra-53
 
+# remove wicd
+apt-get -y remove python-wicd wicd-cli wicd-curses wicd-daemon wicd-gtk
+
 # remove any trash
 apt-get -y autoremove
 
@@ -15,7 +18,7 @@ apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
 apt-get -y upgrade
 
 # other packages
-apt-get -y install udhcpd cape-firmware dbus python-dbus
+apt-get -y install udhcpd cape-firmware dbus python-dbus network-manager
 
 #
 apt-get -y install mc less ipython sshfs aptitude python-matplotlib minicom 
