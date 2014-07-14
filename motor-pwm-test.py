@@ -57,7 +57,8 @@ def print_pwm():
 
 print_pwm()
 
-while True:
+try:
+ while True:
   #
   key = chr(stdscr.getch())
 
@@ -97,6 +98,8 @@ while True:
   PWM.set_duty_cycle(pin_rl,pwm_rl)
   PWM.set_duty_cycle(pin_rr,pwm_rr)
 
+except:
+ pass
 
 curses.endwin()
 PWM.cleanup()
