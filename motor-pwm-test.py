@@ -77,10 +77,10 @@ while True:
 
   # START ALL
   if key == 's':
-   pwm_fl=50
-   pwm_fr=50
-   pwm_rl=50
-   pwm_rr=50
+   pwm_fl=49
+   pwm_fr=51
+   pwm_rl=58
+   pwm_rr=58
 
   # ARM
   if key == 'a':
