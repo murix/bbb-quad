@@ -62,3 +62,4 @@ while True:
 #  pass
 
 curses.endwin()
+PWM.cleanup()
