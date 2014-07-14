@@ -60,6 +60,8 @@ print_pwm()
 while True:
   #
   key = chr(stdscr.getch())
+
+  # CONTROL
   if key == '7': pwm_fl-=1
   if key == '8': pwm_fl+=1
   if key == '9': pwm_fr-=1
@@ -68,8 +70,25 @@ while True:
   if key == '5': pwm_rl+=1
   if key == '6': pwm_rr-=1
   if key == '.': pwm_rr+=1
-  if key=='q':
+
+  # QUIT
+  if key == 'q':
    break
+
+  # START ALL
+  if key == 's':
+   pwm_fl=50
+   pwm_fr=50
+   pwm_rl=50
+   pwm_rr=50
+
+  # ARM
+  if key == 'a':
+   pwm_fl=arm_fl
+   pwm_fr=arm_fr
+   pwm_rl=arm_rl
+   pwm_rr=arm_rr
+
 
   print_pwm()
 
