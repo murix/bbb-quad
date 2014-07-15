@@ -3,34 +3,36 @@
 from time import sleep
 import thread
 import Adafruit_BBIO.GPIO as G
+import curses
 
-def function_pin_change(pin,time):
- s=True
- while True:
-  s= not s
-  G.output(pin,s)
-  sleep(time)
-  
+ss=curses.initscr()
 
-for p in [ "P9_", "P8_" ]:
- for i in range(1,47):
-  pin=p+str(i)
-  print pin,
-  #G.setup(pin,G.OUT,G.PUD_OFF,0)
-  G.setup(pin,G.OUT,G.PUD_DOWN,0)
-  #G.setup(pin,G.OUT,G.PUD_UP,0)
-  #G.setup(pin,G.OUT,G.PUD_OFF,1)
-  #G.setup(pin,G.OUT,G.PUD_DOWN,1)
-  #G.setup(pin,G.OUT,G.PUD_UP,1)
-  func_args = ( pin, 0.5 )
-  thread.start_new_thread(function_pin_change, func_args )
-  
+curses.noecho()
 
-print ""
-print "all pins change state every half second foverer"
-while 1:
+G.cleanup()
+
+y=0
+x=0
+
+try:
+ ss.addstr(1,1,"dasdasdasda")
+ for p in [ "P9_", "P8_" ]:
+  if p == "P9_": y=10
+  if p == "P8_": y=20
+  for i in range(1,47,2):
+   x+=1
+
+   pin1=p+str(i)
+   pin2=p+str(i+1)
+
+   G.setup(pin1,G.IN,G.PUD_OFF)
+   G.setup(pin2,G.IN,G.PUD_OFF)
+
+   ss.addstr(x,y,str(pin1))
+except:
  pass
 
+curses.endwin()
 
 
 
