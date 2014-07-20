@@ -3,11 +3,7 @@
 from Adafruit_I2C import Adafruit_I2C
 from time import sleep
 import math
-import numpy as np
-from collections import deque
 import sys
-import matplotlib.pyplot as plt 
-import matplotlib.animation as animation
 import os
 
 os.system("echo BB-I2C1  > /sys/devices/bone_capemgr.9/slots")
@@ -114,59 +110,7 @@ def gy86_read():
  out = [ ax,ay,az,temp_mpu6050,gx,gy,gz,x,y,z,magx,magy,magz,temp_ms5611,press,alt*100 ]
  return out
 
-# plot class
-class AnalogPlot:
-  # constr
-  def __init__(self, maxLen):
-      self.ax = deque([0.0]*maxLen)
-      self.ay = deque([0.0]*maxLen)
-      self.az = deque([0.0]*maxLen)
-      self.maxLen = maxLen
-
-  # add to buffer
-  def addToBuf(self, buf, val):
-      if len(buf) < self.maxLen:
-          buf.append(val)
-      else:
-          buf.pop()
-          buf.appendleft(val)
-
-  # add data
-  def add(self, data):
-      assert(len(data) == 3)
-      self.addToBuf(self.ax, data[0])
-      self.addToBuf(self.ay, data[1])
-      self.addToBuf(self.az, data[2])
-
-  # update plot
-  def update(self, frameNum, a0, a1,a2):
-      try:
-          out = gy86_read()
-          print out
-          [ ax,ay,az,temp_mpu6050,gx,gy,gz,x,y,z,magx,magy,magz,temp_ms5611,press,alt ] = out
-          
-          #data = [ x,gx, 0 ]
-          #data = [ y,gy, 0 ]
-          #data = [ z,gz, 0 ]
-          data = [ alt , 0,0 ]
-          if(len(data) == 3):
-              self.add(data)
-              a0.set_data(range(self.maxLen), self.ax)
-              a1.set_data(range(self.maxLen), self.ay)
-              a2.set_data(range(self.maxLen), self.az)
-      except KeyboardInterrupt:
-          print('exiting')
-      
-      return a0, 
-
-
-analogPlot = AnalogPlot(100)
-fig = plt.figure()
-ax = plt.axes(xlim=(0, 100), ylim=(-300, -200))
-a0, = ax.plot([], [])
-a1, = ax.plot([], [])
-a2, = ax.plot([], [])
-anim = animation.FuncAnimation(fig, analogPlot.update, fargs=(a0, a1 ,a2), interval=16)
-plt.show()
+while 1:
+    print gy86_read()
 
 

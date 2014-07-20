@@ -22,6 +22,7 @@
 #include <stdint.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
@@ -72,7 +73,7 @@ void set_all(PRUPWM* myPWM,uint32_t dutyns){
 
 int main() {
 
-system("echo bone_pru0_out > /sys/devices/bone_capemgr.*/slots");
+       system("sh -c \"echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots\" ");
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
