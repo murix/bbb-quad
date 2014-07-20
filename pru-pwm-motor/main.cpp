@@ -71,6 +71,9 @@ void set_all(PRUPWM* myPWM,uint32_t dutyns){
 #define PWM_STEP      1000
 
 int main() {
+
+system("echo bone_pru0_out > /sys/devices/bone_capemgr.*/slots");
+
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
 
