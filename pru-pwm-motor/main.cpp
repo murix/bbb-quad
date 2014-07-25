@@ -73,7 +73,7 @@ void set_all(PRUPWM* myPWM,uint32_t dutyns){
 
 int main() {
 
-       system("sh -c \"echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots\" ");
+       system("sh -c \"echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots ; sleep 3\" ");
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
