@@ -15,11 +15,59 @@
 #define ADDR_MS5611  0x77
 
 void hmc5883_configure(int file){
+    uint8_t buffer[2];
+
     if (ioctl(file,I2C_SLAVE,ADDR_HMC5883) < 0) {
         printf("Failed to acquire bus access and/or talk to slave.\n");
     }
 
+    //master enable
+    buffer[0]=0x02;
+    buffer[1]=0x00;
+    write(file,buffer,2);
+ 
+    //wait to be ready
+    while(1){
+      buffer[0]=0x09;
+      write(file,buffer,1);
+      read(file,buffer,1);
+      if(buffer[0] & 0x01 == 1){
+  
+      } else {
+	break;
+      }
+
+
+   }
+
 }
+
+float hmc5883_read16(int file,uint8_t reg_msb,uint8_t reg_lsb){
+
+    uint8_t buffer[2];
+    uint8_t msb;
+    uint8_t lsb;
+    uint16_t *p16;
+    p16=(uint16_t*)buffer;
+
+    buffer[0]=reg_msb;
+    write(file,buffer,1);
+    read(file,&msb,1);
+
+    buffer[0]=reg_lsb;
+    write(file,buffer,1);
+    read(file,&lsb,1);
+        
+    buffer[0]=lsb;
+    buffer[1]=msb;
+
+    int16_t value = p16[0];
+
+    float fvalue = value;
+
+    return fvalue;
+}
+
 
 void ms5611_configure(int file){
     if (ioctl(file,I2C_SLAVE,ADDR_MS5611) < 0) {
@@ -93,11 +141,16 @@ while(1){
     float gx = mpu6050_read16(file,0x43,0x44)/131.0;
     float gy = mpu6050_read16(file,0x45,0x46)/131.0;
     float gz = mpu6050_read16(file,0x47,0x48)/131.0;
-    printf("%+3.2f %+3.2f %+3.2f %+3.2f %+3.2f %+3.2f %+3.2f\r\n",ax,ay,az,tp,gx,gy,gz);
 
     hmc5883_configure(file);
+    float mx= hmc5883_read16(file,0x3,0x4)/1090.0;
+    float my= hmc5883_read16(file,0x5,0x6)/1090.0;
+    float mz= hmc5883_read16(file,0x7,0x8)/1090.0;
+
 
     ms5611_configure(file);
+
+    printf("%+3.2f %+3.2f %+3.2f %+3.2f %+3.2f %+3.2f %+3.2f| %+3.2f %+3.2f %+3.2f |\r\n",ax,ay,az,tp,gx,gy,gz,mx,my,mz);
 
  }
   return 0;
