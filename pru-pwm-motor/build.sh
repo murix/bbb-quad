@@ -13,7 +13,7 @@ echo "build pru firmware"
 pasm -b pwm.p
 
 echo "build test program"
-g++ -g0 -O3  main.cpp pru.cpp pruPWM.cpp -lprussdrv -lpthread -o pwm-test
+g++ -g0 -O3 -Wall main.cpp pru.cpp pruPWM.cpp -lprussdrv -lpthread -o pwm-test
 
 
 

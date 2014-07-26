@@ -17,7 +17,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
 #include "pru.h"
 
 unsigned int* PRU::memoryPtr = NULL;
@@ -71,7 +71,7 @@ void PRU::setSharedMemoryInt(unsigned int index, unsigned int value) {
 };
 
 void PRU::setSharedMemory(unsigned int * array, unsigned int start, unsigned int length) {
-	for (int i = 0; i<length; i++) {
+	for (unsigned int i = 0; i<length; i++) {
 		this->setSharedMemoryInt(start + i, array[i]);
 	}
 };
@@ -121,11 +121,13 @@ Handle<Value> waitForInterrupt(const Arguments& args) {
 	uv_queue_work(uv_default_loop(), &baton->request, AsyncWork, AsyncAfter);
 	return scope.Close(Undefined());
 }
+*/
 
 /*---------------------------Here ends the copy/pasting----------------------------*/
 
 /* Clear Interrupt */
-/*Handle<Value> clearInterrupt(const Arguments& args) {
+/*
+Handle<Value> clearInterrupt(const Arguments& args) {
 	HandleScope scope;
 	prussdrv_pru_clear_event(PRU0_ARM_INTERRUPT);
 	return scope.Close(Undefined());
@@ -135,4 +137,5 @@ Handle<Value> interruptPRU(const Arguments& args) {
 	HandleScope scope;
 	prussdrv_pru_send_event(ARM_PRU0_INTERRUPT);
 	return scope.Close(Undefined());
-};*/
+};
+*/
