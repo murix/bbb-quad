@@ -180,11 +180,14 @@ if(debug){
    int64_t p=(d1*sens/(1<<21)-off)/(1<<15);
 
 if(debug){
-if(dt!=2366) printf("dt error\r\n");
-if(temp!=2007) printf("temp error\r\n");
-if(off!=2420281617) printf("off error\r\n");
-if(sens!=1315097036) printf("sens error\r\n");
-if(p!=100009) printf("p error\r\n");
+
+ if(dt  !=2366) printf("dt error\r\n");
+ if(temp!=2007) printf("temp error\r\n");
+ if(off !=2420281617) printf("off error\r\n");
+ if(sens!=1315097036) printf("sens error\r\n");
+ if(p   !=100009) printf("p error\r\n");
+
+
 }
 
    float p0=1013.25;
