@@ -269,6 +269,10 @@ float mpu6050_read16(int file,uint8_t reg_msb,uint8_t reg_lsb){
 
 int main(int argc,char** argv){
 
+       printf("enable I2C-2 overlay\r\n");
+       system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+       printf("wait I2C-2 overlay to be ready\r\n");
+       usleep(1000000);
     
 
     int file;
