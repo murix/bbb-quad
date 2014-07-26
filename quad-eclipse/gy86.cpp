@@ -50,7 +50,7 @@ private:
 			printf("Failed to acquire bus access and/or talk to slave.\n");
 		}
 	}
-	int hmc5883_configure(){
+	void hmc5883_configure(){
 		set_addr();
 		//master enable
 		uint8_t buffer[2];
@@ -58,6 +58,7 @@ private:
 		buffer[1]=0x00;
 		write(fd,buffer,2);
 	}
+
 	bool is_ready(){
 		set_addr();
 
@@ -259,8 +260,8 @@ private:
 
 		if(dt  !=2366) printf("dt error\r\n");
 		if(temp!=2007) printf("temp error\r\n");
-		if(off !=2420281617) printf("off error\r\n");
-		if(sens!=1315097036) printf("sens error\r\n");
+		if(off !=atol("2420281617")) printf("off error\r\n");
+		if(sens!=atol("1315097036")) printf("sens error\r\n");
 		if(p   !=100009) printf("p error\r\n");
 	}
 
