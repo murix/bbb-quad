@@ -1,5 +1,1 @@
-*.dtbo
-*.bin
-pwm-test
-gy86
-baro
+bin
