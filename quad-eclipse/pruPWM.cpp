@@ -31,7 +31,7 @@ PRUPWM::PRUPWM(unsigned int frequency) : PRU(0) {
 }
 
 void PRUPWM::start() {
-	this->execute("pwm.bin");
+	this->execute("pasm-pwm.bin");
 }
 
 void PRUPWM::setFrequency(unsigned int frequency) {

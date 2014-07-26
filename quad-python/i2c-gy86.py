@@ -7,7 +7,7 @@ import sys
 import os
 
 os.system("echo BB-I2C1  > /sys/devices/bone_capemgr.9/slots")
-os.system("echo BB-UART1  > /sys/devices/bone_capemgr.9/slots")
+time.sleep(2);
 
 def gy86_read():
  mpu6050 = Adafruit_I2C(0x68,2) # ADC 16bit
