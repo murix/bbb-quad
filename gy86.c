@@ -14,7 +14,7 @@
 #define ADDR_HMC5883 0x1e
 #define ADDR_MS5611  0x77
 
-void hmc5883_configure(int file){
+int hmc5883_configure(int file){
     uint8_t buffer[2];
 
     if (ioctl(file,I2C_SLAVE,ADDR_HMC5883) < 0) {
@@ -25,20 +25,17 @@ void hmc5883_configure(int file){
     buffer[0]=0x02;
     buffer[1]=0x00;
     write(file,buffer,2);
- 
     //wait to be ready
-    while(1){
       buffer[0]=0x09;
       write(file,buffer,1);
       read(file,buffer,1);
       if(buffer[0] & 0x01 == 1){
-  
+         return 1;
       } else {
-	break;
-      }
+         return -1;
+     }
 
 
-   }
 
 }
 
@@ -132,6 +129,12 @@ int main(int argc,char** argv){
         printf("Failed to open the bus.");
         exit(1);
     }
+
+    while(hmc5883_configure(file)!=1);
+    float mx= hmc5883_read16(file,0x3,0x4)/1090.0;
+    float my= hmc5883_read16(file,0x5,0x6)/1090.0;
+    float mz= hmc5883_read16(file,0x7,0x8)/1090.0;
+
 while(1){
     mpu6050_configure(file);
     float ax = mpu6050_read16(file,0x3b,0x3c)/16384.0;
@@ -142,10 +145,11 @@ while(1){
     float gy = mpu6050_read16(file,0x45,0x46)/131.0;
     float gz = mpu6050_read16(file,0x47,0x48)/131.0;
 
-    hmc5883_configure(file);
-    float mx= hmc5883_read16(file,0x3,0x4)/1090.0;
-    float my= hmc5883_read16(file,0x5,0x6)/1090.0;
-    float mz= hmc5883_read16(file,0x7,0x8)/1090.0;
+    if(hmc5883_configure(file)==1){
+     mx= hmc5883_read16(file,0x3,0x4)/1090.0;
+     my= hmc5883_read16(file,0x5,0x6)/1090.0;
+     mz= hmc5883_read16(file,0x7,0x8)/1090.0;
+    }
 
 
     ms5611_configure(file);
