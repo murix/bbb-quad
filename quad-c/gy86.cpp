@@ -268,6 +268,9 @@ float mpu6050_read16(int file,uint8_t reg_msb,uint8_t reg_lsb){
 }
 
 int main(int argc,char** argv){
+
+    
+
     int file;
     if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
         printf("Failed to open the bus.");

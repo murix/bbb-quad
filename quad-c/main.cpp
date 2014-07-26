@@ -73,7 +73,11 @@ void set_all(PRUPWM* myPWM,uint32_t dutyns){
 
 int main() {
 
-       system("sh -c \"echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots ; sleep 3\" ");
+       printf("enable PRU overlay\r\n");
+       system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
+       printf("wait PRU overlay to be ready\r\n");
+       usleep(1000000);
+
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
