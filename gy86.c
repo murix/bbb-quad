@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <math.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -13,6 +14,14 @@
 #define ADDR_MPU6050 0x68
 #define ADDR_HMC5883 0x1e
 #define ADDR_MS5611  0x77
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+inline float to_degrees(float radians){
+ return radians*(180.0/M_PI);
+}
 
 int hmc5883_configure(int file){
     uint8_t buffer[2];
@@ -29,7 +38,7 @@ int hmc5883_configure(int file){
       buffer[0]=0x09;
       write(file,buffer,1);
       read(file,buffer,1);
-      if(buffer[0] & 0x01 == 1){
+      if( (buffer[0] & 0x01) == 1){
          return 1;
       } else {
          return -1;
@@ -135,7 +144,7 @@ int main(int argc,char** argv){
     float my= hmc5883_read16(file,0x5,0x6)/1090.0;
     float mz= hmc5883_read16(file,0x7,0x8)/1090.0;
 
-while(1){
+   while(1){
     mpu6050_configure(file);
     float ax = mpu6050_read16(file,0x3b,0x3c)/16384.0;
     float ay = mpu6050_read16(file,0x3d,0x3e)/16384.0;
@@ -151,11 +160,18 @@ while(1){
      mz= hmc5883_read16(file,0x7,0x8)/1090.0;
     }
 
+    float z= to_degrees( -atan2f(my,mx) );
+    float y= to_degrees( -atan2f(ax,az) );
+    float x= to_degrees( atan2f(ay,az) );
 
     ms5611_configure(file);
 
-    printf("%+3.2f %+3.2f %+3.2f %+3.2f %+3.2f %+3.2f %+3.2f| %+3.2f %+3.2f %+3.2f |\r\n",ax,ay,az,tp,gx,gy,gz,mx,my,mz);
+    printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f \r\n",ax,ay,az,tp,gx,gy,gz);
+    printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f \r\n",mx,my,mz);
+    printf("ms5611 p=  \r\n");
+    printf("angles = %f %f %f\r\n",x,y,z);
+    printf("-------------------------------------------------------------------------\r\n");
 
- }
+  }
   return 0;
 }
