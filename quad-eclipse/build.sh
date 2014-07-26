@@ -17,7 +17,7 @@ echo "build test program"
 g++ -g0 -O3 -Wall -std=c++0x -lprussdrv -lpthread pru-motor-test.cpp pru.cpp pruPWM.cpp -o bin/pru-motor-test
 g++ -g0 -O3 -Wall -std=c++0x -lm -D_BSD_SOURCE    gy86.cpp -o bin/gy86
 g++ -g0 -O3 -Wall -std=c++0x                      ms5611-test.cpp -o bin/ms5611-test
-
+g++ -g0 -O3 -Wall -std=c++0x -lgps                gps.cpp -o bin/gps
 
 
 
