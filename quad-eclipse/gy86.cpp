@@ -76,7 +76,7 @@ float hmc5883_read16(int file,uint8_t reg_msb,uint8_t reg_lsb){
 }
 
 
-void ms5611_configure(int file,int over,float* sp,float* salt,float* st){
+void ms5611_configure(int file,int over,double* sp,double* salt,double* st,double p0){
     
     uint8_t buffer[3];
     //uint16_t* p16;
@@ -86,56 +86,70 @@ void ms5611_configure(int file,int over,float* sp,float* salt,float* st){
         printf("Failed to acquire bus access and/or talk to slave.\n");
     }
 
+#if 0
     //reset
     buffer[0]=0x1e;
     write(file,buffer,1);
     //wait wake up
     usleep(10000);
+#endif
+
+int wait_eeprom=1;
 
     buffer[0]=0xa2;
     write(file,buffer,1);
+    usleep(wait_eeprom);
     read(file,buffer,2);
     uint16_t c1=buffer[0]*256+buffer[1];
 
     buffer[0]=0xa4;
     write(file,buffer,1);
+    usleep(wait_eeprom);
     read(file,buffer,2);
     uint16_t c2=buffer[0]*256+buffer[1];
 
     buffer[0]=0xa6;
     write(file,buffer,1);
+    usleep(wait_eeprom);
     read(file,buffer,2);
     uint16_t c3=buffer[0]*256+buffer[1];
 
     buffer[0]=0xa8;
     write(file,buffer,1);
+    usleep(wait_eeprom);
     read(file,buffer,2);
     uint16_t c4=buffer[0]*256+buffer[1];
 
     buffer[0]=0xaa;
     write(file,buffer,1);
+    usleep(wait_eeprom);
     read(file,buffer,2);
     uint16_t c5=buffer[0]*256+buffer[1];
 
     buffer[0]=0xac;
     write(file,buffer,1);
+    usleep(wait_eeprom);
     read(file,buffer,2);
     uint16_t c6=buffer[0]*256+buffer[1];
 
 
-    //oversample
-    //0.065=1ms=0x40
-    //0.042=3ms=0x42
-    //0.027=4ms=0x44
-    //0.018=6ms=0x46
-    //0.012=10ms=0x48
+
+    int sleep_us=0;
+    switch(over){
+     case 0: sleep_us=700; break;
+     case 2: sleep_us=1200; break;
+     case 4: sleep_us=2300; break;
+     case 6: sleep_us=4600; break;
+     case 8: sleep_us=9100; break;
+     default: sleep_us=10000; break;
+    }
 
     //
     buffer[0]=0x40+over;
     write(file,buffer,1);
 
     //
-    usleep(10000);
+    usleep(sleep_us);
 
     //read ADC
     buffer[0]=0x0;
@@ -148,7 +162,7 @@ void ms5611_configure(int file,int over,float* sp,float* salt,float* st){
     write(file,buffer,1);
 
     //
-    usleep(10000);
+    usleep(sleep_us);
 
     //read ADC
     buffer[0]=0x0;
@@ -190,8 +204,23 @@ if(debug){
 
 }
 
-   float p0=1013.25;
-   float alt = 44330.0*(1.0-pow(((p/100.0)/p0),1.0/5.255));
+   //z=RT/gM*loge(p0/0)
+   //z=height difference between start height and measurement height
+   //R=gas constant=8.31432
+   //T=air temperature in measured kelvin
+   //g=earth gravity=9.80665
+   //M=molar mass of the gas=0.0289644
+   //p0=pressure at start height
+   //p=pressure at the measurement height
+   double R=8.31432;
+   double tn=temp/100.0;
+   double T=tn+273.15;
+   double g=9.80665;
+   double M=0.0289644;
+   double pn=p/100.0;
+   double z=((R*T)/(g*M))*log(p0/pn);
+
+   double alt = 44330.0*(1.0-pow(((p/100.0)/p0),1.0/5.255));
 
 if(debug){
    printf("c1=%d ",c1);
@@ -203,16 +232,16 @@ if(debug){
    printf("d1=%d ",d1);
    printf("d2=%d ",d2);
    printf("dt=%lld ",dt);
-   printf("temp=%lld (%f) ",temp,temp/100.0);
+   printf("temp=%lld (%f) ",temp,tn);
    printf("off=%lld ",off);
    printf("sens=%lld ",sens);
-   printf("p=%lld (%f) ",p,p/100.0);
+   printf("p=%lld (%f) ",p,pn);
    printf("p0=%f ",p0);
    printf("alt=%f\r\n",alt);
 }
 
    *sp=p/100.0;
-   *salt=alt;
+   *salt=z;
    *st=temp/100.0;
 }
 
@@ -286,6 +315,10 @@ int main(int argc,char** argv){
     float my= hmc5883_read16(file,0x5,0x6)/1090.0;
     float mz= hmc5883_read16(file,0x7,0x8)/1090.0;
 
+    double p,p0,alt,tt;
+    ms5611_configure(file,8,&p,&alt,&tt,1013.25);
+    p0=p;
+
    while(1){
     mpu6050_configure(file);
     float ax = mpu6050_read16(file,0x3b,0x3c)/16384.0;
@@ -306,13 +339,13 @@ int main(int argc,char** argv){
     float y= to_degrees( -atan2f(ax,az) );
     float x= to_degrees( atan2f(ay,az) );
 
-    float p,alt,tt;
-    ms5611_configure(file,8,&p,&alt,&tt);
+    ms5611_configure(file,8,&p,&alt,&tt,p0);
+
 
     printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",ax,ay,az,tp,gx,gy,gz);
     printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mx,my,mz);
     printf("angles = %f %f %f | ",x,y,z);
-    printf("ms5611 p=%f h=%f t=%f\r\n",p,alt,tt);
+    printf("ms5611 p=%f t=%f h=%f\r\n",p,tt,alt*100);
 
     //ms5611_configure(file,0);
     //ms5611_configure(file,2);
