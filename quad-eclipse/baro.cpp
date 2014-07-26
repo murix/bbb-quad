@@ -60,7 +60,6 @@ public:
 	}
 	unsigned long cmd_adc(char cmd)
 	{
-		unsigned int ret;
 		unsigned long temp=0;
 		i2c_send(CMD_ADC_CONV+cmd); // send conversion command
 		switch (cmd & 0x0f) // wait necessary conversion time
@@ -81,7 +80,6 @@ public:
 
 	unsigned int cmd_prom(char coef_num)
 	{
-		unsigned int ret;
 		unsigned int rC=0;
 		i2c_send(CMD_PROM_RD+coef_num*2); // send PROM READ command
 		unsigned char b[2];
@@ -133,23 +131,11 @@ public:
 	    }
 	}
 
-	void main(){
-
-		beaglebone_start();
-
-		unsigned long D1; // ADC value of the pressure conversion
-		unsigned long D2; // ADC value of the temperature conversion
-		unsigned int C[8]; // calibration coefficients
-		double P; // compensated pressure value
-		double T; // compensated temperature value
-		double dT; // difference between actual and measured temperature
-		double OFF; // offset at actual temperature
-		double SENS; // sensitivity at actual temperature
+	unsigned int C[8]; // calibration coefficients
+	void ms5611_init(){
 		int i;
 		unsigned char n_crc; // crc value of the prom
 
-		D1=0;
-		D2=0;
 		cmd_reset(); // reset IC
 		for (i=0;i<8;i++){
 			C[i]=cmd_prom(i);
@@ -157,20 +143,69 @@ public:
 		} // read coefficients
 		n_crc=crc4(C); // calculate the CRC
 		printf("calculated crc=%08x\r\n",n_crc);
+	}
+	unsigned long D1; // ADC value of the pressure conversion
+	unsigned long D2; // ADC value of the temperature conversion
+	double P; // compensated pressure value
+	double T; // compensated temperature value
+	double dT; // difference between actual and measured temperature
+	double OFF; // offset at actual temperature
+	double SENS; // sensitivity at actual temperature
+    void ms5611_update(){
+		//Read digital pressure and temperature data
+		D2=cmd_adc(CMD_ADC_D2+CMD_ADC_4096); // read D2
+		D1=cmd_adc(CMD_ADC_D1+CMD_ADC_4096); // read D1
+		//Calculate temperature
+		dT=D2-C[5]*pow(2,8);
+		T=(2000+(dT*C[6])/pow(2,23))/100;
+		//Calculate temperature compensated pressure
+		OFF=C[2]*pow(2,16)+dT*C[4]/pow(2,7);
+		SENS=C[1]*pow(2,15)+dT*C[3]/pow(2,8);
+		P=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15))/100;
+    }
 
-		for(;;) // loop without stopping
+
+    double altimeter(double p0,double p,double t){
+    	   //R=gas constant=8.31432
+    	   //T=air temperature in measured kelvin
+    	   //g=earth gravity=9.80665
+    	   //M=molar mass of the gas=0.0289644
+    	   double R=8.31432;
+    	   double TK=t+273.15;
+    	   double g=9.80665;
+    	   double M=0.0289644;
+    	   return ((R*TK)/(g*M))*log(p0/p);
+    }
+
+	void main(){
+
+	double P_MIN;
+	double P_MAX;
+	double T_MIN;
+	double T_MAX;
+
+		beaglebone_start();
+		ms5611_init();
+		ms5611_update();
+		P_MIN=P;
+		P_MAX=P;
+		T_MIN=T;
+		T_MAX=T;
+
+		for(;;)
 		{
-			D2=cmd_adc(CMD_ADC_D2+CMD_ADC_4096); // read D2
-			D1=cmd_adc(CMD_ADC_D1+CMD_ADC_4096); // read D1
-			// calculate 1st order pressure and temperature (MS5607 1st order algorithm)
-			dT=D2-C[5]*pow(2,8);
-			OFF=C[2]*pow(2,17)+dT*C[4]/pow(2,6);
-			SENS=C[1]*pow(2,16)+dT*C[3]/pow(2,7);
+			ms5611_update();
+			////////////////////////////////////
+			if(P<P_MIN){ P_MIN=P; };
+			if(P>P_MAX){ P_MAX=P; };
 
-			T=(2000+(dT*C[6])/pow(2,23))/100;
-			P=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15))/100;
-			// place to use P, T, put them on LCD, send them trough RS232 interface...
-			printf("P=%d T=%d\r\n",P,T);
+			if(T<T_MIN){ T_MIN=T; };
+			if(T>T_MAX){ T_MAX=T; };
+
+			double Z1=altimeter(P_MAX,P,T);
+			double Z2=altimeter(P_MAX,P_MIN,T);
+
+			printf("P=%f|%f|%f T=%f|%f|%f Z=%f|%f\r\n",P_MIN,P,P_MAX,T_MIN,T,T_MAX,Z1,Z2);
 
 		}
 
