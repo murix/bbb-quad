@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define ADDR_MPU6050 0x68
 #define ADDR_HMC5883 0x1e
@@ -76,11 +77,131 @@ float hmc5883_read16(int file,uint8_t reg_msb,uint8_t reg_lsb){
 
 
 void ms5611_configure(int file){
+    
+    uint8_t buffer[3];
+    uint16_t* p16;
+    p16=(uint16_t*)buffer;
+
     if (ioctl(file,I2C_SLAVE,ADDR_MS5611) < 0) {
         printf("Failed to acquire bus access and/or talk to slave.\n");
     }
 
+    //reset
+    buffer[0]=0x1e;
+    write(file,buffer,1);
+    //wait wake up
+    usleep(3000);
+
+    buffer[0]=0xa2;
+    write(file,buffer,1);
+    read(file,buffer,2);
+    uint16_t c1=p16[0];
+
+    buffer[0]=0xa4;
+    write(file,buffer,1);
+    read(file,buffer,2);
+    uint16_t c2=p16[0];
+
+    buffer[0]=0xa6;
+    write(file,buffer,1);
+    read(file,buffer,2);
+    uint16_t c3=p16[0];
+
+    buffer[0]=0xa8;
+    write(file,buffer,1);
+    read(file,buffer,2);
+    uint16_t c4=p16[0];
+
+    buffer[0]=0xaa;
+    write(file,buffer,1);
+    read(file,buffer,2);
+    uint16_t c5=p16[0];
+
+    buffer[0]=0xac;
+    write(file,buffer,1);
+    read(file,buffer,2);
+    uint16_t c6=p16[0];
+
+int debug=0;
+
+if(debug){
+    c1=40127;
+    c2=36924;
+    c3=23317;
+    c4=23282;
+    c5=33464;
+    c6=28312;
 }
+    //oversample
+    //0.065=1ms=0x40
+    //0.042=3ms=0x42
+    //0.027=4ms=0x44
+    //0.018=6ms=0x46
+    //0.012=10ms=0x48
+
+
+
+    buffer[0]=0x48;
+    write(file,buffer,1);
+    usleep(10000);
+    buffer[0]=0x0;
+    write(file,buffer,1);
+    read(file,buffer,3);
+    uint32_t d1=buffer[0]*65536+buffer[1]*256+buffer[2];
+
+    buffer[0]=0x58;
+    write(file,buffer,1);
+    usleep(10000);
+    buffer[0]=0x0;
+    write(file,buffer,1);
+    read(file,buffer,3);
+    uint32_t d2=buffer[0]*65536+buffer[1]*256+buffer[2];
+
+if(debug){
+  d1=9085466;
+  d2=8569150;
+}
+
+
+
+   int32_t dt = d2 - c5*(1<<8);
+   int32_t temp = 2000 + dt*c6/(1<<23);
+
+   int64_t off= (( int64_t)  c2*(1<<16) ) + ( ( int64_t)  c4*dt/(1<<7) );
+
+   int64_t sens= (( int64_t) c1*(1<<15) )+ (( int64_t)   c3*dt/(1<<8));
+   int32_t p=(d1*sens/(1<<21)-off)/(1<<15);
+
+if(debug){
+if(dt!=2366) printf("dt error\r\n");
+if(temp!=2007) printf("temp error\r\n");
+if(off!=2420281617) printf("off error\r\n");
+if(sens!=1315097036) printf("sens error\r\n");
+if(p!=100009) printf("p error\r\n");
+}
+
+   float p0=1013.25;
+   float alt = 44330.0*(1.0-pow(((p/100.0)/p0),1.0/5.255));
+
+   printf("c1=%d\r\n",c1);
+   printf("c2=%d\r\n",c2);
+   printf("c3=%d\r\n",c3);
+   printf("c4=%d\r\n",c4);
+   printf("c5=%d\r\n",c5);
+   printf("c6=%d\r\n",c6);
+   printf("d1=%d\r\n",d1);
+   printf("d2=%d\r\n",d2);
+   printf("dt=%d\r\n",dt);
+   printf("temp=%d (%f)\r\n",temp,temp/100.0);
+   printf("off=%lld\r\n",off);
+   printf("sens=%lld\r\n",sens);
+   printf("p=%d (%f)\r\n",p,p/100.0);
+   printf("p0=%f\r\n",p0);
+   printf("alt=%f\r\n",alt);
+
+
+}
+
 
 void mpu6050_configure(int file){
     uint8_t buffer[2];
