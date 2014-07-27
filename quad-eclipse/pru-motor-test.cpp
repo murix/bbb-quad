@@ -54,15 +54,15 @@ int getch()
   return ch;
 }
 
-void set_all(PRUPWM* myPWM,uint32_t dutyns){
-	myPWM->setChannelValue(0,dutyns);
-	myPWM->setChannelValue(1,dutyns);
-	myPWM->setChannelValue(2,dutyns);
-	myPWM->setChannelValue(3,dutyns);
-	myPWM->setChannelValue(4,dutyns);
-	myPWM->setChannelValue(5,dutyns);
-	myPWM->setChannelValue(6,dutyns);
-	myPWM->setChannelValue(7,dutyns);
+void set_all(PRUPWM* myPWM,uint32_t* dutyns){
+	myPWM->setChannelValue(0,dutyns[0]);
+	myPWM->setChannelValue(1,dutyns[1]);
+	myPWM->setChannelValue(2,dutyns[2]);
+	myPWM->setChannelValue(3,dutyns[3]);
+	myPWM->setChannelValue(4,dutyns[4]);
+	myPWM->setChannelValue(5,dutyns[5]);
+	myPWM->setChannelValue(6,dutyns[6]);
+	myPWM->setChannelValue(7,dutyns[7]);
 }
 
 #define PWM_HZ          50
@@ -70,6 +70,8 @@ void set_all(PRUPWM* myPWM,uint32_t dutyns){
 #define PWM_MIN    1000000 
 #define PWM_MAX    2000000
 #define PWM_STEP      1000
+
+uint32_t dutyns[8];
 
 int main() {
 
@@ -85,9 +87,11 @@ int main() {
 	// Start the PRU
 	myPWM->start();
 
-        // ARM Motors
-	uint32_t dutyns=PWM_ARM;
+	//
+	for(int i=0;i<8;i++) dutyns[i]=PWM_ARM;
+	//
 	set_all(myPWM,dutyns);
+
 	while(1){
 	   printf("PWM frequency %d Hz\r\n",PWM_HZ);
 	   printf("cmd +: increase      duty by %8d ns\r\n",PWM_STEP);
@@ -95,22 +99,46 @@ int main() {
 	   printf("cmd d: motor max     -> duty=%8d ns\r\n",PWM_MAX);
 	   printf("cmd c: motor min     -> duty=%8d ns\r\n",PWM_MIN);
 	   printf("cmd space: motor arm -> duty=%8d ns\r\n",PWM_ARM);
-	   printf("cmd q: quit\r\n");
+	   printf("cmd x: quit\r\n");
 	
 	   char c = getch();
-	   if (c =='+') dutyns+=PWM_STEP;
-	   if (c =='-') dutyns-=PWM_STEP;
-	   if (c =='d') dutyns=PWM_MAX;
-	   if (c =='c') dutyns=PWM_MIN;
-	   if (c ==' ') dutyns=PWM_ARM;
-	   if (c =='q') break;
-	   printf("dutyns=%d\r\n",dutyns);
+	   if (c =='+') for(int i=0;i<8;i++) dutyns[i]+=PWM_STEP;
+	   if (c =='-') for(int i=0;i<8;i++) dutyns[i]-=PWM_STEP;
+	   if (c =='d') for(int i=0;i<8;i++) dutyns[i]=PWM_MAX;
+	   if (c =='c') for(int i=0;i<8;i++) dutyns[i]=PWM_MIN;
+	   if (c ==' ') for(int i=0;i<8;i++) dutyns[i]=PWM_ARM;
+	   if (c =='x') break;
+	   //
+	   if (c =='1') dutyns[0]+=PWM_STEP;//FL H
+	   if (c =='2') dutyns[1]+=PWM_STEP;//FR L
+	   if (c =='3') dutyns[2]+=PWM_STEP;
+	   if (c =='4') dutyns[3]+=PWM_STEP;//RL I
+	   if (c =='5') dutyns[4]+=PWM_STEP;//RR K
+	   if (c =='6') dutyns[5]+=PWM_STEP;
+	   if (c =='7') dutyns[6]+=PWM_STEP;
+	   if (c =='8') dutyns[7]+=PWM_STEP;
+	   //
+	   if (c =='q') dutyns[0]-=PWM_STEP;
+	   if (c =='w') dutyns[1]-=PWM_STEP;
+	   if (c =='e') dutyns[2]-=PWM_STEP;
+	   if (c =='r') dutyns[3]-=PWM_STEP;
+	   if (c =='t') dutyns[4]-=PWM_STEP;
+	   if (c =='y') dutyns[5]-=PWM_STEP;
+	   if (c =='u') dutyns[6]-=PWM_STEP;
+	   if (c =='i') dutyns[7]-=PWM_STEP;
+
+
+
+	   for(int i=0;i<8;i++) printf("|%d",dutyns[i]);
+	   printf("|\r\n");
+
 	   set_all(myPWM,dutyns);
 	
 	}
 
-        //Leave motors ARMED
-	dutyns=PWM_ARM;
+    //Leave motors ARMED
+	for(int i=0;i<8;i++) dutyns[i]=PWM_ARM;
+	//
 	set_all(myPWM,dutyns);
 }
  
