@@ -353,6 +353,14 @@ private:
 
 };
 
+class sensor_angles {
+	//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
+    // theta = atan( x / sqrt (y^2 + z^2)  )
+	// psi   = atan( y / sqrt (x^2 + z^2)  )
+	// phi   = atan( sqrt( x^2 + y^2 ) / z )
+	//
+
+};
 
 
 int main(int argc,char** argv){
