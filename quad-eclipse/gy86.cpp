@@ -393,10 +393,11 @@ int main(int argc,char** argv){
 		float z= to_degrees( -atan2f(mag.my,mag.mx) );
 		float h= baro.altimeter(p0,baro.P,baro.T);
 
-		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
-		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
-		printf("angles = %f %f %f | ",x,y,z);
-		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
+		//printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
+		//printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
+		//printf("angles = %f %f %f | ",x,y,z);
+		printf("%f,%f,%f\n",x,y,z);
+		//printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
 
 	}
 	return 0;
