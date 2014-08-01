@@ -1,3 +1,5 @@
+
+/// BBB
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -9,8 +11,11 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <fcntl.h>  /* File control definitions */
+#include <unistd.h> /* UNIX standard function definitions */
+#include <sys/time.h>
+#include <termios.h> /* POSIX terminal control definitions */
+
 
 #define ADDR_MPU6050 0x68
 #define ADDR_HMC5883 0x1e
@@ -355,12 +360,56 @@ private:
 
 class sensor_angles {
 	//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
-    // theta = atan( x / sqrt (y^2 + z^2)  )
+	// theta = atan( x / sqrt (y^2 + z^2)  )
 	// psi   = atan( y / sqrt (x^2 + z^2)  )
 	// phi   = atan( sqrt( x^2 + y^2 ) / z )
 	//
 
 };
+
+int get_fd(){
+	int fd = open( "/dev/vmodem", O_RDWR| O_NOCTTY );
+
+	struct termios tty;
+	struct termios tty_old;
+	memset (&tty, 0, sizeof tty);
+
+	/* Error Handling */
+	if ( tcgetattr (fd, &tty ) != 0 )
+	{
+		perror(dev); exit(1);
+	}
+
+	/* Save old tty parameters */
+	tty_old = tty;
+
+	/* Set Baud Rate */
+	cfsetospeed (&tty, (speed_t)B115200);
+	cfsetispeed (&tty, (speed_t)B115200);
+
+	/* Setting other Port Stuff */
+	tty.c_cflag     &=  ~PARENB;        // Make 8n1
+	tty.c_cflag     &=  ~CSTOPB;
+	tty.c_cflag     &=  ~CSIZE;
+	tty.c_cflag     |=  CS8;
+
+	tty.c_cflag     &=  ~CRTSCTS;       // no flow control
+	tty.c_cc[VMIN]      =   1;                  // read doesn't block
+	tty.c_cc[VTIME]     =   5;                  // 0.5 seconds read timeout
+	tty.c_cflag     |=  CREAD | CLOCAL;     // turn on READ & ignore ctrl lines
+
+	/* Make raw */
+	cfmakeraw(&tty);
+
+	/* Flush Port, then applies attributes */
+	tcflush( fd, TCIFLUSH );
+	if ( tcsetattr ( fd, TCSANOW, &tty ) != 0)
+	{
+		perror(dev); exit(1);
+	}
+
+	return fd;
+}
 
 
 int main(int argc,char** argv){
@@ -383,6 +432,9 @@ int main(int argc,char** argv){
 
 	double p0=baro.P;
 
+	int fd=get_fd();
+    char buf[1024];
+
 	while(1){
 		acc_gyro.update();
 		mag.update();
@@ -393,11 +445,14 @@ int main(int argc,char** argv){
 		float z= to_degrees( -atan2f(mag.my,mag.mx) );
 		float h= baro.altimeter(p0,baro.P,baro.T);
 
-		//printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
-		//printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
-		//printf("angles = %f %f %f | ",x,y,z);
-		printf("%f,%f,%f\n",x,y,z);
-		//printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
+		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
+		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
+		printf("angles = %f %f %f | ",x,y,z);
+		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
+
+		int len = sprintf(buf,"%f,%f,%f\n",x,y,z);
+		write(fd,buf,len);
+
 
 	}
 	return 0;
