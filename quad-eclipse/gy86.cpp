@@ -52,6 +52,9 @@ unsigned long micros(void){
 inline float to_degrees(float radians){
 	return radians*(180.0/M_PI);
 }
+inline float to_radian(float degree){
+	return degree * M_PI/180;
+}
 
 class sensor_hmc5883 {
 public:
@@ -815,19 +818,110 @@ int get_vmodem_fd(){
 /////////////////////////////////////////////////////////////////////////////////////
 
 void test1(){
+	printf("basic sensors test\r\n");
+
+	//load capes
 	printf("enable I2C-2 overlay\r\n");
 	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
 	printf("wait I2C-2 overlay to be ready\r\n");
+
+	//wait capes apply
 	usleep(1000000);
+
+	//open i2c
 	int file;
 	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
 		printf("Failed to open the bus.");
 		exit(1);
 	}
+
+	//start raw sensors
 	sensor_mpu6050 acc_gyro(file);
 	sensor_hmc5883 mag(file);
 	sensor_ms5611 baro(file);
+
+	//save initial pressure
 	double p0=baro.P;
+
+	//
+	while(1){
+		//update raw sensors
+		acc_gyro.update();
+		mag.update();
+		baro.update();
+
+		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
+		// theta = atan( x / sqrt (y^2 + z^2)  )
+		// psi   = atan( y / sqrt (x^2 + z^2)  )
+		// phi   = atan( sqrt( x^2 + y^2 ) / z )
+
+		//calcule euler angles from accelerometer
+		float rx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
+		float ry=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
+		float rz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
+
+		//convert from radion to degrees
+		float x= to_degrees( rx );
+		float y= to_degrees( ry );
+		float z= to_degrees( rz );
+
+		//calculate relative altitude from start point
+		float h= baro.altimeter(p0,baro.P,baro.T);
+
+		//print
+		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
+		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
+		printf("angles = %f %f %f | ",x,y,z);
+		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
+	}
+
+}
+
+void test2(){
+	printf("quaternion imu cube-test\r\n");
+
+	//vmodem support - cube test
+	int fd=get_vmodem_fd();
+	char buf[1024];
+
+	float angles[3];
+	quaternion_imu uav;
+
+	while(1){
+		uav.getEulerRad(angles);
+		printf("quaternion imu cube-test %f %f %f \r\n",to_degrees(angles[0]),to_degrees(angles[1]),to_degrees(angles[2]));
+
+		//vmodem print - cube test
+		int len = sprintf(buf,"%f|%f|%f|\n",
+				angles[0],
+				angles[1],
+				angles[2]);
+		write(fd,buf,len);
+	}
+}
+
+void test3(){
+    printf("accelerometer only cube-test\r\n");
+
+	//load capes
+	printf("enable I2C-2 overlay\r\n");
+	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+	printf("wait I2C-2 overlay to be ready\r\n");
+
+	//wait capes apply
+	usleep(1000000);
+
+	//open i2c
+	int file;
+	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
+		printf("Failed to open the bus.");
+		exit(1);
+	}
+
+	//start raw sensors
+	sensor_mpu6050 acc_gyro(file);
+	sensor_hmc5883 mag(file);
+	sensor_ms5611 baro(file);
 
 	//vmodem support
 	int fd=get_vmodem_fd();
@@ -836,49 +930,86 @@ void test1(){
 	while(1){
 		acc_gyro.update();
 		mag.update();
-		baro.update();
-		float rx=atan2f(acc_gyro.ay,acc_gyro.az);
-		float ry=-atan2f(acc_gyro.ax,acc_gyro.az);
-		float rz=-atan2f(mag.my,mag.mx);
-		float x= to_degrees( rx );
-		float y= to_degrees( ry );
-		float z= to_degrees( rz );
-		float h= baro.altimeter(p0,baro.P,baro.T);
-		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
-		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
-		printf("angles = %f %f %f | ",x,y,z);
-		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
 
+		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
+		// theta = atan( x / sqrt (y^2 + z^2)  )
+		// psi   = atan( y / sqrt (x^2 + z^2)  )
+		// phi   = atan( sqrt( x^2 + y^2 ) / z )
+		//
+
+		float rx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
+		float ry=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
+		float rz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
 		//vmodem print
 		int len = sprintf(buf,"%f|%f|%f|\n",rx,ry,rz);
 		write(fd,buf,len);
-	}
 
+		printf("accelerometer only cube-test %s\r\n",buf);
+	}
 }
 
-void test2(){
+
+void test4(){
+    printf("gyroscope only cube-test\r\n");
+
+	//load capes
+	printf("enable I2C-2 overlay\r\n");
+	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+	printf("wait I2C-2 overlay to be ready\r\n");
+
+	//wait capes apply
+	usleep(1000000);
+
+	//open i2c
+	int file;
+	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
+		printf("Failed to open the bus.");
+		exit(1);
+	}
+
+	//start raw sensors
+	sensor_mpu6050 acc_gyro(file);
+	sensor_hmc5883 mag(file);
+	sensor_ms5611 baro(file);
 
 	//vmodem support
 	int fd=get_vmodem_fd();
 	char buf[1024];
 
+	float goff[3]={0,0,0};
+	int gsample=10;
+	for(int i=0;i<gsample;i++){
+		acc_gyro.update();
+		goff[0]+=acc_gyro.gx;
+		goff[1]+=acc_gyro.gy;
+		goff[2]+=acc_gyro.gz;
+	}
+	goff[0]/=gsample;
+	goff[1]/=gsample;
+	goff[2]/=gsample;
 
-	float angles[3];
-	quaternion_imu uav;
+	float gint[3]={0,0,0};
+
 	while(1){
-		uav.getEulerRad(angles);
-		printf("%f %f %f \r\n",to_degrees(angles[0]),to_degrees(angles[1]),to_degrees(angles[2]));
+		acc_gyro.update();
+		gint[0]+= (acc_gyro.gx-goff[0]);
+		gint[1]+= (acc_gyro.gy-goff[1]);
+		gint[2]+= (acc_gyro.gz-goff[2]);
+
+		float rx=to_radian(gint[0]);
+		float ry=to_radian(gint[1]);
+		float rz=to_radian(gint[2]);
 
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|\n",angles[0],angles[1],angles[2]);
+		int len = sprintf(buf,"%f|%f|%f|\n",rx,ry,rz);
 		write(fd,buf,len);
+
+		printf("gyroscope only cube-test %s\r\n",buf);
 	}
 }
 
-void test3(){
 
 
-}
 
 int main(int argc,char** argv){
 
@@ -889,6 +1020,8 @@ int main(int argc,char** argv){
 		case 1: test1(); break;
 		case 2: test2(); break;
 		case 3: test3(); break;
+		case 4: test4(); break;
+
 		default:
 			printf("unknown mode\r\n");
 			break;
