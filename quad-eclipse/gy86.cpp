@@ -850,28 +850,12 @@ void test1(){
 		mag.update();
 		baro.update();
 
-		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
-		// theta = atan( x / sqrt (y^2 + z^2)  )
-		// psi   = atan( y / sqrt (x^2 + z^2)  )
-		// phi   = atan( sqrt( x^2 + y^2 ) / z )
-
-		//calcule euler angles from accelerometer
-		float rx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
-		float ry=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
-		float rz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
-
-		//convert from radion to degrees
-		float x= to_degrees( rx );
-		float y= to_degrees( ry );
-		float z= to_degrees( rz );
-
 		//calculate relative altitude from start point
 		float h= baro.altimeter(p0,baro.P,baro.T);
 
 		//print
 		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
 		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
-		printf("angles = %f %f %f | ",x,y,z);
 		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
 	}
 
@@ -892,10 +876,10 @@ void test2(){
 		printf("quaternion imu cube-test %f %f %f \r\n",to_degrees(angles[0]),to_degrees(angles[1]),to_degrees(angles[2]));
 
 		//vmodem print - cube test
-		int len = sprintf(buf,"%f|%f|%f|\n",
+		int len = sprintf(buf,"%f|%f|%f|%f|\n",
 				angles[0],
 				angles[1],
-				angles[2]);
+				angles[2],0);
 		write(fd,buf,len);
 	}
 }
@@ -932,15 +916,14 @@ void test3(){
 		mag.update();
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
-		// theta = atan( x / sqrt (y^2 + z^2)  )
-		// psi   = atan( y / sqrt (x^2 + z^2)  )
-		// phi   = atan( sqrt( x^2 + y^2 ) / z )
-		//
-		float rx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
-		float ry=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
-		float rz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
+
+		float pitch=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
+		float roll=-atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
+		float yaw=0;//atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
+
+
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|\n",rx,ry,rz);
+		int len = sprintf(buf,"%f|%f|%f|%f|\n",pitch,roll,yaw,0);
 		write(fd,buf,len);
 
 		printf("accelerometer only cube-test %s\r\n",buf);
@@ -1021,7 +1004,7 @@ void test4(){
 		float rz=to_radian(gint[2]);
 
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|\n",rx,ry,rz);
+		int len = sprintf(buf,"%f|%f|%f|%f|\n",rx,ry,rz,0);
 		write(fd,buf,len);
 
 		printf("gyroscope only cube-test %s\r\n",buf);
@@ -1029,7 +1012,7 @@ void test4(){
 }
 
 void test5(){
-    printf("gyroscope only cube-test\r\n");
+    printf("complementary filter cube-test\r\n");
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -1091,23 +1074,20 @@ void test5(){
 		grstep[2]= to_radian((acc_gyro.gz-goff[2])*tdiff);
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
-		// theta = atan( x / sqrt (y^2 + z^2)  )
-		// psi   = atan( y / sqrt (x^2 + z^2)  )
-		// phi   = atan( sqrt( x^2 + y^2 ) / z )
-		//
-		float arx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
-		float ary=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
-		float arz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
+		float pitch=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
+		float roll=-atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
+		float yaw=0;//atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
 
-		cr[0]=0.98*(cr[0]+grstep[0])+0.02*(arx);
-		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(ary);
-		cr[2]=0.98*(cr[2]+grstep[2])+0.02*(arz);
+
+		cr[0]=0.98*(cr[0]+grstep[0])+0.02*(pitch);
+		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(roll);
+		cr[2]+=grstep[2];
 
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|\n",cr[0],cr[1],cr[2]);
+		int len = sprintf(buf,"%f|%f|%f|%f|\n",cr[0],cr[1],cr[2],0);
 		write(fd,buf,len);
 
-		printf("gyroscope only cube-test %s\r\n",buf);
+		printf("6 DOF complementary filter cube-test %s\r\n",buf);
 	}
 
 }
@@ -1123,6 +1103,7 @@ int main(int argc,char** argv){
 		case 2: test2(); break;
 		case 3: test3(); break;
 		case 4: test4(); break;
+		case 5: test5(); break;
 
 		default:
 			printf("unknown mode\r\n");
