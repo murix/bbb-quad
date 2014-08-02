@@ -873,14 +873,14 @@ void test2(){
 
 	while(1){
 		uav.getEulerRad(angles);
-		printf("quaternion imu cube-test %f %f %f \r\n",to_degrees(angles[0]),to_degrees(angles[1]),to_degrees(angles[2]));
 
 		//vmodem print - cube test
-		int len = sprintf(buf,"%f|%f|%f|%f|\n",
+		int len = sprintf(buf,"GY86 9DOF Quaternion IMU|%f|%f|%f|%f|\r",
 				angles[0],
 				angles[1],
 				angles[2],0);
 		write(fd,buf,len);
+		printf("%s\n",buf);
 	}
 }
 
@@ -923,10 +923,10 @@ void test3(){
 
 
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|%f|\n",pitch,roll,yaw,0);
+		int len = sprintf(buf,"GY-86 3DOF accelerometer only IMU|%f|%f|%f|%f|\r",pitch,roll,yaw,0);
 		write(fd,buf,len);
 
-		printf("accelerometer only cube-test %s\r\n",buf);
+		printf("%s\n",buf);
 	}
 }
 
@@ -1004,15 +1004,14 @@ void test4(){
 		float rz=to_radian(gint[2]);
 
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|%f|\n",rx,ry,rz,0);
+		int len = sprintf(buf,"GY-86 3DOF gyroscope only IMU|%f|%f|%f|%f|\r",rx,ry,rz,0);
 		write(fd,buf,len);
 
-		printf("gyroscope only cube-test %s\r\n",buf);
+		printf("%s\n",buf);
 	}
 }
 
-void test5(){
-    printf("complementary filter cube-test\r\n");
+void test5(bool use_altimeter){
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -1061,6 +1060,9 @@ void test5(){
 	//complementary filter output in radians
 	float cr[3]={0,0,0};
 
+	//
+	float altimeter=0;
+
 	while(1){
 
 		tback=tnow;
@@ -1068,6 +1070,7 @@ void test5(){
 		double tdiff=tnow-tback;
 
 		acc_gyro.update();
+		baro.update();
 
 		grstep[0]= to_radian((acc_gyro.gx-goff[0])*tdiff);
 		grstep[1]= to_radian((acc_gyro.gy-goff[1])*tdiff);
@@ -1083,11 +1086,15 @@ void test5(){
 		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(roll);
 		cr[2]+=grstep[2];
 
+		if(use_altimeter){
+
+		}
+
 		//vmodem print
-		int len = sprintf(buf,"%f|%f|%f|%f|\n",cr[0],cr[1],cr[2],0);
+		int len = sprintf(buf,"GY-86 6DOF complementary filter IMU|%f|%f|%f|%f|\n",cr[0],cr[1],cr[2],0);
 		write(fd,buf,len);
 
-		printf("6 DOF complementary filter cube-test %s\r\n",buf);
+		printf("%s\n",buf);
 	}
 
 }
@@ -1103,7 +1110,8 @@ int main(int argc,char** argv){
 		case 2: test2(); break;
 		case 3: test3(); break;
 		case 4: test4(); break;
-		case 5: test5(); break;
+		case 5: test5(false); break;
+		case 6: test5(true); break;
 
 		default:
 			printf("unknown mode\r\n");
