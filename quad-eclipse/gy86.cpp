@@ -876,9 +876,9 @@ void test2(){
 
 		//vmodem print - cube test
 		int len = sprintf(buf,"GY86 9DOF Quaternion IMU|%f|%f|%f|%f|\r",
-				angles[0],
+				angles[2],
 				angles[1],
-				angles[2],0);
+				angles[0],0);
 		write(fd,buf,len);
 		printf("%s\n",buf);
 	}
@@ -1062,6 +1062,7 @@ void test5(bool use_altimeter){
 
 	//
 	float altimeter=0;
+	float p0 = baro.P;
 
 	while(1){
 
@@ -1087,11 +1088,12 @@ void test5(bool use_altimeter){
 		cr[2]+=grstep[2];
 
 		if(use_altimeter){
-
+			//calculate relative altitude from start point
+			altimeter=baro.altimeter(p0,baro.P,baro.T);
 		}
 
 		//vmodem print
-		int len = sprintf(buf,"GY-86 6DOF complementary filter IMU|%f|%f|%f|%f|\n",cr[0],cr[1],cr[2],0);
+		int len = sprintf(buf,"GY-86 6DOF complementary filter IMU|%f|%f|%f|%f|\r",cr[0],cr[1],cr[2],altimeter);
 		write(fd,buf,len);
 
 		printf("%s\n",buf);
