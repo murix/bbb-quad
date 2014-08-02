@@ -35,11 +35,11 @@ unsigned long micros(void){
 	struct timeval start;
 	gettimeofday(&start, NULL);
 	double seconds = start.tv_sec + start.tv_usec/1000000.0;
-        if(start_time==0){
-           start_time=seconds;
-	   gettimeofday(&start, NULL);
-	   seconds = start.tv_sec + start.tv_usec/1000000.0;
-        }
+	if(start_time==0){
+		start_time=seconds;
+		gettimeofday(&start, NULL);
+		seconds = start.tv_sec + start.tv_usec/1000000.0;
+	}
 
 	double micros = (seconds-start_time)*1000000.0;
 
@@ -550,7 +550,7 @@ public:
 
 
 	void zeroGyro(){
-		const int totSamples = 3;
+		const int totSamples = 10;
 		float tmpOffsets[] = {0,0,0};
 		for (int i = 0; i < totSamples; i++){
 			acc_gyro.update();
@@ -865,14 +865,14 @@ void test2(){
 
 	float angles[3];
 	quaternion_imu uav;
-    while(1){
-       uav.getEulerRad(angles);
-       printf("%f %f %f \r\n",to_degrees(angles[0]),to_degrees(angles[1]),to_degrees(angles[2]));
+	while(1){
+		uav.getEulerRad(angles);
+		printf("%f %f %f \r\n",to_degrees(angles[0]),to_degrees(angles[1]),to_degrees(angles[2]));
 
-  	   //vmodem print
-	   int len = sprintf(buf,"%f|%f|%f|\n",angles[0],angles[1],angles[2]);
-	   write(fd,buf,len);
-    }
+		//vmodem print
+		int len = sprintf(buf,"%f|%f|%f|\n",angles[0],angles[1],angles[2]);
+		write(fd,buf,len);
+	}
 }
 
 void test3(){
@@ -881,9 +881,22 @@ void test3(){
 }
 
 int main(int argc,char** argv){
-	//test1();
-	//test2();
-	test3();
+
+	if(argc==2){
+		int mode=atoi(argv[1]);
+		printf("mode=%d\r\n",mode);
+		switch(mode){
+		case 1: test1(); break;
+		case 2: test2(); break;
+		case 3: test3(); break;
+		default:
+			printf("unknown mode\r\n");
+			break;
+		}
+	}
+	else {
+		printf("%s <mode>\r\n",argv[0]);
+	}
 
 	return 0;
 }
