@@ -1,1 +1,13 @@
-bin
+
+bone_pru0_out-00A0.dtbo
+pasm-pwm.bin
+bbb-gps
+gy86
+ms5611-test
+pru-motor-test
+
+CMakeFiles
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+
