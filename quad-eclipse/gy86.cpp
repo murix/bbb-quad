@@ -936,7 +936,6 @@ void test3(){
 		// psi   = atan( y / sqrt (x^2 + z^2)  )
 		// phi   = atan( sqrt( x^2 + y^2 ) / z )
 		//
-
 		float rx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
 		float ry=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
 		float rz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
@@ -948,6 +947,12 @@ void test3(){
 	}
 }
 
+double get_timestamp_in_seconds(){
+	struct timeval start;
+	gettimeofday(&start, NULL);
+	double seconds = start.tv_sec + start.tv_usec/1000000.0;
+	return seconds;
+}
 
 void test4(){
     printf("gyroscope only cube-test\r\n");
@@ -990,11 +995,26 @@ void test4(){
 
 	float gint[3]={0,0,0};
 
+	double tback=get_timestamp_in_seconds();
+	double tnow=get_timestamp_in_seconds();
+
+	float gstep[3]={0,0,0};
+
 	while(1){
+
+		tback=tnow;
+		tnow=get_timestamp_in_seconds();
+		double tdiff=tnow-tback;
+
 		acc_gyro.update();
-		gint[0]+= (acc_gyro.gx-goff[0]);
-		gint[1]+= (acc_gyro.gy-goff[1]);
-		gint[2]+= (acc_gyro.gz-goff[2]);
+
+		gstep[0]= (acc_gyro.gx-goff[0])*tdiff;
+		gstep[1]= (acc_gyro.gy-goff[1])*tdiff;
+		gstep[2]= (acc_gyro.gz-goff[2])*tdiff;
+
+		gint[0]+=gstep[0];
+		gint[1]+=gstep[1];
+		gint[2]+=gstep[2];
 
 		float rx=to_radian(gint[0]);
 		float ry=to_radian(gint[1]);
@@ -1008,7 +1028,89 @@ void test4(){
 	}
 }
 
+void test5(){
+    printf("gyroscope only cube-test\r\n");
 
+	//load capes
+	printf("enable I2C-2 overlay\r\n");
+	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+	printf("wait I2C-2 overlay to be ready\r\n");
+
+	//wait capes apply
+	usleep(1000000);
+
+	//open i2c
+	int file;
+	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
+		printf("Failed to open the bus.");
+		exit(1);
+	}
+
+	//start raw sensors
+	sensor_mpu6050 acc_gyro(file);
+	sensor_hmc5883 mag(file);
+	sensor_ms5611 baro(file);
+
+	//vmodem support
+	int fd=get_vmodem_fd();
+	char buf[1024];
+
+	float goff[3]={0,0,0};
+	int gsample=10;
+	for(int i=0;i<gsample;i++){
+		acc_gyro.update();
+		goff[0]+=acc_gyro.gx;
+		goff[1]+=acc_gyro.gy;
+		goff[2]+=acc_gyro.gz;
+	}
+	goff[0]/=gsample;
+	goff[1]/=gsample;
+	goff[2]/=gsample;
+
+	float gint[3]={0,0,0};
+
+	double tback=get_timestamp_in_seconds();
+	double tnow=get_timestamp_in_seconds();
+
+	//gyroscope distance in radians
+	float grstep[3]={0,0,0};
+
+	//complementary filter output in radians
+	float cr[3]={0,0,0};
+
+	while(1){
+
+		tback=tnow;
+		tnow=get_timestamp_in_seconds();
+		double tdiff=tnow-tback;
+
+		acc_gyro.update();
+
+		grstep[0]= to_radian((acc_gyro.gx-goff[0])*tdiff);
+		grstep[1]= to_radian((acc_gyro.gy-goff[1])*tdiff);
+		grstep[2]= to_radian((acc_gyro.gz-goff[2])*tdiff);
+
+		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
+		// theta = atan( x / sqrt (y^2 + z^2)  )
+		// psi   = atan( y / sqrt (x^2 + z^2)  )
+		// phi   = atan( sqrt( x^2 + y^2 ) / z )
+		//
+		float arx=atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
+		float ary=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
+		float arz=atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
+
+		cr[0]=0.98*(cr[0]+grstep[0])+0.02*(arx);
+		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(ary);
+		cr[2]=0.98*(cr[2]+grstep[2])+0.02*(arz);
+
+		//vmodem print
+		int len = sprintf(buf,"%f|%f|%f|\n",cr[0],cr[1],cr[2]);
+		write(fd,buf,len);
+
+		printf("gyroscope only cube-test %s\r\n",buf);
+	}
+
+}
 
 
 int main(int argc,char** argv){
