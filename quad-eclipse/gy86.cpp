@@ -368,7 +368,10 @@ class sensor_angles {
 };
 
 int get_fd(){
-	int fd = open( "/dev/vmodem", O_RDWR| O_NOCTTY );
+
+char* dev="/dev/vmodem";
+
+	int fd = open( dev, O_RDWR| O_NOCTTY );
 
 	struct termios tty;
 	struct termios tty_old;
@@ -440,9 +443,13 @@ int main(int argc,char** argv){
 		mag.update();
 		baro.update();
 
-		float x= to_degrees( atan2f(acc_gyro.ay,acc_gyro.az) );
-		float y= to_degrees( -atan2f(acc_gyro.ax,acc_gyro.az) );
-		float z= to_degrees( -atan2f(mag.my,mag.mx) );
+		float rx=atan2f(acc_gyro.ay,acc_gyro.az);
+		float ry=-atan2f(acc_gyro.ax,acc_gyro.az);
+		float rz=-atan2f(mag.my,mag.mx);
+
+		float x= to_degrees( rx );
+		float y= to_degrees( ry );
+		float z= to_degrees( rz );
 		float h= baro.altimeter(p0,baro.P,baro.T);
 
 		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
@@ -450,7 +457,7 @@ int main(int argc,char** argv){
 		printf("angles = %f %f %f | ",x,y,z);
 		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
 
-		int len = sprintf(buf,"%f,%f,%f\n",x,y,z);
+		int len = sprintf(buf,"%f|%f|%f|\n",rx,ry,rz);
 		write(fd,buf,len);
 
 
