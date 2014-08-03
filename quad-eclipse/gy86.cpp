@@ -139,8 +139,6 @@ public:
 	double P,T;
 	uint16_t c[8];
 	uint32_t d[3];
-	int64_t dt,temp,off,sens,p;
-	int64_t t2,off2,sens2;
 
 
 	sensor_ms5611(int fd){
@@ -301,40 +299,34 @@ public:
 		if(p   !=100009) printf("p error\r\n");
 	}
 
+	double dt,temp,off,sens,p;
+	double t2,off2,sens2;
 	void calculate(){
-
-		///////////////////////////////
-		// first order
-		dt =( (int64_t  )d[2]) - (( int64_t) c[5]*(1<<8));
-		temp = 2000 + dt*c[6]/(1<<23);
-		off= (( int64_t)  c[2]*(1<<16) ) + ( ( int64_t)  c[4]*dt/(1<<7) );
-		sens= (( int64_t) c[1]*(1<<15) )+ (( int64_t)   c[3]*dt/(1<<8));
-		// second order
+		//first order
+		dt=d[2]-c[5]*pow(2,8);
+		temp=2000 + dt*c[6]/pow(2,23);
+		off=c[2]*pow(2,16)+(c[4]*dt)/pow(2,7);
+		sens=c[1]*pow(2,15)+(c[3]*dt)/pow(2,8);
+		//second order
 		if(temp<2000){
-			// <20C (low temperature)
 			t2=pow(dt,2)/pow(2,31);
-			off2=5*(pow(temp-2000,2))/2;
-			sens2=5*(pow(temp-2000,2))/4;
+			off2=5*pow(temp-2000,2)/pow(2,1);
+			sens2=5*pow(temp-2000,2)/pow(2,2);
 			if(temp<-1500){
-				// <-15C (very low temperature)
 				off2=off2+7*pow(temp+1500,2);
-				sens2=sens2+11*pow(temp+1500,1)/2;
+				sens2=sens2+11*pow(temp+1500,2)/pow(2,1);
 			}
 		} else {
-			// >=20C (high temperature)
 			t2=0;
 			off2=0;
 			sens2=0;
 		}
-		temp = temp-t2;
+		temp=temp-t2;
 		off=off-off2;
 		sens=sens-sens2;
-		//////////////////////////////////
-		//
-		p=(d[1]*sens/(1<<21)-off)/(1<<15);
-
-
-		//
+		//pressure
+		p=(d[1]*sens/pow(2,21)-off)/pow(2,15);
+		//convert to C and mbar.
 		T=temp/100.0;
 		P=p/100.0;
 	}
@@ -364,7 +356,7 @@ public:
 		gyro[3] = mpu6050_read16(0x47,0x48)/131.0;
 	}
 	void set_addr(){
-		if (ioctl(this->fd,I2C_SLAVE,ADDR_MPU6050) < 0) {
+		if (ioctl(this->fd,I2C_SLAVE_FORCE,ADDR_MPU6050) < 0) {
 			printf("mpu6050 i2c addr error\r\n");
 			//exit(1);
 		}
@@ -817,14 +809,14 @@ void test_basic(){
 	printf("sensors: basic test\r\n");
 
 	//load capes
-	/*
+
 	printf("enable I2C-2 overlay\r\n");
 	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
 	printf("wait I2C-2 overlay to be ready\r\n");
 
 	//wait capes apply
 	usleep(1*1000*1000);
-*/
+
 	//open i2c
 	int file;
 	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
@@ -1044,6 +1036,38 @@ void test_gyro_only_imu(char* title){
 		printf("%s\n",buf);
 	}
 }
+
+
+void test_ms5611(){
+
+	//load capes
+	printf("enable I2C-2 overlay\r\n");
+	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+	printf("wait I2C-2 overlay to be ready\r\n");
+
+	//wait capes apply
+	usleep(1000000);
+
+	//open i2c
+	int file;
+	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
+		printf("Failed to open the bus.");
+		exit(1);
+	}
+
+	sensor_ms5611 baro(file);
+	while(1){
+		baro.update();
+		double altimeter=(baro.altimeter(1013.25,baro.P,baro.T,1)*100);
+		printf("temp(C)=%f press(mbar)=%f altimeter(cm)=%f\r\n",
+				baro.T,
+				baro.P,
+				altimeter);
+	}
+
+
+}
+
 
 // Inertial measurement unit (IMU)
 // Attitude and heading reference system (ARHS)
@@ -1332,6 +1356,7 @@ int main(int argc,char** argv){
 		int mode=atoi(argv[1]);
 		printf("mode=%d\r\n",mode);
 		switch(mode){
+		case 0: gy86::test_ms5611(); break;
 		case 1: gy86::test_basic(); break;
 		case 2: gy86::test_accel_only_imu("GY-86 3DOF accelerometer only IMU"); break;
 		case 3: gy86::test_gyro_only_imu("GY-86 3DOF gyroscope only IMU"); break;
