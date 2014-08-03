@@ -817,8 +817,8 @@ int get_vmodem_fd(){
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
-void test1(){
-	printf("basic sensors test\r\n");
+void test_basic(){
+	printf("sensors: basic test\r\n");
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -861,7 +861,7 @@ void test1(){
 
 }
 
-void test2(){
+void test_quaternion(char* title){
 	printf("quaternion imu cube-test\r\n");
 
 	//vmodem support - cube test
@@ -875,7 +875,8 @@ void test2(){
 		uav.getEulerRad(angles);
 
 		//vmodem print - cube test
-		int len = sprintf(buf,"GY86 9DOF Quaternion IMU|%f|%f|%f|%f|%f|%f|\r",
+		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",
+				title,
 				angles[2],
 				angles[1],
 				angles[0],0,0,0);
@@ -884,7 +885,7 @@ void test2(){
 	}
 }
 
-void test3(){
+void test_accel_only_imu(char* title){
 	printf("accelerometer only cube-test\r\n");
 
 	//load capes
@@ -923,7 +924,7 @@ void test3(){
 
 
 		//vmodem print
-		int len = sprintf(buf,"GY-86 3DOF accelerometer only IMU|%f|%f|%f|%f|%f|%f|\r",pitch,roll,yaw,0,0,0);
+		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",title,pitch,roll,yaw,0,0,0);
 		write(fd,buf,len);
 
 		printf("%s\n",buf);
@@ -937,7 +938,7 @@ double get_timestamp_in_seconds(){
 	return seconds;
 }
 
-void test4(){
+void test_gyro_only_imu(char* title){
 	printf("gyroscope only cube-test\r\n");
 
 	//load capes
@@ -1004,14 +1005,14 @@ void test4(){
 		float rz=to_radian(gint[2]);
 
 		//vmodem print
-		int len = sprintf(buf,"GY-86 3DOF gyroscope only IMU|%f|%f|%f|%f|%f|%f|\r",rx,ry,rz,0,0,0);
+		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",title,rx,ry,rz,0,0,0);
 		write(fd,buf,len);
 
 		printf("%s\n",buf);
 	}
 }
 
-void test5(bool use_altimeter){
+void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -1089,16 +1090,58 @@ void test5(bool use_altimeter){
 	float acc_v_now[3]={0,0,0};
 	float acc_p[3]={0,0,0};
 
+	// Android Accelerometer: Low-Pass Filter Estimated Linear Acceleration
+	// http://www.kircherelectronics.com/blog/index.php/11-android/sensors/10-low-pass-filter-linear-acceleration
+	float gravity[3]={0,0,0};
+	float linearAcceleration[3]={0,0,0};
+	float input[3]={0,0,0};
+	float timeConstant = 0.18f;
+	float alpha = 0.9f;
+	float dt = 0;
+
+
 	while(1){
 
-		//
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		////
+
 		tback=tnow;
 		tnow=get_timestamp_in_seconds();
 		double tdiff=tnow-tback;
 
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+
+
+		// Find the sample period (between updates).
+		dt = 1 / (pidx / (tdiff) );
+
+		input[0]=acc_gyro.ax;
+		input[1]=acc_gyro.ay;
+		input[2]=acc_gyro.az;
+
+		gravity[0] = alpha * gravity[0] + (1 - alpha) * input[0];
+		gravity[1] = alpha * gravity[1] + (1 - alpha) * input[1];
+		gravity[2] = alpha * gravity[2] + (1 - alpha) * input[2];
+
+		linearAcceleration[0] = input[0] - gravity[0];
+		linearAcceleration[1] = input[1] - gravity[1];
+		linearAcceleration[2] = input[2] - gravity[2];
+
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+
 		//
 		acc_gyro.update();
 		baro.update();
+
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
 
 		//Implementing Positioning Algorithms Using Accelerometers
 		//http://cache.freescale.com/files/sensors/doc/app_note/AN3397.pdf
@@ -1107,14 +1150,16 @@ void test5(bool use_altimeter){
 		//backup acceleration
 		for(int i=0;i<3;i++) acc_back[i]=acc_now[3];
 		//update acceleration
-		acc_now[0]=acc_gyro.ax;
-		acc_now[1]=acc_gyro.ay;
+		acc_now[0]=input[0];
+		acc_now[1]=input[1];
 		acc_now[2]=0;
 		//reduce mechanical noise
+
 		for(int i=0;i<3;i++){
 			if(acc_now[i]>-0.1&&acc_now[i]<0.1)
 				acc_now[i]=0;
 		}
+
 		//convert from g_factor to m/s^2
 		for(int i=0;i<3;i++) acc_now[i]*=9.80665;
 
@@ -1125,6 +1170,9 @@ void test5(bool use_altimeter){
 		//position via trapezoidal integrate of speed
 		for(int i=0;i<3;i++) acc_p[i]=acc_v_now[i]+(acc_v_now[i]-acc_v_back[i])/2.0;
 
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
 
 		// gyroscope
 		grstep[0]= to_radian((acc_gyro.gx-goff[0])*tdiff);
@@ -1182,14 +1230,20 @@ void test5(bool use_altimeter){
 			altimeter=0;
 		}
 
+		if(!use_position){
+			acc_p[0]=0;
+			acc_p[1]=0;
+		}
+
 		//vmodem print
-		int len = sprintf(buf,"GY-86 6DOF complementary filter IMU|%f|%f|%f|%f|%f|%f|\r",
+		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",
+				title,
 				cr[0]-pitch_off,
 				cr[1]-roll_off,
 				cr[2],
 				acc_p[0],
 				acc_p[1],
-				acc_p[2]);	//altimeter);
+				altimeter);
 
 		write(fd,buf,len);
 
@@ -1205,12 +1259,13 @@ int main(int argc,char** argv){
 		int mode=atoi(argv[1]);
 		printf("mode=%d\r\n",mode);
 		switch(mode){
-		case 1: test1(); break;
-		case 2: test2(); break;
-		case 3: test3(); break;
-		case 4: test4(); break;
-		case 5: test5(false); break;
-		case 6: test5(true); break;
+		case 1: test_basic(); break;
+		case 2: test_quaternion("GY86 9DOF Quaternion IMU"); break;
+		case 3: test_accel_only_imu("GY-86 3DOF accelerometer only IMU"); break;
+		case 4: test_gyro_only_imu("GY-86 3DOF gyroscope only IMU"); break;
+		case 5: test_6dof_imu("GY86 6DOF comp filter",false,false); break;
+		case 6: test_6dof_imu("GY86 6DOF comp filter with altimeter",true,false); break;
+		case 7: test_6dof_imu("GY86 6DOF comp filter with altimeter and position",true,true); break;
 
 		default:
 			printf("unknown mode\r\n");
