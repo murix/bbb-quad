@@ -60,6 +60,7 @@ inline float to_radian(float degree){
 class sensor_hmc5883 {
 public:
 	float mag[3];
+	int fd;
 
 	sensor_hmc5883(int fd){
 		this->fd=fd;
@@ -68,6 +69,7 @@ public:
 		mag[1]=0;
 		mag[2]=0;
 	}
+
 	void update(){
 		if(is_ready()){
 			mag[0]= hmc5883_read16(0x3,0x4)/1090.0;
@@ -75,14 +77,14 @@ public:
 			mag[2]= hmc5883_read16(0x7,0x8)/1090.0;
 		}
 	}
-private:
-	int fd;
+
 	void set_addr(){
 		if (ioctl(fd,I2C_SLAVE,ADDR_HMC5883) < 0) {
 			printf("hmc5883 i2c addr error\r\n");
 			exit(1);
 		}
 	}
+
 	void hmc5883_configure(){
 		set_addr();
 		//master enable
@@ -133,13 +135,20 @@ private:
 
 class sensor_ms5611 {
 public:
+	int fd;
+	double P,T;
+	uint16_t c[8];
+	uint32_t d[3];
+	int64_t dt,temp,off,sens,p;
+	int64_t t2,off2,sens2;
+
+
 	sensor_ms5611(int fd){
 		this->fd=fd;
 		reset();
 		read_calib();
 		update();
 	}
-	double P,T;
 	void update(){
 		//read_adc(0);
 		read_adc(8);
@@ -156,10 +165,6 @@ public:
 		double M=0.0289644;
 		return ((R*tk)/(g*M))*log(p0/p);
 	}
-
-
-private:
-	int fd;
 	void set_addr(){
 		if (ioctl(fd,I2C_SLAVE,ADDR_MS5611) < 0) {
 			printf("ms5611 i2c addr error\r\n");
@@ -175,8 +180,6 @@ private:
 		//wait 3ms to be ready
 		usleep(3*1000);
 	}
-
-	uint16_t c[8];
 	void read_calib(){
 		set_addr();
 
@@ -221,7 +224,6 @@ private:
 
 	}
 
-	uint32_t d[3];
 	void read_adc(int over){
 		set_addr();
 
@@ -299,8 +301,6 @@ private:
 		if(p   !=100009) printf("p error\r\n");
 	}
 
-	int64_t dt,temp,off,sens,p;
-	int64_t t2,off2,sens2;
 	void calculate(){
 
 		///////////////////////////////
@@ -343,34 +343,30 @@ private:
 
 class sensor_mpu6050 {
 public:
+	float acc[3];
+	float temp;
+	float gyro[3];
+	int fd;
 
 	sensor_mpu6050(int fd){
 		this->fd=fd;
 		set_addr();
 		update();
 	}
-
-	float acc[3];
-	float temp;
-	float gyro[3];
-
 	void update(){
 		set_addr();
-		acc[0] = mpu6050_read16(0x3b,0x3c)/16384.0;
-		acc[1] = mpu6050_read16(0x3d,0x3e)/16384.0;
-		acc[2] = mpu6050_read16(0x3f,0x40)/16384.0;
-		temp = mpu6050_read16(0x41,0x42)/340.0+36.53;
+		acc[0]  = mpu6050_read16(0x3b,0x3c)/16384.0;
+		acc[1]  = mpu6050_read16(0x3d,0x3e)/16384.0;
+		acc[2]  = mpu6050_read16(0x3f,0x40)/16384.0;
+		temp    = mpu6050_read16(0x41,0x42)/340.0+36.53;
 		gyro[0] = mpu6050_read16(0x43,0x44)/131.0;
 		gyro[1] = mpu6050_read16(0x45,0x46)/131.0;
 		gyro[3] = mpu6050_read16(0x47,0x48)/131.0;
 	}
-
-private:
-	int fd;
 	void set_addr(){
-		if (ioctl(fd,I2C_SLAVE,ADDR_MPU6050) < 0) {
+		if (ioctl(this->fd,I2C_SLAVE,ADDR_MPU6050) < 0) {
 			printf("mpu6050 i2c addr error\r\n");
-			exit(1);
+			//exit(1);
 		}
 	}
 	void configure(){
@@ -821,13 +817,14 @@ void test_basic(){
 	printf("sensors: basic test\r\n");
 
 	//load capes
+	/*
 	printf("enable I2C-2 overlay\r\n");
 	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
 	printf("wait I2C-2 overlay to be ready\r\n");
 
 	//wait capes apply
 	usleep(1*1000*1000);
-
+*/
 	//open i2c
 	int file;
 	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
