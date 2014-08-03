@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <termios.h> /* POSIX terminal control definitions */
 
+namespace gy86 {
 
 #define ADDR_MPU6050 0x68
 #define ADDR_HMC5883 0x1e
@@ -58,31 +59,28 @@ inline float to_radian(float degree){
 
 class sensor_hmc5883 {
 public:
-	float mx;
-	float my;
-	float mz;
-	sensor_hmc5883(){
+	float mag[3];
 
-	}
 	sensor_hmc5883(int fd){
 		this->fd=fd;
 		hmc5883_configure();
-		mx=0;
-		my=0;
-		mz=0;
+		mag[0]=0;
+		mag[1]=0;
+		mag[2]=0;
 	}
 	void update(){
 		if(is_ready()){
-			mx= hmc5883_read16(0x3,0x4)/1090.0;
-			my= hmc5883_read16(0x5,0x6)/1090.0;
-			mz= hmc5883_read16(0x7,0x8)/1090.0;
+			mag[0]= hmc5883_read16(0x3,0x4)/1090.0;
+			mag[1]= hmc5883_read16(0x5,0x6)/1090.0;
+			mag[2]= hmc5883_read16(0x7,0x8)/1090.0;
 		}
 	}
 private:
 	int fd;
 	void set_addr(){
 		if (ioctl(fd,I2C_SLAVE,ADDR_HMC5883) < 0) {
-			printf("Failed to acquire bus access and/or talk to slave.\n");
+			printf("hmc5883 i2c addr error\r\n");
+			exit(1);
 		}
 	}
 	void hmc5883_configure(){
@@ -135,9 +133,6 @@ private:
 
 class sensor_ms5611 {
 public:
-	sensor_ms5611(){
-
-	}
 	sensor_ms5611(int fd){
 		this->fd=fd;
 		reset();
@@ -146,6 +141,7 @@ public:
 	}
 	double P,T;
 	void update(){
+		//read_adc(0);
 		read_adc(8);
 		calculate();
 	}
@@ -156,7 +152,6 @@ public:
 		//M=molar mass of the gas=0.0289644
 		double tk= t+273.15;
 		double R=8.31432;
-		//TODO: get gravity from accelerometer
 		double g=9.80665;
 		double M=0.0289644;
 		return ((R*tk)/(g*M))*log(p0/p);
@@ -167,7 +162,8 @@ private:
 	int fd;
 	void set_addr(){
 		if (ioctl(fd,I2C_SLAVE,ADDR_MS5611) < 0) {
-			printf("Failed to acquire bus access and/or talk to slave.\n");
+			printf("ms5611 i2c addr error\r\n");
+			exit(1);
 		}
 	}
 	void reset(){
@@ -316,13 +312,13 @@ private:
 		// second order
 		if(temp<2000){
 			// <20C (low temperature)
-			t2=(dt<<2)/(2<<31);
-			off2=5*((temp-2000)<<2)/2;
-			sens2=5*((temp-2000)<<2)/(2<<2);
+			t2=pow(dt,2)/pow(2,31);
+			off2=5*(pow(temp-2000,2))/2;
+			sens2=5*(pow(temp-2000,2))/4;
 			if(temp<-1500){
 				// <-15C (very low temperature)
-				off2=off2+7*((temp+1500)<<2);
-				sens2=sens2+11*((temp+1500)<<2)/2;
+				off2=off2+7*pow(temp+1500,2);
+				sens2=sens2+11*pow(temp+1500,1)/2;
 			}
 		} else {
 			// >=20C (high temperature)
@@ -347,36 +343,37 @@ private:
 
 class sensor_mpu6050 {
 public:
-	sensor_mpu6050(){
 
-	}
 	sensor_mpu6050(int fd){
 		this->fd=fd;
-		init();
+		set_addr();
 		update();
 	}
 
-	float ax,ay,az,tp,gx,gy,gz;
+	float acc[3];
+	float temp;
+	float gyro[3];
+
 	void update(){
-		ax = mpu6050_read16(0x3b,0x3c)/16384.0;
-		ay = mpu6050_read16(0x3d,0x3e)/16384.0;
-		az = mpu6050_read16(0x3f,0x40)/16384.0;
-		tp = mpu6050_read16(0x41,0x42)/340.0+36.53;
-		gx = mpu6050_read16(0x43,0x44)/131.0;
-		gy = mpu6050_read16(0x45,0x46)/131.0;
-		gz = mpu6050_read16(0x47,0x48)/131.0;
+		set_addr();
+		acc[0] = mpu6050_read16(0x3b,0x3c)/16384.0;
+		acc[1] = mpu6050_read16(0x3d,0x3e)/16384.0;
+		acc[2] = mpu6050_read16(0x3f,0x40)/16384.0;
+		temp = mpu6050_read16(0x41,0x42)/340.0+36.53;
+		gyro[0] = mpu6050_read16(0x43,0x44)/131.0;
+		gyro[1] = mpu6050_read16(0x45,0x46)/131.0;
+		gyro[3] = mpu6050_read16(0x47,0x48)/131.0;
 	}
 
 private:
 	int fd;
 	void set_addr(){
 		if (ioctl(fd,I2C_SLAVE,ADDR_MPU6050) < 0) {
-			printf("Failed to acquire bus access and/or talk to slave.\n");
+			printf("mpu6050 i2c addr error\r\n");
+			exit(1);
 		}
 	}
-	void init(){
-		set_addr();
-
+	void configure(){
 		uint8_t buffer[2];
 		//master enable
 		buffer[0]=0x6a;
@@ -390,16 +387,14 @@ private:
 		buffer[0]=0x6b;
 		buffer[1]=0x00;
 		write(fd,buffer,2);
-
 	}
 
 	float mpu6050_read16(uint8_t reg_msb,uint8_t reg_lsb){
-		set_addr();
-
 		uint8_t buffer[2];
 		uint8_t msb;
 		uint8_t lsb;
 		uint16_t *p16;
+
 		p16=(uint16_t*)buffer;
 
 		buffer[0]=reg_msb;
@@ -429,38 +424,7 @@ private:
 
 
 
-class simple_imu {
 
-	//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
-	// theta = atan( x / sqrt (y^2 + z^2)  )
-	// psi   = atan( y / sqrt (x^2 + z^2)  )
-	// phi   = atan( sqrt( x^2 + y^2 ) / z )
-	//
-	sensor_mpu6050 acc_gyro;
-	sensor_hmc5883 mag;
-	sensor_ms5611 baro;
-
-	void bbb_sensors_init(){
-		printf("enable I2C-2 overlay\r\n");
-		system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
-		printf("wait I2C-2 overlay to be ready\r\n");
-		usleep(1000000);
-		int file;
-		if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
-			printf("Failed to open the bus.");
-			exit(1);
-		}
-		acc_gyro=sensor_mpu6050(file);
-		mag=sensor_hmc5883(file);
-		baro=sensor_ms5611(file);
-	}
-
-	simple_imu(){
-
-
-	}
-
-};
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -471,24 +435,13 @@ class simple_imu {
 
 class quaternion_imu {
 private:
-	sensor_mpu6050 acc_gyro;
-	sensor_hmc5883 mag;
-	sensor_ms5611 baro;
+	float input_acc[3];
+	float input_gyro[3];
+	float input_mag[3];
+	float input_baro_p;
+	float input_baro_t;
 
-	void bbb_sensors_init(){
-		printf("enable I2C-2 overlay\r\n");
-		system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
-		printf("wait I2C-2 overlay to be ready\r\n");
-		usleep(1000000);
-		int file;
-		if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
-			printf("Failed to open the bus.");
-			exit(1);
-		}
-		acc_gyro=sensor_mpu6050(file);
-		mag=sensor_hmc5883(file);
-		baro=sensor_ms5611(file);
-	}
+
 
 	void arr3_rad_to_deg(float * arr) {
 		arr[0] *= 180/M_PI;
@@ -523,10 +476,23 @@ private:
 	float sampleFreq; // half the sample period expressed in seconds
 public:
 
+	// acc
+	// gyro in degree/s
+	// mag
+	// baro_p in hpa
+	// baro_t in celcius
+
+	void input_update(float acc[3],float gyro[3],float mag[3],float baro_p,float baro_t){
+		for(int i=0;i<3;i++){
+			input_acc[i]=acc[i];
+			input_gyro[i]=gyro[i];
+			input_mag[i]=mag[i];
+		}
+		input_baro_p=baro_p;
+		input_baro_t=baro_t;
+	}
 
 	quaternion_imu(){
-		bbb_sensors_init();
-
 		// initialize quaternion
 		q0 = 1.0f;
 		q1 = 0.0f;
@@ -544,13 +510,15 @@ public:
 
 		// initialize scale factors to neutral values
 		calibration_init();
-		// zero gyro
-		zeroGyro();
 		// load calibration from eeprom
 		calLoad();
 
 	}
 	void calibration_init(){
+		gyro_off_x=0;
+		gyro_off_y=0;
+		gyro_off_z=0;
+
 		acc_off_x = 0;
 		acc_off_y = 0;
 		acc_off_z = 0;
@@ -565,6 +533,10 @@ public:
 		magn_scale_z = 1;
 	}
 	void calLoad(){
+		gyro_off_x=0;
+		gyro_off_y=0;
+		gyro_off_z=0;
+
 		acc_off_x = 0;
 		acc_off_y = 0;
 		acc_off_z = 0;
@@ -580,30 +552,23 @@ public:
 	}
 
 
-	void zeroGyro(){
-		const int totSamples = 10;
-		float tmpOffsets[] = {0,0,0};
-		for (int i = 0; i < totSamples; i++){
-			acc_gyro.update();
-			tmpOffsets[0] += acc_gyro.gx;
-			tmpOffsets[1] += acc_gyro.gy;
-			tmpOffsets[2] += acc_gyro.gz;
-		}
-		gyro_off_x = tmpOffsets[0] / totSamples;
-		gyro_off_y = tmpOffsets[1] / totSamples;
-		gyro_off_z = tmpOffsets[2] / totSamples;
-	}
 	void getQ(float * q){
-		acc_gyro.update();
-		mag.update();
 
 		now = micros();
 		sampleFreq = 1.0 / ((now - lastUpdate) / 1000000.0);
 		lastUpdate = now;
 
-		AHRSupdate(acc_gyro.gx * M_PI/180, acc_gyro.gy * M_PI/180, acc_gyro.gz * M_PI/180,
-				acc_gyro.ax,acc_gyro.ay,acc_gyro.az,
-				mag.mx,mag.my,mag.mz,true);
+		AHRSupdate(
+				input_gyro[0] * M_PI/180,
+				input_gyro[1] * M_PI/180,
+				input_gyro[2] * M_PI/180,
+				input_acc[0],
+				input_acc[1],
+				input_acc[2],
+				input_mag[0],
+				input_mag[1],
+				input_mag[2]
+				);
 
 		q[0] = q0;
 		q[1] = q1;
@@ -643,9 +608,8 @@ public:
 		return getBaroAlt(def_sea_press);
 	}
 	float getBaroAlt(float sea_press){
-		baro.update();
-		float temp = baro.T;
-		float press = baro.P;
+		float temp = input_baro_t;
+		float press = input_baro_p;
 		return ((pow((sea_press / press), 1/5.257) - 1.0) * (temp + 273.15)) / 0.0065;
 	}
 	void gravityCompensateAcc(float * acc, float * q){
@@ -661,7 +625,7 @@ public:
 		acc[1] = acc[1] - g[1];
 		acc[2] = acc[2] - g[2];
 	}
-	void AHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz,bool use_mag){
+	void AHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz){
 
 		float recipNorm;
 		float q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
@@ -680,7 +644,6 @@ public:
 		q2q3 = q2 * q3;
 		q3q3 = q3 * q3;
 
-		if(use_mag){
 			// Use magnetometer measurement only when valid (avoids NaN in magnetometer normalisation)
 			if((mx != 0.0f) && (my != 0.0f) && (mz != 0.0f)) {
 
@@ -709,7 +672,6 @@ public:
 				halfey = (mz * halfwx - mx * halfwz);
 				halfez = (mx * halfwy - my * halfwx);
 			}
-		}
 
 		// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
 		if((ax != 0.0f) && (ay != 0.0f) && (az != 0.0f)) {
@@ -839,6 +801,13 @@ int get_vmodem_fd(){
 
 	return fd;
 }
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -846,6 +815,9 @@ int get_vmodem_fd(){
 /////////////////////////////////////////////////////////////////////////////////////
 
 void test_basic(){
+
+
+
 	printf("sensors: basic test\r\n");
 
 	//load capes
@@ -854,7 +826,7 @@ void test_basic(){
 	printf("wait I2C-2 overlay to be ready\r\n");
 
 	//wait capes apply
-	usleep(1000000);
+	usleep(1*1000*1000);
 
 	//open i2c
 	int file;
@@ -882,8 +854,18 @@ void test_basic(){
 		float h= baro.altimeter(p0,baro.P,baro.T,1);
 
 		//print
-		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
-		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",mag.mx,mag.my,mag.mz);
+		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",
+				acc_gyro.acc[0],
+				acc_gyro.acc[1],
+				acc_gyro.acc[2],
+				acc_gyro.temp,
+				acc_gyro.gyro[0],
+				acc_gyro.gyro[1],
+				acc_gyro.gyro[2]);
+		printf("hmc5883 mag=%+3.2f %+3.2f %+3.2f | ",
+				mag.mag[0],
+				mag.mag[1],
+				mag.mag[2]);
 		printf("ms5611 p=%f t=%f h=%f\r\n",baro.P,baro.T,h);
 	}
 
@@ -892,15 +874,41 @@ void test_basic(){
 void test_quaternion(char* title){
 	printf("quaternion imu cube-test\r\n");
 
+	//load capes
+	printf("enable I2C-2 overlay\r\n");
+	system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+	printf("wait I2C-2 overlay to be ready\r\n");
+
+	//wait capes apply
+	usleep(1000000);
+
+	//open i2c
+	int file;
+	if ((file = open("/dev/i2c-2",O_RDWR)) < 0) {
+		printf("Failed to open the bus.");
+		exit(1);
+	}
+
+	//start raw sensors
+	sensor_mpu6050 acc_gyro(file);
+	sensor_hmc5883 mag(file);
+	sensor_ms5611 baro(file);
+
+
+
 	//vmodem support - cube test
 	int fd=get_vmodem_fd();
 	char buf[1024];
 
 	float angles[3];
-	quaternion_imu uav;
+	quaternion_imu imu;
+
+
 
 	while(1){
-		uav.getEulerRad(angles);
+
+		//imu.input_update();
+		imu.getEulerRad(angles);
 
 		//vmodem print - cube test
 		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",
@@ -922,7 +930,7 @@ void test_accel_only_imu(char* title){
 	printf("wait I2C-2 overlay to be ready\r\n");
 
 	//wait capes apply
-	usleep(1000000);
+	usleep(1*1000*1000);
 
 	//open i2c
 	int file;
@@ -946,10 +954,10 @@ void test_accel_only_imu(char* title){
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
 
-		float pitch=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
-		float roll=-atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
-		float yaw=0;//atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
-
+		float pitch=atan2f(acc_gyro.acc[1], sqrt(acc_gyro.acc[0]*acc_gyro.acc[0]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
+		float roll=-atan2f(acc_gyro.acc[0], sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
+		float yaw=atan2f(sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[0]*acc_gyro.acc[0]) ,acc_gyro.acc[2]);
+		yaw=0;
 
 		//vmodem print
 		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",title,pitch,roll,yaw,0,0,0);
@@ -997,13 +1005,13 @@ void test_gyro_only_imu(char* title){
 	int gsample=10;
 	for(int i=0;i<gsample;i++){
 		acc_gyro.update();
-		goff[0]+=acc_gyro.gx;
-		goff[1]+=acc_gyro.gy;
-		goff[2]+=acc_gyro.gz;
+		for(int i=0;i<3;i++){
+			goff[i]+=acc_gyro.gyro[i];
+		}
 	}
-	goff[0]/=gsample;
-	goff[1]/=gsample;
-	goff[2]/=gsample;
+	for(int i=0;i<3;i++){
+		goff[i]/=gsample;
+	}
 
 	float gint[3]={0,0,0};
 
@@ -1020,13 +1028,13 @@ void test_gyro_only_imu(char* title){
 
 		acc_gyro.update();
 
-		gstep[0]= (acc_gyro.gx-goff[0])*tdiff;
-		gstep[1]= (acc_gyro.gy-goff[1])*tdiff;
-		gstep[2]= (acc_gyro.gz-goff[2])*tdiff;
+		for(int i=0;i<3;i++){
+			gstep[i]= (acc_gyro.gyro[i]-goff[i])*tdiff;
+		}
 
-		gint[0]+=gstep[0];
-		gint[1]+=gstep[1];
-		gint[2]+=gstep[2];
+		for(int i=0;i<3;i++){
+			gint[i]+=gstep[i];
+		}
 
 		float rx=to_radian(gint[0]);
 		float ry=to_radian(gint[1]);
@@ -1072,15 +1080,16 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 
 	float goff[3]={0,0,0};
 	int gsample=10;
+
 	for(int i=0;i<gsample;i++){
 		acc_gyro.update();
-		goff[0]+=acc_gyro.gx;
-		goff[1]+=acc_gyro.gy;
-		goff[2]+=acc_gyro.gz;
+		for(int i=0;i<3;i++){
+			goff[i]+=acc_gyro.gyro[i];
+		}
 	}
-	goff[0]/=gsample;
-	goff[1]/=gsample;
-	goff[2]/=gsample;
+	for(int i=0;i<3;i++){
+	   goff[i]/=gsample;
+	}
 
 	float gint[3]={0,0,0};
 
@@ -1097,7 +1106,7 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 	//
 	float pavg=0;
 	float tavg=0;
-	int psamples=10;
+	int psamples=100;
 	float baro_press[psamples];
 	float baro_temp[psamples];
 	unsigned int pidx=0;
@@ -1159,26 +1168,12 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		//////////////////////////////////////////////////////////
 		//// Linear acceleration and gravity compensation
 
-		// Find the sample period (between updates).
 		dt = 1 / (pidx / (tdiff) );
-
-		input[0]=acc_gyro.ax;
-		input[1]=acc_gyro.ay;
-		input[2]=acc_gyro.az;
-
-		gravity[0] = alpha * gravity[0] + (1 - alpha) * input[0];
-		gravity[1] = alpha * gravity[1] + (1 - alpha) * input[1];
-		gravity[2] = alpha * gravity[2] + (1 - alpha) * input[2];
-
-		linearAcceleration[0] = input[0] - gravity[0];
-		linearAcceleration[1] = input[1] - gravity[1];
-		linearAcceleration[2] = input[2] - gravity[2];
-
-		//////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////
-
-
+		for(int i=0;i<3;i++){
+			input[i]=acc_gyro.acc[i];
+			gravity[i] = alpha * gravity[i] + (1 - alpha) * input[i];
+			linearAcceleration[i] = input[i] - gravity[i];
+		}
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1190,17 +1185,21 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		//earth gravity=9.80665
 
 		//backup acceleration
-		for(int i=0;i<3;i++) acc_back[i]=acc_now[3];
+		for(int i=0;i<3;i++){
+			acc_back[i]=acc_now[3];
+		}
 		//update acceleration
-		acc_now[0]=input[0];
-		acc_now[1]=input[1];
-		acc_now[2]=0;
-		//reduce mechanical noise
+		for(int i=0;i<3;i++){
+			acc_now[i]=linearAcceleration[i];
+		}
 
+		//reduce mechanical noise
+		/*
 		for(int i=0;i<3;i++){
 			if(acc_now[i]>-0.1&&acc_now[i]<0.1)
 				acc_now[i]=0;
 		}
+		*/
 
 		//convert from g_factor to m/s^2
 		for(int i=0;i<3;i++) acc_now[i]*=9.80665;
@@ -1217,9 +1216,10 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		//////////////////////////////////////////////////////////
 		// Gyroscope relative angles
 
-		grstep[0]= to_radian((acc_gyro.gx-goff[0])*tdiff);
-		grstep[1]= to_radian((acc_gyro.gy-goff[1])*tdiff);
-		grstep[2]= to_radian((acc_gyro.gz-goff[2])*tdiff);
+		for(int i=0;i<3;i++){
+			grstep[i]= to_radian((acc_gyro.gyro[i]-goff[i])*tdiff);
+		}
+
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1227,9 +1227,10 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		// Accelerometer absolute angles
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
-		float pitch=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
-		float roll=-atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
-		float yaw=0;//atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
+		float pitch=atan2f(acc_gyro.acc[1], sqrt(acc_gyro.acc[0]*acc_gyro.acc[0]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
+		float roll=-atan2f(acc_gyro.acc[0], sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
+		float yaw=atan2f(sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[0]*acc_gyro.acc[0]) ,acc_gyro.acc[2]);
+		yaw=0;
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1238,11 +1239,10 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		// COMPASS HEADING USING MAGNETOMETERS AN-203
 
 		float heading = 0;
-		if(mag.my>0) heading = 90  - to_degrees(atan2f(mag.mx,mag.my));
-		if(mag.my<0) heading = 270 - to_degrees(atan2f(mag.mx,mag.my));
-		if(mag.my==0 && mag.mx<0) heading = 180.0;
-		if(mag.my==0 && mag.mx>0) heading = 0.0;
-
+		if(mag.mag[1]>0) heading = 90  - to_degrees(atan2f(mag.mag[0],mag.mag[1]));
+		if(mag.mag[1]<0) heading = 270 - to_degrees(atan2f(mag.mag[0],mag.mag[1]));
+		if(mag.mag[1]==0 && mag.mag[0]<0) heading = 180.0;
+		if(mag.mag[1]==0 && mag.mag[0]>0) heading = 0.0;
 		heading = to_radian(heading);
 
 
@@ -1299,7 +1299,7 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 
 		//calculate relative altitude from start point
 		if(use_altimeter & pidx>2*psamples){
-			altimeter=baro.altimeter(p0,pavg,tavg,1)*100;
+			altimeter=baro.altimeter(p0,baro.P,baro.T,1)*100;
 		}
 		else {
 			altimeter=0;
@@ -1327,6 +1327,7 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 
 }
 
+};
 
 int main(int argc,char** argv){
 
@@ -1334,15 +1335,15 @@ int main(int argc,char** argv){
 		int mode=atoi(argv[1]);
 		printf("mode=%d\r\n",mode);
 		switch(mode){
-		case 1: test_basic(); break;
-		case 2: test_quaternion("GY86 9DOF Quaternion IMU"); break;
-		case 3: test_accel_only_imu("GY-86 3DOF accelerometer only IMU"); break;
-		case 4: test_gyro_only_imu("GY-86 3DOF gyroscope only IMU"); break;
-		case 5: test_6dof_imu("GY86 6DOF comp filter",false,false,false); break;
-		case 6: test_6dof_imu("GY86 6DOF comp filter with altimeter",true,false,false); break;
-		case 7: test_6dof_imu("GY86 6DOF comp filter with altimeter and position",true,true,false); break;
-		case 8: test_6dof_imu("GY86 9DOF comp filter with altimeter and mag",true,false,true); break;
-		case 9: test_6dof_imu("GY86 9DOF comp filter with altimeter and position and mag",true,true,true); break;
+		case 1: gy86::test_basic(); break;
+		case 2: gy86::test_accel_only_imu("GY-86 3DOF accelerometer only IMU"); break;
+		case 3: gy86::test_gyro_only_imu("GY-86 3DOF gyroscope only IMU"); break;
+		case 4: gy86::test_6dof_imu("GY86 6DOF comp filter",false,false,false); break;
+		case 5: gy86::test_6dof_imu("GY86 6DOF comp filter with altimeter",true,false,false); break;
+		case 6: gy86::test_6dof_imu("GY86 6DOF comp filter with altimeter and position",true,true,false); break;
+		case 7: gy86::test_6dof_imu("GY86 9DOF comp filter with altimeter and mag",true,false,true); break;
+		case 8: gy86::test_6dof_imu("GY86 9DOF comp filter with altimeter and position and mag",true,true,true); break;
+		case 9: gy86::test_quaternion("GY86 9DOF Quaternion IMU"); break;
 
 		default:
 			printf("unknown mode\r\n");

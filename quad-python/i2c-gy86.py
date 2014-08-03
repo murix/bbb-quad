@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from Adafruit_I2C import Adafruit_I2C
-from time import sleep
+import time
 import math
 import sys
 import os
@@ -53,7 +53,7 @@ def gy86_read():
  #####################################################
  # ms5611 reset
  ms5611.writeList(0x1e,[])
- sleep(3/1000.0)
+ time.sleep(3/1000.0)
 
  # ms5611 prom
  t=ms5611.readList(0xa2,2)
@@ -83,13 +83,13 @@ def gy86_read():
 
 
  ms5611.writeList(0x48,[])
- sleep(10/1000.0)
+ time.sleep(10/1000.0)
  adc=ms5611.readList(0x00,3)
  d1=adc[0]*65536+adc[1]*256+adc[2]
  #d1=9085466
 
  ms5611.writeList(0x58,[])
- sleep(10/1000.0)
+ time.sleep(10/1000.0)
  adc=ms5611.readList(0x00,3)
  d2=adc[0]*65536+adc[1]*256+adc[2]
  #d2=8569150
