@@ -149,7 +149,7 @@ public:
 		read_adc(8);
 		calculate();
 	}
-	double altimeter(double p0,double p,double t){
+	double altimeter(double p0,double p,double t,double g_factor){
 		//R=gas constant=8.31432
 		//tk=air temperature in measured kelvin
 		//g=earth gravity=9.80665
@@ -851,7 +851,7 @@ void test1(){
 		baro.update();
 
 		//calculate relative altitude from start point
-		float h= baro.altimeter(p0,baro.P,baro.T);
+		float h= baro.altimeter(p0,baro.P,baro.T,1);
 
 		//print
 		printf("mpu6050 acc=%+3.2f %+3.2f %+3.2f temp=%+3.2f gyro=%+3.2f %+3.2f %+3.2f | ",acc_gyro.ax,acc_gyro.ay,acc_gyro.az,acc_gyro.tp,acc_gyro.gx,acc_gyro.gy,acc_gyro.gz);
@@ -875,17 +875,17 @@ void test2(){
 		uav.getEulerRad(angles);
 
 		//vmodem print - cube test
-		int len = sprintf(buf,"GY86 9DOF Quaternion IMU|%f|%f|%f|%f|\r",
+		int len = sprintf(buf,"GY86 9DOF Quaternion IMU|%f|%f|%f|%f|%f|%f|\r",
 				angles[2],
 				angles[1],
-				angles[0],0);
+				angles[0],0,0,0);
 		write(fd,buf,len);
 		printf("%s\n",buf);
 	}
 }
 
 void test3(){
-    printf("accelerometer only cube-test\r\n");
+	printf("accelerometer only cube-test\r\n");
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -923,7 +923,7 @@ void test3(){
 
 
 		//vmodem print
-		int len = sprintf(buf,"GY-86 3DOF accelerometer only IMU|%f|%f|%f|%f|\r",pitch,roll,yaw,0);
+		int len = sprintf(buf,"GY-86 3DOF accelerometer only IMU|%f|%f|%f|%f|%f|%f|\r",pitch,roll,yaw,0,0,0);
 		write(fd,buf,len);
 
 		printf("%s\n",buf);
@@ -938,7 +938,7 @@ double get_timestamp_in_seconds(){
 }
 
 void test4(){
-    printf("gyroscope only cube-test\r\n");
+	printf("gyroscope only cube-test\r\n");
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -1004,7 +1004,7 @@ void test4(){
 		float rz=to_radian(gint[2]);
 
 		//vmodem print
-		int len = sprintf(buf,"GY-86 3DOF gyroscope only IMU|%f|%f|%f|%f|\r",rx,ry,rz,0);
+		int len = sprintf(buf,"GY-86 3DOF gyroscope only IMU|%f|%f|%f|%f|%f|%f|\r",rx,ry,rz,0,0,0);
 		write(fd,buf,len);
 
 		printf("%s\n",buf);
@@ -1060,19 +1060,73 @@ void test5(bool use_altimeter){
 	//complementary filter output in radians
 	float cr[3]={0,0,0};
 
+
 	//
+	float pavg=0;
+	int psamples=50;
+	float pressure[psamples];
+	unsigned int pidx=0;
+	float p0 = 0;
 	float altimeter=0;
-	float p0 = baro.P;
+
+	//
+	//
+	float vpitch[psamples];
+	float vroll[psamples];
+	float pitch_avg = 0;
+	float roll_avg = 0;
+	float pitch_off = 0;
+	float roll_off = 0;
+
+	//
+	float yaw_step_now=0;
+	float yaw_step_back=0;
+
+	//
+	float acc_back[3]={0,0,0};
+	float acc_now[3]={0,0,0};
+	float acc_v_back[3]={0,0,0};
+	float acc_v_now[3]={0,0,0};
+	float acc_p[3]={0,0,0};
 
 	while(1){
 
+		//
 		tback=tnow;
 		tnow=get_timestamp_in_seconds();
 		double tdiff=tnow-tback;
 
+		//
 		acc_gyro.update();
 		baro.update();
 
+		//Implementing Positioning Algorithms Using Accelerometers
+		//http://cache.freescale.com/files/sensors/doc/app_note/AN3397.pdf
+		//earth gravity=9.80665
+
+		//backup acceleration
+		for(int i=0;i<3;i++) acc_back[i]=acc_now[3];
+		//update acceleration
+		acc_now[0]=acc_gyro.ax;
+		acc_now[1]=acc_gyro.ay;
+		acc_now[2]=0;
+		//reduce mechanical noise
+		for(int i=0;i<3;i++){
+			if(acc_now[i]>-0.1&&acc_now[i]<0.1)
+				acc_now[i]=0;
+		}
+		//convert from g_factor to m/s^2
+		for(int i=0;i<3;i++) acc_now[i]*=9.80665;
+
+		//backup speed
+		for(int i=0;i<3;i++) acc_v_back[i]=acc_v_now[i];
+		//speed via trapezoidal integrate of acceleration
+		for(int i=0;i<3;i++) acc_v_now[i]+= acc_now[i]+(acc_now[i]-acc_back[i])/2.0;
+		//position via trapezoidal integrate of speed
+		for(int i=0;i<3;i++) acc_p[i]=acc_v_now[i]+(acc_v_now[i]-acc_v_back[i])/2.0;
+
+
+		// gyroscope
 		grstep[0]= to_radian((acc_gyro.gx-goff[0])*tdiff);
 		grstep[1]= to_radian((acc_gyro.gy-goff[1])*tdiff);
 		grstep[2]= to_radian((acc_gyro.gz-goff[2])*tdiff);
@@ -1082,18 +1136,61 @@ void test5(bool use_altimeter){
 		float roll=-atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
 		float yaw=0;//atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
 
-
+		// complementary filter
 		cr[0]=0.98*(cr[0]+grstep[0])+0.02*(pitch);
 		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(roll);
-		cr[2]+=grstep[2];
 
-		if(use_altimeter){
-			//calculate relative altitude from start point
-			altimeter=baro.altimeter(p0,baro.P,baro.T);
+		// yaw via gyroscope trapezoidal integrate
+		yaw_step_back = yaw_step_now;
+		yaw_step_now = grstep[2];
+		cr[2]+= yaw_step_now + (yaw_step_now-yaw_step_back)/2.0;
+
+		// update circular buffer index
+		pidx++;
+
+		// push to circular buffer
+		pressure[pidx%psamples]=baro.P;
+		vpitch[pidx%psamples]=cr[0];
+		vroll[pidx%psamples]=cr[1];
+
+		// moving average
+		pavg=0.0;
+		pitch_avg=0;
+		roll_avg=0;
+		for(int i=0;i<psamples;i++){
+			pavg+=pressure[i];
+			pitch_avg+=vpitch[i];
+			roll_avg+=vroll[i];
+		}
+		pavg/=psamples;
+		pitch_avg/=psamples;;
+		roll_avg/=psamples;;
+
+
+		// after fill circular buffer set reference value
+		if(pidx==2*psamples){
+			p0=pavg;
+			pitch_off=pitch_avg;
+			roll_off=roll_avg;
+		}
+
+		//calculate relative altitude from start point
+		if(use_altimeter & pidx>2*psamples){
+			altimeter=baro.altimeter(p0,pavg,baro.T,acc_gyro.az)*100;
+		}
+		else {
+			altimeter=0;
 		}
 
 		//vmodem print
-		int len = sprintf(buf,"GY-86 6DOF complementary filter IMU|%f|%f|%f|%f|\r",cr[0],cr[1],cr[2],altimeter);
+		int len = sprintf(buf,"GY-86 6DOF complementary filter IMU|%f|%f|%f|%f|%f|%f|\r",
+				cr[0]-pitch_off,
+				cr[1]-roll_off,
+				cr[2],
+				acc_p[0],
+				acc_p[1],
+				acc_p[2]);	//altimeter);
+
 		write(fd,buf,len);
 
 		printf("%s\n",buf);
