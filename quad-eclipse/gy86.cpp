@@ -304,12 +304,40 @@ private:
 	}
 
 	int64_t dt,temp,off,sens,p;
+	int64_t t2,off2,sens2;
 	void calculate(){
+
+		///////////////////////////////
+		// first order
 		dt =( (int64_t  )d[2]) - (( int64_t) c[5]*(1<<8));
 		temp = 2000 + dt*c[6]/(1<<23);
 		off= (( int64_t)  c[2]*(1<<16) ) + ( ( int64_t)  c[4]*dt/(1<<7) );
 		sens= (( int64_t) c[1]*(1<<15) )+ (( int64_t)   c[3]*dt/(1<<8));
+		// second order
+		if(temp<2000){
+			// <20C (low temperature)
+			t2=(dt<<2)/(2<<31);
+			off2=5*((temp-2000)<<2)/2;
+			sens2=5*((temp-2000)<<2)/(2<<2);
+			if(temp<-1500){
+				// <-15C (very low temperature)
+				off2=off2+7*((temp+1500)<<2);
+				sens2=sens2+11*((temp+1500)<<2)/2;
+			}
+		} else {
+			// >=20C (high temperature)
+			t2=0;
+			off2=0;
+			sens2=0;
+		}
+		temp = temp-t2;
+		off=off-off2;
+		sens=sens-sens2;
+		//////////////////////////////////
+		//
 		p=(d[1]*sens/(1<<21)-off)/(1<<15);
+
+
 		//
 		T=temp/100.0;
 		P=p/100.0;
@@ -1012,7 +1040,11 @@ void test_gyro_only_imu(char* title){
 	}
 }
 
-void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
+// Inertial measurement unit (IMU)
+// Attitude and heading reference system (ARHS)
+// http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/
+
+void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag){
 
 	//load capes
 	printf("enable I2C-2 overlay\r\n");
@@ -1064,8 +1096,10 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
 
 	//
 	float pavg=0;
-	int psamples=50;
-	float pressure[psamples];
+	float tavg=0;
+	int psamples=10;
+	float baro_press[psamples];
+	float baro_temp[psamples];
 	unsigned int pidx=0;
 	float p0 = 0;
 	float altimeter=0;
@@ -1101,20 +1135,29 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
 
 
 	while(1){
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		// Update sensors
+
+		acc_gyro.update();
+		mag.update();
+		baro.update();
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
-		////
+		//// Time tracking
 
 		tback=tnow;
 		tnow=get_timestamp_in_seconds();
 		double tdiff=tnow-tback;
 
-		//////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////
 
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//// Linear acceleration and gravity compensation
 
 		// Find the sample period (between updates).
 		dt = 1 / (pidx / (tdiff) );
@@ -1135,13 +1178,12 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 
-		//
-		acc_gyro.update();
-		baro.update();
+
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
+		/// Position tracking
 
 		//Implementing Positioning Algorithms Using Accelerometers
 		//http://cache.freescale.com/files/sensors/doc/app_note/AN3397.pdf
@@ -1173,44 +1215,77 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
+		// Gyroscope relative angles
 
-		// gyroscope
 		grstep[0]= to_radian((acc_gyro.gx-goff[0])*tdiff);
 		grstep[1]= to_radian((acc_gyro.gy-goff[1])*tdiff);
 		grstep[2]= to_radian((acc_gyro.gz-goff[2])*tdiff);
+
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		// Accelerometer absolute angles
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
 		float pitch=atan2f(acc_gyro.ay, sqrt(acc_gyro.ax*acc_gyro.ax+acc_gyro.az*acc_gyro.az) );
 		float roll=-atan2f(acc_gyro.ax, sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.az*acc_gyro.az) );
 		float yaw=0;//atan2f(sqrt(acc_gyro.ay*acc_gyro.ay+acc_gyro.ax*acc_gyro.ax) ,acc_gyro.az);
 
-		// complementary filter
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		// Magnetometer heading
+		// COMPASS HEADING USING MAGNETOMETERS AN-203
+
+		float heading = 0;
+		if(mag.my>0) heading = 90  - to_degrees(atan2f(mag.mx,mag.my));
+		if(mag.my<0) heading = 270 - to_degrees(atan2f(mag.mx,mag.my));
+		if(mag.my==0 && mag.mx<0) heading = 180.0;
+		if(mag.my==0 && mag.mx>0) heading = 0.0;
+
+		heading = to_radian(heading);
+
+
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		// Complementary filter - gyroscope and accelerometer
+
 		cr[0]=0.98*(cr[0]+grstep[0])+0.02*(pitch);
 		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(roll);
 
-		// yaw via gyroscope trapezoidal integrate
-		yaw_step_back = yaw_step_now;
-		yaw_step_now = grstep[2];
-		cr[2]+= yaw_step_now + (yaw_step_now-yaw_step_back)/2.0;
+		if(use_mag){
+			// Complementary filter - gyroscope and magnetometer
+			cr[2]=0.98*(cr[1]+grstep[1])+0.02*(heading);
+		} else {
+			// yaw via gyroscope trapezoidal integrate
+			yaw_step_back = yaw_step_now;
+			yaw_step_now = grstep[2];
+			cr[2]+= yaw_step_now + (yaw_step_now-yaw_step_back)/2.0;
+		}
 
 		// update circular buffer index
 		pidx++;
 
 		// push to circular buffer
-		pressure[pidx%psamples]=baro.P;
+		baro_press[pidx%psamples]=baro.P;
+		baro_temp[pidx%psamples]=baro.T;
 		vpitch[pidx%psamples]=cr[0];
 		vroll[pidx%psamples]=cr[1];
 
 		// moving average
 		pavg=0.0;
+		tavg=0.0;
 		pitch_avg=0;
 		roll_avg=0;
 		for(int i=0;i<psamples;i++){
-			pavg+=pressure[i];
+			pavg+=baro_press[i];
+			tavg+=baro_temp[i];
 			pitch_avg+=vpitch[i];
 			roll_avg+=vroll[i];
 		}
 		pavg/=psamples;
+		tavg/=psamples;
 		pitch_avg/=psamples;;
 		roll_avg/=psamples;;
 
@@ -1224,7 +1299,7 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position){
 
 		//calculate relative altitude from start point
 		if(use_altimeter & pidx>2*psamples){
-			altimeter=baro.altimeter(p0,pavg,baro.T,acc_gyro.az)*100;
+			altimeter=baro.altimeter(p0,pavg,tavg,1)*100;
 		}
 		else {
 			altimeter=0;
@@ -1263,9 +1338,11 @@ int main(int argc,char** argv){
 		case 2: test_quaternion("GY86 9DOF Quaternion IMU"); break;
 		case 3: test_accel_only_imu("GY-86 3DOF accelerometer only IMU"); break;
 		case 4: test_gyro_only_imu("GY-86 3DOF gyroscope only IMU"); break;
-		case 5: test_6dof_imu("GY86 6DOF comp filter",false,false); break;
-		case 6: test_6dof_imu("GY86 6DOF comp filter with altimeter",true,false); break;
-		case 7: test_6dof_imu("GY86 6DOF comp filter with altimeter and position",true,true); break;
+		case 5: test_6dof_imu("GY86 6DOF comp filter",false,false,false); break;
+		case 6: test_6dof_imu("GY86 6DOF comp filter with altimeter",true,false,false); break;
+		case 7: test_6dof_imu("GY86 6DOF comp filter with altimeter and position",true,true,false); break;
+		case 8: test_6dof_imu("GY86 9DOF comp filter with altimeter and mag",true,false,true); break;
+		case 9: test_6dof_imu("GY86 9DOF comp filter with altimeter and position and mag",true,true,true); break;
 
 		default:
 			printf("unknown mode\r\n");
