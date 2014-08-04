@@ -517,7 +517,7 @@ public:
 				input_mag[0],
 				input_mag[1],
 				input_mag[2]
-				);
+		);
 
 		q[0] = q0;
 		q[1] = q1;
@@ -593,34 +593,34 @@ public:
 		q2q3 = q2 * q3;
 		q3q3 = q3 * q3;
 
-			// Use magnetometer measurement only when valid (avoids NaN in magnetometer normalisation)
-			if((mx != 0.0f) && (my != 0.0f) && (mz != 0.0f)) {
+		// Use magnetometer measurement only when valid (avoids NaN in magnetometer normalisation)
+		if((mx != 0.0f) && (my != 0.0f) && (mz != 0.0f)) {
 
-				float hx, hy, bx, bz;
-				float halfwx, halfwy, halfwz;
+			float hx, hy, bx, bz;
+			float halfwx, halfwy, halfwz;
 
-				// Normalise magnetometer measurement
-				recipNorm = invSqrt(mx * mx + my * my + mz * mz);
-				mx *= recipNorm;
-				my *= recipNorm;
-				mz *= recipNorm;
+			// Normalise magnetometer measurement
+			recipNorm = invSqrt(mx * mx + my * my + mz * mz);
+			mx *= recipNorm;
+			my *= recipNorm;
+			mz *= recipNorm;
 
-				// Reference direction of Earth's magnetic field
-				hx = 2.0f * (mx * (0.5f - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2));
-				hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
-				bx = sqrt(hx * hx + hy * hy);
-				bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+			// Reference direction of Earth's magnetic field
+			hx = 2.0f * (mx * (0.5f - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2));
+			hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+			bx = sqrt(hx * hx + hy * hy);
+			bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
 
-				// Estimated direction of magnetic field
-				halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
-				halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
-				halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);
+			// Estimated direction of magnetic field
+			halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+			halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+			halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);
 
-				// Error is sum of cross product between estimated direction and measured direction of field vectors
-				halfex = (my * halfwz - mz * halfwy);
-				halfey = (mz * halfwx - mx * halfwz);
-				halfez = (mx * halfwy - my * halfwx);
-			}
+			// Error is sum of cross product between estimated direction and measured direction of field vectors
+			halfex = (my * halfwz - mz * halfwy);
+			halfey = (mz * halfwx - mx * halfwz);
+			halfez = (mx * halfwy - my * halfwx);
+		}
 
 		// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
 		if((ax != 0.0f) && (ay != 0.0f) && (az != 0.0f)) {
@@ -1064,72 +1064,99 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 
 	//vmodem support
 	int fd=get_vmodem_fd();
-	char buf[1024];
+
+
+	////////////////////////////////////////////
+	////////////////////////////////////////////
+	////////////////////////////////////////////
+	// calculate gyroscope offset
 
 	float goff[3]={0,0,0};
-	int gsample=10;
+	int gsamples=30;
 
-	for(int i=0;i<gsample;i++){
+	for(int i=0;i<gsamples;i++){
 		acc_gyro.update();
 		for(int i=0;i<3;i++){
 			goff[i]+=acc_gyro.gyro[i];
 		}
 	}
 	for(int i=0;i<3;i++){
-	   goff[i]/=gsample;
+		goff[i]/=gsamples;
 	}
 
-	float gint[3]={0,0,0};
-
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	//time tracking
 	double tback=get_timestamp_in_seconds();
 	double tnow=get_timestamp_in_seconds();
 
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
 	//gyroscope distance in radians
 	float grstep[3]={0,0,0};
 
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
 	//complementary filter output in radians
 	float cr[3]={0,0,0};
 
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	// altimeter
+	float havg=0;
+	float hoff=0;
+	int hsamples=100;
+	float hring[hsamples];
+	unsigned int hidx=0;
 
-	//
-	float pavg=0;
-	float tavg=0;
-	int psamples=100;
-	float baro_press[psamples];
-	float baro_temp[psamples];
-	unsigned int pidx=0;
-	float p0 = 0;
-	float altimeter=0;
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	// pitch and roll offset
 
-	//
-	//
-	float vpitch[psamples];
-	float vroll[psamples];
+	float vpitch[hsamples];
 	float pitch_avg = 0;
-	float roll_avg = 0;
 	float pitch_off = 0;
+
+	float vroll[hsamples];
+	float roll_avg = 0;
 	float roll_off = 0;
 
-	//
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	// yaw tracking
+
 	float yaw_step_now=0;
 	float yaw_step_back=0;
 
-	//
+
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	// position tracking
+
 	float acc_back[3]={0,0,0};
 	float acc_now[3]={0,0,0};
 	float acc_v_back[3]={0,0,0};
 	float acc_v_now[3]={0,0,0};
 	float acc_p[3]={0,0,0};
 
+	///////////////////////////////////////////
+	///////////////////////////////////////////
+	///////////////////////////////////////////
 	// Android Accelerometer: Low-Pass Filter Estimated Linear Acceleration
 	// http://www.kircherelectronics.com/blog/index.php/11-android/sensors/10-low-pass-filter-linear-acceleration
 	float gravity[3]={0,0,0};
 	float linearAcceleration[3]={0,0,0};
 	float input[3]={0,0,0};
-	float timeConstant = 0.18f;
-	float alpha = 0.9f;
-	float dt = 0;
 
+	bool debug=false;
+	bool calib_ok=false;
 
 	while(1){
 		//////////////////////////////////////////////////////////
@@ -1141,6 +1168,20 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		mag.update();
 		baro.update();
 
+		if(debug)printf("acc=%f|%f|%f atc=%f gyro=%f|%f|%f mag=%f|%f|%f btc=%f p=%f\r\n",
+				acc_gyro.acc[0],
+				acc_gyro.acc[1],
+				acc_gyro.acc[2],
+				acc_gyro.tc,
+				acc_gyro.gyro[0],
+				acc_gyro.gyro[1],
+				acc_gyro.gyro[2],
+				mag.mag[0],
+				mag.mag[1],
+				mag.mag[2],
+				baro.T,
+				baro.P);
+
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1150,18 +1191,33 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		tnow=get_timestamp_in_seconds();
 		double tdiff=tnow-tback;
 
+		float freq = 1/tdiff;
+		if(debug)printf("frequency=%fHz tdiff=%f\r\n",freq,tdiff);
+
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//// Linear acceleration and gravity compensation
 
-		dt = 1 / (pidx / (tdiff) );
+		float desired_reponse_time=0.2;
+		float alpha = desired_reponse_time/(desired_reponse_time/tdiff);
+		if(debug)printf("alpha=%f\r\n",alpha);
+
 		for(int i=0;i<3;i++){
 			input[i]=acc_gyro.acc[i];
 			gravity[i] = alpha * gravity[i] + (1 - alpha) * input[i];
 			linearAcceleration[i] = input[i] - gravity[i];
 		}
+
+		if(debug)printf("g=%f|%f|%f l=%f|%f|%f\r\n",
+				gravity[0],
+				gravity[1],
+				gravity[2],
+				linearAcceleration[0],
+				linearAcceleration[1],
+				linearAcceleration[2]
+		);
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1178,26 +1234,23 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		}
 		//update acceleration
 		for(int i=0;i<3;i++){
-			acc_now[i]=linearAcceleration[i];
+			acc_now[i]=acc_gyro.acc[i];
 		}
-
-		//reduce mechanical noise
-		/*
-		for(int i=0;i<3;i++){
-			if(acc_now[i]>-0.1&&acc_now[i]<0.1)
-				acc_now[i]=0;
-		}
-		*/
-
-		//convert from g_factor to m/s^2
-		for(int i=0;i<3;i++) acc_now[i]*=9.80665;
-
 		//backup speed
 		for(int i=0;i<3;i++) acc_v_back[i]=acc_v_now[i];
 		//speed via trapezoidal integrate of acceleration
 		for(int i=0;i<3;i++) acc_v_now[i]+= acc_now[i]+(acc_now[i]-acc_back[i])/2.0;
 		//position via trapezoidal integrate of speed
 		for(int i=0;i<3;i++) acc_p[i]=acc_v_now[i]+(acc_v_now[i]-acc_v_back[i])/2.0;
+
+		if(debug)printf("speed=%f|%f|%f position=%f|%f|%f\r\n",
+				acc_v_now[0],
+				acc_v_now[1],
+				acc_v_now[2],
+				acc_p[0],
+				acc_p[1],
+				acc_p[2]
+		);
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1208,6 +1261,8 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 			grstep[i]= to_radian((acc_gyro.gyro[i]-goff[i])*tdiff);
 		}
 
+		if(debug)printf("gyro step=%f|%f|%f\r\n",
+				grstep[0],grstep[1],grstep[2]);
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1218,7 +1273,8 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		float pitch=atan2f(acc_gyro.acc[1], sqrt(acc_gyro.acc[0]*acc_gyro.acc[0]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
 		float roll=-atan2f(acc_gyro.acc[0], sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
 		float yaw=atan2f(sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[0]*acc_gyro.acc[0]) ,acc_gyro.acc[2]);
-		yaw=0;
+
+		if(debug)printf("angles by acc = %f|%f|%f\r\n",pitch,roll,yaw);
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -1233,80 +1289,87 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 		if(mag.mag[1]==0 && mag.mag[0]>0) heading = 0.0;
 		heading = to_radian(heading);
 
+		if(debug)printf("heading=%f (%f degrees)\r\n",heading,to_degrees(heading));
 
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////
 		// Complementary filter - gyroscope and accelerometer
 
-		cr[0]=0.98*(cr[0]+grstep[0])+0.02*(pitch);
-		cr[1]=0.98*(cr[1]+grstep[1])+0.02*(roll);
+		cr[0]=(1-alpha)*(cr[0]+grstep[0])+(alpha)*(pitch);
+		cr[1]=(1-alpha)*(cr[1]+grstep[1])+(alpha)*(roll);
+		if(debug)printf("comp filter gyro+acc pitch=%f roll=%f\r\n",cr[0],cr[1]);
 
 		if(use_mag){
 			// Complementary filter - gyroscope and magnetometer
-			cr[2]=0.98*(cr[1]+grstep[1])+0.02*(heading);
+			cr[2]=(1-alpha)*(cr[1]+grstep[1])+(alpha)*(heading);
+			if(debug)printf("comp filter gyro+mag yaw=%f\r\n",cr[2]);
 		} else {
 			// yaw via gyroscope trapezoidal integrate
 			yaw_step_back = yaw_step_now;
 			yaw_step_now = grstep[2];
 			cr[2]+= yaw_step_now + (yaw_step_now-yaw_step_back)/2.0;
+			if(debug)printf("yaw by gyro integration = %f\r\n",cr[2]);
 		}
 
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
 		// update circular buffer index
-		pidx++;
-
-		// push to circular buffer
-		baro_press[pidx%psamples]=baro.P;
-		baro_temp[pidx%psamples]=baro.T;
-		vpitch[pidx%psamples]=cr[0];
-		vroll[pidx%psamples]=cr[1];
-
-		// moving average
-		pavg=0.0;
-		tavg=0.0;
-		pitch_avg=0;
-		roll_avg=0;
-		for(int i=0;i<psamples;i++){
-			pavg+=baro_press[i];
-			tavg+=baro_temp[i];
-			pitch_avg+=vpitch[i];
-			roll_avg+=vroll[i];
-		}
-		pavg/=psamples;
-		tavg/=psamples;
-		pitch_avg/=psamples;;
-		roll_avg/=psamples;;
 
 
-		// after fill circular buffer set reference value
-		if(pidx==2*psamples){
-			p0=pavg;
-			pitch_off=pitch_avg;
-			roll_off=roll_avg;
-		}
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		// altimeter MAVG
 
-		//calculate relative altitude from start point
-		if(use_altimeter & pidx>2*psamples){
-			altimeter=baro.altimeter(p0,baro.P,baro.T,1)*100;
-		}
-		else {
-			altimeter=0;
+
+		hring[hidx%hsamples]=baro.altimeter(1013.25,baro.P,baro.T,1)*100;
+		vpitch[hidx%hsamples]=cr[0];
+		vroll[hidx%hsamples]=cr[1];
+		hidx++;
+		if(hidx>hsamples){
+			havg=0;
+			pitch_avg=0;
+			roll_avg=0;
+			for(int i=0;i<hsamples;i++){
+				havg+=hring[i];
+				pitch_avg+=vpitch[i];
+				roll_avg+=vroll[i];
+			}
+			havg/=hsamples;
+			pitch_avg/=hsamples;;
+			roll_avg/=hsamples;;
+
+			if(!calib_ok){
+				calib_ok=true;
+				pitch_off=pitch_avg;
+				roll_off=roll_avg;
+				hoff=havg;
+			}
+
 		}
 
-		if(!use_position){
-			acc_p[0]=0;
-			acc_p[1]=0;
-		}
+		if(debug)printf("havg=%f\r\n",havg);
+		if(debug)printf("pitch_avg=%f roll_avg=%f\r\n",pitch_avg,roll_avg);
+
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+
+
 
 		//vmodem print
+
+		char buf[1024];
 		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",
 				title,
 				cr[0]-pitch_off,
 				cr[1]-roll_off,
 				cr[2],
-				acc_p[0],
-				acc_p[1],
-				altimeter);
+				0.0,
+				0.0,
+				havg-hoff);
 
 		write(fd,buf,len);
 
