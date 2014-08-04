@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <math.h>
-#include <linux/i2c-dev.h>
+#include "i2c-dev.h"
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -333,82 +333,43 @@ public:
 
 };
 
+
 class sensor_mpu6050 {
 public:
-	float acc[3];
-	float temp;
-	float gyro[3];
 	int fd;
+	float acc[3];
+	float gyro[3];
+	float tc;
 
 	sensor_mpu6050(int fd){
 		this->fd=fd;
-		set_addr();
-		update();
 	}
 	void update(){
-		set_addr();
-		acc[0]  = mpu6050_read16(0x3b,0x3c)/16384.0;
-		acc[1]  = mpu6050_read16(0x3d,0x3e)/16384.0;
-		acc[2]  = mpu6050_read16(0x3f,0x40)/16384.0;
-		temp    = mpu6050_read16(0x41,0x42)/340.0+36.53;
-		gyro[0] = mpu6050_read16(0x43,0x44)/131.0;
-		gyro[1] = mpu6050_read16(0x45,0x46)/131.0;
-		gyro[3] = mpu6050_read16(0x47,0x48)/131.0;
-	}
-	void set_addr(){
-		if (ioctl(this->fd,I2C_SLAVE_FORCE,ADDR_MPU6050) < 0) {
-			printf("mpu6050 i2c addr error\r\n");
-			//exit(1);
-		}
-	}
-	void configure(){
-		uint8_t buffer[2];
+		ioctl(fd,I2C_SLAVE,0x68);
 		//master enable
-		buffer[0]=0x6a;
-		buffer[1]=0x00;
-		write(fd,buffer,2);
+		i2c_smbus_write_byte_data(fd,0x6a,0x00);
 		//i2c bypass
-		buffer[0]=0x37;
-		buffer[1]=0x02;
-		write(fd,buffer,2);
+		i2c_smbus_write_byte_data(fd,0x37,0x02);
 		//wake up from sleep
-		buffer[0]=0x6b;
-		buffer[1]=0x00;
-		write(fd,buffer,2);
+		i2c_smbus_write_byte_data(fd,0x6b,0x00);
+		//read all
+		uint16_t vu[7];
+		int16_t vs[7];
+		i2c_smbus_read_i2c_block_data(fd,0x3b,14,(uint8_t*)vu);
+		for(int i=0;i<7;i++){
+			vs[i]=(int16_t) __bswap_16(vu[i]);
+		}
+		//
+		acc[0] =vs[0]/16384.0;
+		acc[1] =vs[1]/16384.0;
+		acc[2] =vs[2]/16384.0;
+		tc     =vs[3]/340.0 + 36.53;
+		gyro[0]=vs[4]/131.0;
+		gyro[1]=vs[5]/131.0;
+		gyro[2]=vs[6]/131.0;
 	}
-
-	float mpu6050_read16(uint8_t reg_msb,uint8_t reg_lsb){
-		uint8_t buffer[2];
-		uint8_t msb;
-		uint8_t lsb;
-		uint16_t *p16;
-
-		p16=(uint16_t*)buffer;
-
-		buffer[0]=reg_msb;
-		write(fd,buffer,1);
-		read(fd,&msb,1);
-
-		buffer[0]=reg_lsb;
-		write(fd,buffer,1);
-		read(fd,&lsb,1);
-
-		buffer[0]=lsb;
-		buffer[1]=msb;
-
-		int16_t value = p16[0];
-
-		float fvalue = value;
-
-		return fvalue;
-	}
-
 };
 
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -823,6 +784,7 @@ void test_basic(){
 		printf("Failed to open the bus.");
 		exit(1);
 	}
+	printf("i2c fd=%d\r\n",file);
 
 	//start raw sensors
 	sensor_mpu6050 acc_gyro(file);
@@ -847,7 +809,7 @@ void test_basic(){
 				acc_gyro.acc[0],
 				acc_gyro.acc[1],
 				acc_gyro.acc[2],
-				acc_gyro.temp,
+				acc_gyro.tc,
 				acc_gyro.gyro[0],
 				acc_gyro.gyro[1],
 				acc_gyro.gyro[2]);
@@ -895,16 +857,21 @@ void test_quaternion(char* title){
 
 
 	while(1){
+		//
+		acc_gyro.update();
+		mag.update();
+		baro.update();
 
-		//imu.input_update();
+		//
+		imu.input_update(acc_gyro.acc,acc_gyro.gyro,mag.mag,baro.P,baro.T);
 		imu.getEulerRad(angles);
-
 		//vmodem print - cube test
 		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",
 				title,
 				angles[2],
-				angles[1],
-				angles[0],0,0,0);
+				-angles[1],
+				-angles[0],
+				0,0,0);
 		write(fd,buf,len);
 		printf("%s\n",buf);
 	}
@@ -1366,10 +1333,7 @@ int main(int argc,char** argv){
 		case 7: gy86::test_6dof_imu("GY86 9DOF comp filter with altimeter and mag",true,false,true); break;
 		case 8: gy86::test_6dof_imu("GY86 9DOF comp filter with altimeter and position and mag",true,true,true); break;
 		case 9: gy86::test_quaternion("GY86 9DOF Quaternion IMU"); break;
-
-		default:
-			printf("unknown mode\r\n");
-			break;
+		default: printf("unknown mode\r\n"); break;
 		}
 	}
 	else {

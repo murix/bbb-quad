@@ -13,6 +13,8 @@ target_link_libraries(pru-motor-test prussdrv pthread)
 
 add_executable(ms5611-test ms5611-test.cpp)
 
+add_executable(mpu6050-test mpu6050-test.cpp)
+
 add_executable(gy86 gy86.cpp)
 target_link_libraries(gy86 m)
 
