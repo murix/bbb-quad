@@ -15,8 +15,24 @@
 #include <unistd.h> /* UNIX standard function definitions */
 #include <sys/time.h>
 #include <termios.h> /* POSIX terminal control definitions */
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 namespace gy86 {
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #define ADDR_MPU6050 0x68
 #define ADDR_HMC5883 0x1e
@@ -392,6 +408,51 @@ private:
 
 
 
+	static void *imu_udp_server(void *arg)
+	{
+		quaternion_imu* imu=(quaternion_imu*) arg;
+
+		   int sockfd,n;
+		   struct sockaddr_in servaddr,cliaddr;
+		   socklen_t len;
+		   char mesg[1000];
+
+		   sockfd=socket(AF_INET,SOCK_DGRAM,0);
+
+		   bzero(&servaddr,sizeof(servaddr));
+		   servaddr.sin_family = AF_INET;
+		   servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
+		   servaddr.sin_port=htons(32000);
+		   bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
+
+		   for (;;)
+		   {
+		      len = sizeof(cliaddr);
+		      n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
+		      mesg[n] = 0;
+		      printf("-------------------------------------------------------\r\n");
+		      printf("Received the following:\r\n");
+		      printf("%s\r\n",mesg);
+		      printf("-------------------------------------------------------\r\n");
+		      printf("Response with following:\r\n");
+
+
+		      int len=sprintf(mesg,"Q_IMU_UDP|%f|%f|%f|%f|%f|%f|",
+		    		  imu->cache_euler_radian[2],
+		    		  -imu->cache_euler_radian[1],
+		    		  -imu->cache_euler_radian[0],0,0,0);
+		      printf("%s\r\n",mesg);
+		      printf("-------------------------------------------------------\r\n");
+
+		      sendto(sockfd,mesg,len,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
+
+		   }
+
+		   return NULL;
+	}
+
+
+
 	void arr3_rad_to_deg(float * arr) {
 		arr[0] *= 180/M_PI;
 		arr[1] *= 180/M_PI;
@@ -409,6 +470,10 @@ private:
 		y.f = y.f * ( 1.5f - ( number * 0.5f * y.f * y.f ) );
 		return y.f;
 	}
+
+
+
+
 
 	float gyro_off_x, gyro_off_y, gyro_off_z;
 	float acc_off_x, acc_off_y, acc_off_z;
@@ -441,7 +506,14 @@ public:
 		input_baro_t=baro_t;
 	}
 
+	void start_server(){
+		pthread_t id;
+		pthread_create(&id, 0, (void* (*)(void*))&quaternion_imu::imu_udp_server, this);
+	}
+
 	quaternion_imu(){
+
+
 		// initialize quaternion
 		q0 = 1.0f;
 		q1 = 0.0f;
@@ -524,16 +596,28 @@ public:
 		q[2] = q2;
 		q[3] = q3;
 	}
+
+	float cache_euler_degree[3];
 	void getEuler(float * angles){
 		getEulerRad(angles);
 		arr3_rad_to_deg(angles);
+
+		cache_euler_degree[0]=angles[0];
+		cache_euler_degree[1]=angles[1];
+		cache_euler_degree[2]=angles[2];
 	}
+
+	float cache_euler_radian[3];
 	void getEulerRad(float * angles){
 		float q[4]; // quaternion
 		getQ(q);
 		angles[0] = atan2(2 * q[1] * q[2] - 2 * q[0] * q[3], 2 * q[0]*q[0] + 2 * q[1] * q[1] - 1); // psi
 		angles[1] = -asin(2 * q[1] * q[3] + 2 * q[0] * q[2]); // theta
 		angles[2] = atan2(2 * q[2] * q[3] - 2 * q[0] * q[1], 2 * q[0] * q[0] + 2 * q[3] * q[3] - 1); // phi
+
+		cache_euler_radian[0]=angles[0];
+		cache_euler_radian[1]=angles[1];
+		cache_euler_radian[2]=angles[2];
 	}
 	void getYawPitchRoll(float * ypr){
 		getYawPitchRollRad(ypr);
@@ -824,7 +908,7 @@ void test_basic(){
 
 }
 
-void test_quaternion(char* title){
+void test_quaternion(char* title,bool use_mag){
 	printf("quaternion imu cube-test\r\n");
 
 	//load capes
@@ -850,22 +934,27 @@ void test_quaternion(char* title){
 
 
 	//vmodem support - cube test
-	int fd=get_vmodem_fd();
+	//int fd=get_vmodem_fd();
 	char buf[1024];
 
 	float angles[3];
 	quaternion_imu imu;
 
-
+	imu.start_server();
 
 	while(1){
 		//
 		acc_gyro.update();
 		mag.update();
 		baro.update();
+		if(use_mag){
+			//
+			imu.input_update(acc_gyro.acc,acc_gyro.gyro,mag.mag,baro.P,baro.T);
+		} else {
+			float magd[3]={0,0,0};
+			imu.input_update(acc_gyro.acc,acc_gyro.gyro,magd,baro.P,baro.T);
+		}
 
-		//
-		imu.input_update(acc_gyro.acc,acc_gyro.gyro,mag.mag,baro.P,baro.T);
 		imu.getEulerRad(angles);
 		//vmodem print - cube test
 		int len = sprintf(buf,"%s|%f|%f|%f|%f|%f|%f|\r",
@@ -874,10 +963,12 @@ void test_quaternion(char* title){
 				-angles[1],
 				-angles[0],
 				0,0,0);
-		write(fd,buf,len);
+		//write(fd,buf,len);
 		printf("%s\n",buf);
 	}
 }
+
+
 
 void test_accel_only_imu(char* title){
 	printf("accelerometer only cube-test\r\n");
@@ -1383,9 +1474,14 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 
 };
 
+
+
+
+
 int main(int argc,char** argv){
 
 	if(argc==2){
+
 		int mode=atoi(argv[1]);
 		printf("mode=%d\r\n",mode);
 		switch(mode){
@@ -1398,7 +1494,8 @@ int main(int argc,char** argv){
 		case 6: gy86::test_6dof_imu("GY86 6DOF comp filter with altimeter and position",true,true,false); break;
 		case 7: gy86::test_6dof_imu("GY86 9DOF comp filter with altimeter and mag",true,false,true); break;
 		case 8: gy86::test_6dof_imu("GY86 9DOF comp filter with altimeter and position and mag",true,true,true); break;
-		case 9: gy86::test_quaternion("GY86 9DOF Quaternion IMU"); break;
+		case 9: gy86::test_quaternion("GY86 9DOF Quaternion IMU",true); break;
+		case 10: gy86::test_quaternion("GY86 6DOF Quaternion IMU",false); break;
 		default: printf("unknown mode\r\n"); break;
 		}
 	}

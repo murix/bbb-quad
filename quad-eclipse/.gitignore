@@ -12,3 +12,4 @@ CMakeCache.txt
 Makefile
 
 mpu6050-test
+socket-test

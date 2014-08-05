@@ -2,7 +2,42 @@
 
 import processing.serial.*;
 import processing.opengl.*;
+import processing.net.*; 
+import java.io.*; 
+import java.net.*;
 
+void sendrecv(){
+  (new Thread() {
+  public void run() {
+
+   while(true){ 
+  try {
+  DatagramSocket clientSocket = new DatagramSocket();  
+  clientSocket.setSoTimeout(1000); 
+  InetAddress IPAddress = InetAddress.getByName("beaglebone.local");       
+  byte[] sendData = new byte[1024];       
+  byte[] receiveData = new byte[1024];       
+  String sentence = "g";       
+  sendData = sentence.getBytes();       
+  DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 32000);       
+  clientSocket.send(sendPacket);       
+  DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);       
+  clientSocket.receive(receivePacket);       
+  String modifiedSentence = new String(receivePacket.getData());       
+  //System.out.println("FROM SERVER:" + modifiedSentence);  
+  decode_string(modifiedSentence);  
+  clientSocket.close();
+  } catch(Exception ex){
+  }
+  
+   }
+    }
+ }).start();
+
+}
+
+
+Client myClient; 
 Serial myPort;  
 final String serialPort = "/dev/vmodem"; // replace this with your serial port. On windows you will need something like "COM1".
 float [] Euler = new float [3]; 
@@ -14,15 +49,17 @@ String title="testing";
 void setup() 
 {
   size(VIEW_SIZE_X, VIEW_SIZE_Y, OPENGL);
-  myPort = new Serial(this, serialPort, 115200);
+
+  
+  sendrecv();
+
+  //myPort = new Serial(this, serialPort, 115200);
   // The font must be located in the sketch's "data" directory to load successfully
   font = loadFont("CourierNew36.vlw"); 
-  myPort.clear();
+  //myPort.clear();
 }
 
-void serialEvent(Serial p) {
-   
-    String inputString = p.readStringUntil('\r');
+void decode_string(String inputString){
     if (inputString != null && inputString.length() > 0) {
       //println(inputString);
       String [] inputStringArr = split(inputString, "|");
@@ -36,6 +73,12 @@ void serialEvent(Serial p) {
         position[2]=Float.parseFloat(inputStringArr[6]);
       }
     }
+}
+
+void serialEvent(Serial p) {
+   
+    String inputString = p.readStringUntil('\r');
+    decode_string(inputString);
 }
 
 
@@ -124,6 +167,12 @@ void drawCube() {
 
 
 void draw() {
+  /*
+  if(myClient!=null){
+    myClient.write("g");
+  }
+  */
+  
   background(#000000);
   fill(#ffffff);
   textFont(font, 20);
