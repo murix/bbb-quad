@@ -574,6 +574,8 @@ public:
 		acc[1] = acc[1] - g[1];
 		acc[2] = acc[2] - g[2];
 	}
+
+	//float gx,gy,gz,ax,ay,az,mx,my,mz;
 	void AHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz){
 
 		float recipNorm;
@@ -1369,7 +1371,8 @@ void test_6dof_imu(char* title,bool use_altimeter,bool use_position,bool use_mag
 				cr[2],
 				0.0,
 				0.0,
-				havg-hoff);
+				0.0);
+				//havg-hoff);
 
 		write(fd,buf,len);
 
