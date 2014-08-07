@@ -483,10 +483,14 @@ public:
 	float gyro_off_x, gyro_off_y, gyro_off_z;
 	float acc_off_x, acc_off_y, acc_off_z;
 	float magn_off_x, magn_off_y, magn_off_z;
+
 	float acc_scale_x, acc_scale_y, acc_scale_z;
 	float magn_scale_x, magn_scale_y, magn_scale_z;
-	float iq0, iq1, iq2, iq3; // quaternion elements representing the estimated orientation
-	float exInt, eyInt, ezInt;  // scaled integral error
+
+
+
+	// iq0, iq1, iq2, iq3; // quaternion elements representing the estimated orientation
+	//float exInt, eyInt, ezInt;  // scaled integral error
 	volatile float twoKp;      // 2 * proportional gain (Kp)
 	volatile float twoKi;      // 2 * integral gain (Ki)
 	volatile float q0, q1, q2, q3; // quaternion of sensor frame relative to auxiliary frame
@@ -521,9 +525,6 @@ public:
 		q1 = 0.0f;
 		q2 = 0.0f;
 		q3 = 0.0f;
-		exInt = 0.0;
-		eyInt = 0.0;
-		ezInt = 0.0;
 		twoKp = (2.0f * 0.5f); // 2 * proportional gain
 		twoKi = (2.0f * 0.1f); // 2 * integral gain
 
@@ -614,7 +615,7 @@ public:
 		float q[4]; // quaternion
 		getQ(q);
 		angles[0] = atan2(2 * q[1] * q[2] - 2 * q[0] * q[3], 2 * q[0]*q[0] + 2 * q[1] * q[1] - 1); // psi
-		angles[1] = -asin(2 * q[1] * q[3] + 2 * q[0] * q[2]); // theta
+		angles[1] = -asin(2 * q[1] * q[3] + 2 * q[0] * q[2] ); // theta
 		angles[2] = atan2(2 * q[2] * q[3] - 2 * q[0] * q[1], 2 * q[0] * q[0] + 2 * q[3] * q[3] - 1); // phi
 
 		cache_euler_radian[0]=angles[0];
@@ -973,7 +974,8 @@ void test_quaternion(char* title,bool use_mag){
 }
 
 typedef struct {
-	float angles[3];
+	float gyro_angles[3];
+	float acc_angles[3];
 	float dt;
 	float hz;
 } imu_data_t;
@@ -1000,16 +1002,14 @@ void *udpserver(void *arg)
 	      len = sizeof(cliaddr);
 	      n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
 	      mesg[n] = 0;
-	      printf("-------------------------------------------------------\r\n");
-	      printf("Received the following:\r\n");
-	      printf("%s\r\n",mesg);
-	      printf("-------------------------------------------------------\r\n");
-	      printf("Response with following:\r\n");
 
 	      Json::Value fromScratch;
-	      fromScratch["pitch"]=pdata->angles[0];
-	      fromScratch["roll"]=pdata->angles[1];
-	      fromScratch["yaw"]=pdata->angles[2];
+	      fromScratch["gyro_pitch"]=pdata->gyro_angles[0];
+	      fromScratch["gyro_roll"]=pdata->gyro_angles[1];
+	      fromScratch["gyro_yaw"]=pdata->gyro_angles[2];
+	      fromScratch["acc_pitch"]=pdata->acc_angles[0];
+	      fromScratch["acc_roll"]=pdata->acc_angles[1];
+	      fromScratch["acc_yaw"]=pdata->acc_angles[2];
 	      fromScratch["hz"]=pdata->hz;
 	      fromScratch["dt"]=pdata->dt;
 	      std::string txt = fromScratch.toStyledString();
@@ -1056,8 +1056,8 @@ void test_accel_only_imu(char* title){
 
 		//http://www.analog.com/static/imported-files/application_notes/AN-1057.pdf
 
-		angles[0]=atan2f(acc_gyro.acc[1], acc_gyro.acc[2] );
-		angles[1]=-atan2f(acc_gyro.acc[0], acc_gyro.acc[2] );
+		//angles[0]=atan2f(acc_gyro.acc[1], acc_gyro.acc[2] );
+		//angles[1]=-atan2f(acc_gyro.acc[0], acc_gyro.acc[2] );
 
 		//angles[0]=atan2f(acc_gyro.acc[1], sqrt(acc_gyro.acc[0]*acc_gyro.acc[0]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
 		//angles[1]=-atan2f(acc_gyro.acc[0], sqrt(acc_gyro.acc[1]*acc_gyro.acc[1]+acc_gyro.acc[2]*acc_gyro.acc[2]) );
@@ -1143,8 +1143,13 @@ void test_gyro_only_imu(char* title){
 		}
 
 		for(int i=0;i<3;i++){
-			idata.angles[i]=to_radian(gint[i]);
+			idata.gyro_angles[i]=to_radian(gint[i]);
 		}
+
+
+		idata.acc_angles[0]= +1*atan2(acc_gyro.acc[1], sqrt(pow(acc_gyro.acc[0],2)+pow(acc_gyro.acc[2],2)) );
+		idata.acc_angles[1]= -1*atan2(acc_gyro.acc[0], sqrt(pow(acc_gyro.acc[1],2)+pow(acc_gyro.acc[2],2)) );
+		idata.acc_angles[2]=0;
 
 	}
 }

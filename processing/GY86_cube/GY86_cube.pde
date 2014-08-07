@@ -8,7 +8,8 @@ import java.net.*;
 
 
 float[] position=new float[3];
-float[] angles=new float[3];
+float[] gyro_angles=new float[3];
+float[] acc_angles=new float[3];
 float dt=0;
 float hz=0;
 
@@ -42,22 +43,24 @@ void sendrecv() {
           
           //
           String str=new String(receivePacket.getData());
-          //
-          //println(str);
+          println(str);
           
           //
           JSONObject json = JSONObject.parse(str);
           dt=json.getFloat("dt");
           hz=json.getFloat("hz");
-          angles[0]=json.getFloat("pitch");
-          angles[1]=json.getFloat("roll");
-          angles[2]=json.getFloat("yaw");
+          gyro_angles[0]=json.getFloat("gyro_pitch");
+          gyro_angles[1]=json.getFloat("gyro_roll");
+          gyro_angles[2]=json.getFloat("gyro_yaw");
+          acc_angles[0]=json.getFloat("acc_pitch");
+          acc_angles[1]=json.getFloat("acc_roll");
 
 
           //
           clientSocket.close();
         } 
         catch(Exception ex) {
+          println(ex);
         }
       }
     }
@@ -143,7 +146,10 @@ void draw() {
   //  
   textFont(font, 20);
   textAlign(LEFT, TOP);
-  text("update rate(hz): "+hz+"\nPitch (degrees): " + degrees(angles[0]) + "\nRoll (degrees): " + degrees(angles[1])+"\nYaw (degrees): " + degrees(angles[2])+ "\nFront/Rear (cm): "+position[0]+ "\nLeft/Right (cm): "+position[1]+ "\nAltimeter (cm): "+position[2], 20, 20);
+  text("update rate(hz): "+hz+"\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]),20,20);
+  text("update rate(hz): "+hz+"\nPitch (degrees): " + degrees(acc_angles[0]) + "\nRoll (degrees): " + degrees(acc_angles[1])+"\nYaw (degrees): " + degrees(acc_angles[2]),400,20);
+  
+  
   
   //
   pushMatrix();
@@ -153,13 +159,23 @@ void draw() {
   popMatrix();
 
   pushMatrix();
-  translate(VIEW_SIZE_X/2 - position[0], VIEW_SIZE_Y/2 - position[2], -position[1]);
+  translate(VIEW_SIZE_X/2 -100 , VIEW_SIZE_Y/2 -50 , 0);
   scale(scale, scale, scale);
-  rotateX(angles[0]);
-  rotateY(angles[2]);
-  rotateZ(angles[1]);
+  rotateX(gyro_angles[0]); // screen x -> sensor x
+  rotateY(gyro_angles[2]); // screen y -> sensor z
+  rotateZ(gyro_angles[1]); // screen z -> sensor y
   buildBoxShape();
   popMatrix();
+  
+  pushMatrix();
+  translate(VIEW_SIZE_X/2 +100 , VIEW_SIZE_Y/2 -50 , 0);
+  scale(scale, scale, scale);
+  rotateX(acc_angles[0]);
+  rotateY(acc_angles[2]);
+  rotateZ(acc_angles[1]);
+  buildBoxShape();
+  popMatrix();
+  
 }
 
 
