@@ -70,7 +70,7 @@ void sendrecv() {
 
 
 PFont font;
-final int VIEW_SIZE_X = 800, VIEW_SIZE_Y = 600;
+final int VIEW_SIZE_X = 1020, VIEW_SIZE_Y = 600;
 void setup() 
 {
   size(VIEW_SIZE_X, VIEW_SIZE_Y, P3D);
@@ -146,8 +146,8 @@ void draw() {
   //  
   textFont(font, 20);
   textAlign(LEFT, TOP);
-  text("update rate(hz): "+hz+"\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]),20,20);
-  text("update rate(hz): "+hz+"\nPitch (degrees): " + degrees(acc_angles[0]) + "\nRoll (degrees): " + degrees(acc_angles[1])+"\nYaw (degrees): " + degrees(acc_angles[2]),400,20);
+  text("Gyroscope rate(hz): "+hz+"\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]),20,20);
+  text("Accelerometer rate(hz): "+hz+"\nPitch (degrees): " + degrees(acc_angles[0]) + "\nRoll (degrees): " + degrees(acc_angles[1])+"\nYaw (degrees): " + degrees(acc_angles[2]),400,20);
   
   
   

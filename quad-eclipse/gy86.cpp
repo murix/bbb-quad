@@ -974,6 +974,9 @@ void test_quaternion(char* title,bool use_mag){
 }
 
 typedef struct {
+	float acc[3];
+	float gyro[3];
+	float mag[3];
 	float gyro_angles[3];
 	float acc_angles[3];
 	float dt;
@@ -1004,15 +1007,32 @@ void *udpserver(void *arg)
 	      mesg[n] = 0;
 
 	      Json::Value fromScratch;
+
+	      fromScratch["ax"]=pdata->acc[0];
+	      fromScratch["ay"]=pdata->acc[1];
+	      fromScratch["az"]=pdata->acc[2];
+
+	      fromScratch["gx"]=pdata->gyro[0];
+	      fromScratch["gy"]=pdata->gyro[1];
+	      fromScratch["gz"]=pdata->gyro[2];
+
+	      fromScratch["mx"]=pdata->mag[0];
+	      fromScratch["my"]=pdata->mag[1];
+	      fromScratch["mz"]=pdata->mag[2];
+
 	      fromScratch["gyro_pitch"]=pdata->gyro_angles[0];
 	      fromScratch["gyro_roll"]=pdata->gyro_angles[1];
 	      fromScratch["gyro_yaw"]=pdata->gyro_angles[2];
+
 	      fromScratch["acc_pitch"]=pdata->acc_angles[0];
 	      fromScratch["acc_roll"]=pdata->acc_angles[1];
 	      fromScratch["acc_yaw"]=pdata->acc_angles[2];
+
 	      fromScratch["hz"]=pdata->hz;
 	      fromScratch["dt"]=pdata->dt;
+
 	      std::string txt = fromScratch.toStyledString();
+
 	      sendto(sockfd,txt.c_str(),txt.length(),0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
 
 	   }
