@@ -1,38 +1,29 @@
 
-
-import processing.serial.*;
+//
 import processing.opengl.*;
-import processing.net.*; 
+
+//
 import java.io.*; 
 import java.net.*;
 
+//
+import peasy.*;
 
+//
+PeasyCam cam;
+PFont    axisLabelFont;
+PVector  axisXHud;
+PVector  axisYHud;
+PVector  axisZHud;
+PVector  axisOrgHud;
 
-//Notation "w" stands for one of the axes, so for example RwAcc[0],RwAcc[1],RwAcc[2] means RxAcc,RyAcc,RzAcc
-//Variables below must be global (their previous value is used in getEstimatedInclination)
-float[] RwEst=new float[3];     //Rw estimated from combining RwAcc and RwGyro
-long lastMicros;  
-//Variables below don't need to be global but we expose them for debug purposes
-long interval; //interval since previous analog samples
-float[] RwAcc=new float[3];         //projection of normalized gravitation force vector on x/y/z axis, as measured by accelerometer
-float[] RwGyro=new float[3];        //Rw obtained from last estimated value and gyro movement
-float[] Awz=new float[2];           //angles between projection of R on XZ/YZ plane and Z axis (deg)
-float wGyro;  
-int firstSample;
-
-
-
-float[] position=new float[3];
+float[] mag_angles=new float[3];
 float[] gyro_angles=new float[3];
 float[] acc_angles=new float[3];
+float hz=0;
+float[] mag=new float[3];
 float[] acc=new float[3];
 float[] gyro=new float[3];
-float[] mag=new float[3];
-float dt=0;
-float hz=0;
-
-float[] Rest_back = new float[3];
-float[] Rest_now = new float[3];
 
 void sendrecv() {
   (new Thread() {
@@ -68,60 +59,32 @@ void sendrecv() {
           
           //
           JSONObject json = JSONObject.parse(str);
-          dt=json.getFloat("dt");
+          
           hz=json.getFloat("hz");
+          
           gyro_angles[0]=json.getFloat("gyro_pitch");
           gyro_angles[1]=json.getFloat("gyro_roll");
           gyro_angles[2]=json.getFloat("gyro_yaw");
+          
           acc_angles[0]=json.getFloat("acc_pitch");
           acc_angles[1]=json.getFloat("acc_roll");
-          
+
+          mag_angles[0]=json.getFloat("mag_pitch");
+          mag_angles[1]=json.getFloat("mag_roll");
+          mag_angles[2]=json.getFloat("mag_yaw");
+
+          mag[0]=json.getFloat("mx");
+          mag[1]=json.getFloat("my");
+          mag[2]=json.getFloat("mz");
+
           acc[0]=json.getFloat("ax");
           acc[1]=json.getFloat("ay");
           acc[2]=json.getFloat("az");
 
           gyro[0]=json.getFloat("gx");
           gyro[1]=json.getFloat("gy");
-          gyro[2]=json.getFloat("gz");
-
-          mag[0]=json.getFloat("mx");
-          mag[1]=json.getFloat("my");
-          mag[2]=json.getFloat("mz");
-
-  float Rx=acc[0];
-  float Ry=acc[1];
-  float Rz=acc[2];
-  float R = (float)Math.sqrt(Math.pow(Rx,2)+Math.pow(Ry,2)+Math.pow(Rz,2));
-  print("R="); println(R);
-  float Axr= (float)Math.acos(Rx/R);
-  float Ayr= (float)Math.acos(Ry/R);
-  float Azr= (float)Math.acos(Rz/R);
-  //
-  print("Axr="); println(Axr);
-  print("Ayr="); println(Ayr);
-  print("Azr="); println(Azr);
-  //
-  print("cos(Axr)="); println(cos(Axr));
-  print("cos(Ayr)="); println(cos(Ayr));
-  print("cos(Azr)="); println(cos(Azr));
-  //must be 1 - to be ok
-  print("unit vector test="); println(Math.sqrt(Math.pow(cos(Axr),2)+Math.pow(cos(Ayr),2)+Math.pow(cos(Azr),2)));
-  
-  //normalize acc
-  float[] Raccn = new float[3];
-  Raccn[0] = Rx/R;
-  Raccn[1] = Ry/R;
-  Raccn[2] = Rz/R;
-  
-  // estimate
-  Rest_back[0]=Rest_now[0];
-  Rest_back[1]=Rest_now[1];
-  Rest_back[2]=Rest_now[2];
-  Rest_now[0]=0;
-  Rest_now[1]=0;
-  Rest_now[2]=0;
-
-
+          gyro[2]=json.getFloat("gz");         
+          
           //
           clientSocket.close();
         } 
@@ -135,50 +98,67 @@ void sendrecv() {
 }
 
 
-
-int i,w;
-float tmpf,tmpf2;  
-long newMicros; //new timestamp
-int signRzGyro;  
-void getEstimatedInclination(){
-
-
-
-
-
+void calculateAxis( float length )
+{
+   // Store the screen positions for the X, Y, Z and origin
+   axisXHud.set( screenX(length,0,0), screenY(length,0,0), 0 );
+   axisYHud.set( screenX(0,length,0), screenY(0,length,0), 0 );     
+   axisZHud.set( screenX(0,0,length), screenY(0,0,length), 0 );
+   axisOrgHud.set( screenX(0,0,0), screenY(0,0,0), 0 );
 }
 
-PFont font;
-final int VIEW_SIZE_X = 1020, VIEW_SIZE_Y = 600;
+void drawAxis( float weight )
+{
+   pushStyle();   // Store the current style information
+
+     strokeWeight( weight );      // Line width
+
+     stroke( 255,   0,   0 );     // X axis color (Red)
+     line( axisOrgHud.x, axisOrgHud.y, axisXHud.x, axisXHud.y );
+ 
+     stroke(   0, 255,   0 );
+     line( axisOrgHud.x, axisOrgHud.y, axisYHud.x, axisYHud.y );
+
+     stroke(   0,   0, 255 );
+     line( axisOrgHud.x, axisOrgHud.y, axisZHud.x, axisZHud.y );
+
+
+      fill(255);                   // Text color
+      textFont( axisLabelFont );   // Set the text font
+
+      text( "X+", axisXHud.x, axisXHud.y );
+      text( "Y+", axisYHud.x, axisYHud.y );
+      text( "Z+", axisZHud.x, axisZHud.y );
+
+   popStyle();    // Recall the previously stored style information
+}
+
+
+
 void setup() 
 {
-  size(VIEW_SIZE_X, VIEW_SIZE_Y, P3D);
-  
+  //
   sendrecv();
-
-  font = loadFont("CourierNew36.vlw"); 
-  
-  
-  ///////////////////////////////////////
-  wGyro = 10;
-  firstSample = 1;
-  
-  /////////////////////////////////////////
+  //
+  size(1024, 600, P3D);
+  //
+  axisXHud      = new PVector();
+  axisYHud      = new PVector();
+  axisZHud      = new PVector();
+  axisOrgHud    = new PVector();
+  axisLabelFont = createFont( "Arial", 14 );
+  cam = new PeasyCam(this, 150);
 }
 
 
 
-int scale=5;
-int half_width=15;
-int half_height=5;
-int half_depth=10;
 
-void buildBoxShape() {
-  //box(60, 10, 40);
+void buildBoxShape(float half_width,float half_height,float half_depth) {
+  
   noStroke();
   beginShape(QUADS);
 
-  //Z+ (to the drawing area)
+  //Z+ 
   fill(#00ff00);
   vertex(-half_width, -half_height, half_depth);
   vertex(half_width, -half_height, half_depth);
@@ -221,55 +201,102 @@ void buildBoxShape() {
   vertex(-half_width, half_height, half_depth);
 
   endShape();
+
 }
 
 
 void draw() {
-
   
-  //
   background(#000000);
-  //
   fill(#ffffff);
-
-  //  
-  textFont(font, 20);
+  textFont(axisLabelFont,4);
   textAlign(LEFT, TOP);
-  text("Gyroscope rate(hz): "+hz+"\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]),20,20);
-  text("Accelerometer rate(hz): "+hz+"\nPitch (degrees): " + degrees(acc_angles[0]) + "\nRoll (degrees): " + degrees(acc_angles[1])+"\nYaw (degrees): " + degrees(acc_angles[2]),400,20);
   
+  text("Gyroscope rate(hz): "+hz+"\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]),-70,-70);
   
+  text("Accelerometer rate(hz): "+hz+"\nPitch (degrees): " + degrees(acc_angles[0]) + "\nRoll (degrees): " + degrees(acc_angles[1])+"\nYaw (degrees): " + degrees(acc_angles[2]),+20,-70);
   
-  //
+  text("Magnetometer rate(hz): "+hz+"\nPitch (degrees): " + degrees(mag_angles[0]) + "\nRoll (degrees): " + degrees(mag_angles[1])+"\nYaw (degrees): " + degrees(mag_angles[2]),-70,+50);
+
+
+/////////////////////////////////  
+/////////////////////////////////  
+
+  calculateAxis(60);  
+   cam.beginHUD();
+  drawAxis(1);
+  cam.endHUD();
+
+/////////////////////////////////  
+/////////////////////////////////  
+
   pushMatrix();
-  translate((VIEW_SIZE_X/2), (VIEW_SIZE_Y/2)+30, 0);
-  scale(scale, scale, scale);
-  box(100, 2, 100);
+  fill(0,0,255);
+  box(2, 2, 100);
+  popMatrix();
+  
+  pushMatrix();
+  fill(255,0,0);
+  box(100, 2, 2);
   popMatrix();
 
   pushMatrix();
-  translate(VIEW_SIZE_X/2 -100 , VIEW_SIZE_Y/2 -50 , 0);
-  scale(scale, scale, scale);
+  fill(0,255,0);
+  box(2, 100, 2);
+  popMatrix();
+
+///////////////////////////
+
+  pushMatrix();
+  translate(-25, -25, -25);
   rotateX(gyro_angles[0]); // screen x -> sensor x
   rotateY(gyro_angles[2]); // screen y -> sensor z
   rotateZ(gyro_angles[1]); // screen z -> sensor y
-  buildBoxShape();
+  buildBoxShape(15,5,10);
+  popMatrix();
+
+  pushMatrix();
+  translate(-25, -25, +25);
+  float gyroN= 200;//sqrt(gyro[0]*gyro[0]+gyro[1]*gyro[1]+gyro[2]*gyro[2]);
+  box(gyro[0]/gyroN*40, 1, 1);
+  box(1, gyro[2]/gyroN*40, 1);
+  box(1, 1, gyro[1]/gyroN*40);
   popMatrix();
   
+///////////////////////////
+
   pushMatrix();
-  translate(VIEW_SIZE_X/2 +100 , VIEW_SIZE_Y/2 -50 , 0);
-  scale(scale, scale, scale);
-  
+  translate(25, -25, -25);
   rotateX(acc_angles[0]); // screen x -> sensor x
   rotateY(acc_angles[2]); // screen y -> sensor z
   rotateZ(acc_angles[1]); // screen z -> sensor y
-  
-  /*
-  rotateX(Ayr); // screen x -> sensor x
-  rotateY(Azr); // screen y -> sensor z
-  rotateZ(Axr); // screen z -> sensor y
-  */
-  buildBoxShape();
+  buildBoxShape(15,5,10);
+  popMatrix();
+
+  pushMatrix();
+  translate(25, -25, +25);
+  float accN= sqrt(acc[0]*acc[0]+acc[1]*acc[1]+acc[2]*acc[2]);
+  box(acc[0]/accN*40, 1, 1);
+  box(1, acc[2]/accN*40, 1);
+  box(1, 1, acc[1]/accN*40);
+  popMatrix();
+
+/////////////////////////////
+
+  pushMatrix();
+  translate(-25, +25, -25);
+  rotateX(mag_angles[0]); // screen x -> sensor x
+  rotateY(mag_angles[2]); // screen y -> sensor z
+  rotateZ(mag_angles[1]); // screen z -> sensor y
+  buildBoxShape(15,5,10);
+  popMatrix();
+
+  pushMatrix();
+  translate(-25, +25, +25);
+  float magN= sqrt(mag[0]*mag[0]+mag[1]*mag[1]+mag[2]*mag[2]);
+  box(mag[0]/magN*40, 1, 1);
+  box(1, mag[2]/magN*40, 1);
+  box(1, 1, mag[1]/magN*40);
   popMatrix();
   
 }

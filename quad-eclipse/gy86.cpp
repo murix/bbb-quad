@@ -979,6 +979,7 @@ typedef struct {
 	float mag[3];
 	float gyro_angles[3];
 	float acc_angles[3];
+	float mag_angles[3];
 	float dt;
 	float hz;
 } imu_data_t;
@@ -1027,6 +1028,10 @@ void *udpserver(void *arg)
 	      fromScratch["acc_pitch"]=pdata->acc_angles[0];
 	      fromScratch["acc_roll"]=pdata->acc_angles[1];
 	      fromScratch["acc_yaw"]=pdata->acc_angles[2];
+
+	      fromScratch["mag_pitch"]=pdata->mag_angles[0];
+	      fromScratch["mag_roll"]=pdata->mag_angles[1];
+	      fromScratch["mag_yaw"]=pdata->mag_angles[2];
 
 	      fromScratch["hz"]=pdata->hz;
 	      fromScratch["dt"]=pdata->dt;
@@ -1159,20 +1164,27 @@ void test_gyro_only_imu(char* title){
 			gstep[i]= (acc_gyro.gyro[i]-goff[i])*tdiff;
 		}
 
-		//
-		for(int i=0;i<3;i++){
-			gint[i]+=gstep[i];
-		}
+
+		// gyroscope angles
+		gint[0]-=gstep[0];
+		gint[1]+=gstep[1];
+		gint[2]+=gstep[2];
 
 		//
 		for(int i=0;i<3;i++){
 			idata.gyro_angles[i]=to_radian(gint[i]);
 		}
 
-		//
-		idata.acc_angles[0]= +1*atan2(acc_gyro.acc[1], sqrt(pow(acc_gyro.acc[0],2)+pow(acc_gyro.acc[2],2)) );
-		idata.acc_angles[1]= -1*atan2(acc_gyro.acc[0], sqrt(pow(acc_gyro.acc[1],2)+pow(acc_gyro.acc[2],2)) );
+		// accelerometer angles
+		idata.acc_angles[0]= -1*atan2(acc_gyro.acc[1], acc_gyro.acc[2] );
+		idata.acc_angles[1]= -1*atan2(acc_gyro.acc[0], acc_gyro.acc[2] );
 		idata.acc_angles[2]=0;
+
+		// magnetometer angles
+		idata.mag_angles[0]=0;
+		idata.mag_angles[1]=0;
+		idata.mag_angles[2]=-atan2(mag.mag[0],mag.mag[1]);
+
 
 		//
 		for(int i=0;i<3;i++){
