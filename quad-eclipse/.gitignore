@@ -13,3 +13,4 @@ Makefile
 
 mpu6050-test
 socket-test
+hmc5883-test
