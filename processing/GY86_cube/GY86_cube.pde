@@ -22,6 +22,7 @@ float[] mag=new float[3];
 float[] acc=new float[3];
 float[] gyro=new float[3];
 double hz_net;
+float mag_head;
 
 void sendrecv() {
   (new Thread() {
@@ -34,7 +35,7 @@ void sendrecv() {
       while (true) { 
         String str="";
         try {
-          sleep( (1/30)*1000 );
+          sleep( 16 );
           t_back = t_now;
           t_now = System.nanoTime();
           hz_net = 1/((double)(t_now - t_back)/(1000*1000*1000));
@@ -63,34 +64,37 @@ void sendrecv() {
           //
           JSONObject json = JSONObject.parse(str);
 
-          hz=json.getFloat("hz");
+          hz=json.getFloat("time_hz");
 
-          gyro_angles[0]=json.getFloat("gyro_pitch");
-          gyro_angles[1]=json.getFloat("gyro_roll");
-          gyro_angles[2]=json.getFloat("gyro_yaw");
+          gyro_angles[0]=json.getFloat("pitch_gyro");
+          gyro_angles[2]=json.getFloat("roll_gyro");
+          gyro_angles[1]=json.getFloat("yaw_gyro");
 
-          acc_angles[0]=json.getFloat("acc_pitch");
-          acc_angles[1]=json.getFloat("acc_roll");
-          acc_angles[2]=json.getFloat("acc_yaw");
+          acc_angles[0]=json.getFloat("pitch_acc");
+          acc_angles[2]=json.getFloat("roll_acc");
+          acc_angles[1]=json.getFloat("yaw_acc");
 
-          mag_angles[0]=json.getFloat("mag_pitch");
-          mag_angles[1]=json.getFloat("mag_roll");
-          mag_angles[2]=json.getFloat("mag_yaw");
+          mag_angles[0]=json.getFloat("pitch_mag");
+          mag_angles[2]=json.getFloat("roll_mag");
+          mag_angles[1]=json.getFloat("yaw_mag");
 
-          mag[0]=json.getFloat("mx");
-          mag[1]=json.getFloat("my");
-          mag[2]=json.getFloat("mz");
+          mag[0]=json.getFloat("mag_x");
+          mag[2]=json.getFloat("mag_y");
+          mag[1]=json.getFloat("mag_z");
+          
+          mag_head=json.getFloat("mag_head");
+          
+          magN=sqrt(pow(mag[0],2)+pow(mag[1],2)+pow(mag[2],2));
 
-          acc[0]=json.getFloat("ax");
-          acc[1]=json.getFloat("ay");
-          acc[2]=json.getFloat("az");
+          acc[0]=json.getFloat("acc_x");
+          acc[2]=json.getFloat("acc_y");
+          acc[1]=json.getFloat("acc_z");
+          accN=sqrt(pow(acc[0],2)+pow(acc[1],2)+pow(acc[2],2));
 
-          gyro[0]=json.getFloat("gx");
-          gyro[1]=json.getFloat("gy");
-          gyro[2]=json.getFloat("gz");        
+          gyro[0]=json.getFloat("gyro_x");
+          gyro[2]=json.getFloat("gyro_y");
+          gyro[1]=json.getFloat("gyro_z");        
          
-          accN=json.getFloat("accn");
-          magN=json.getFloat("magn");
 
           //
           clientSocket.close();
@@ -236,7 +240,7 @@ void draw() {
   popMatrix();
 
   pushMatrix();
-  text("Gyroscope\nimu(hz): "+hz+"\nnet(hz): "+hz_net+"\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]), -70, -70,-25);
+  text("Gyroscope\nPitch (degrees): " + degrees(gyro_angles[0]) + "\nRoll (degrees): " + degrees(gyro_angles[1])+"\nYaw (degrees): " + degrees(gyro_angles[2]), -70, -70,-25);
   popMatrix();
 
   pushMatrix();
@@ -318,14 +322,12 @@ void draw() {
   popMatrix();
 
   pushMatrix();
-  text("Magnetometer\nPitch (degrees): " + degrees(mag_angles[0]) + "\nRoll (degrees): " + degrees(mag_angles[1])+"\nYaw (degrees): " + degrees(mag_angles[2]), -70, +50,-25);
+  text("Magnetometer\nHeading (degrees): " + degrees(mag_head), -70, +50,-25);
   popMatrix();
   
   pushMatrix();
   translate(-25, +25, -25);
-  rotateX(mag_angles[0]); 
-  rotateY(mag_angles[1]); 
-  rotateZ(mag_angles[2]); 
+  rotateY(mag_head); 
   buildBoxShape(15, 5, 10);
   popMatrix();
 

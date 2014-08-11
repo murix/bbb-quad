@@ -15,7 +15,12 @@
 #include <stdio.h>
 //read,write
 #include <unistd.h>
+//
+#include <math.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #include "hmc5883.h"
 
@@ -60,6 +65,7 @@ void hmc5883::update(){
 		mag[0]= read16(REG_X_MSB,REG_X_LSB)/1090.0;
 		mag[1]= read16(REG_Y_MSB,REG_Y_LSB)/1090.0;
 		mag[2]= read16(REG_Z_MSB,REG_Z_LSB)/1090.0;
+		calculate_heading();
 	}
 }
 
@@ -125,5 +131,27 @@ double hmc5883::read16(int reg_msb,int reg_lsb){
 	return fvalue;
 }
 
+void hmc5883::calculate_heading(){
+
+	magn=sqrt(pow(mag[0],2)+pow(mag[1],2)+pow(mag[2],2));
+	if(mag[0] <0&&mag[1]==0) heading=0;
+	if(mag[0] <0&&mag[1]<0)  heading=-asin(mag[1]/magn);
+	if(mag[0]==0&&mag[1]<0)  heading=M_PI/2;
+	if(mag[0] >0&&mag[1]<0)  heading=M_PI/2+asin(mag[0]/magn);
+	if(mag[0] >0&&mag[1]==0) heading=M_PI;
+	if(mag[0] >0&&mag[1]>0)  heading=M_PI+asin(mag[1]/magn);
+	if(mag[0]==0&&mag[1]>0)  heading=3*M_PI/2;
+	if(mag[0] <0&&mag[1]>0)  heading=3*M_PI/2-asin(mag[0]/magn);
+
+	//
+	heading*=-1;
+}
+
+double hmc5883::to_degrees(double radians){
+	return radians*(180.0/M_PI);
+}
+double hmc5883::to_radian(double degree){
+	return degree * M_PI/180;
+}
 
 

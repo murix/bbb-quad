@@ -35,7 +35,10 @@
 
 ms5611::ms5611(int fd){
 	this->fd=fd;
+	P0=0;
 	init();
+	update();
+	P0=P;
 }
 
 void ms5611::i2c_start(){
@@ -172,6 +175,12 @@ void ms5611::update(){
 
 	T/=100.0;
 	P/=100.0;
+
+	if(P0!=0){
+		H=altimeter(P0,P,T);
+	} else {
+		H=0;
+	}
 }
 
 

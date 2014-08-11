@@ -12,7 +12,9 @@
 class hmc5883 {
 public:
 	double mag[3];
+	double magn;
 	int fd;
+	double heading;
 
 	hmc5883(int fd);
 	void update();
@@ -20,6 +22,12 @@ public:
 	void configure();
 	bool is_ready();
 	double read16(int reg_msb,int reg_lsb);
+
+	void calculate_heading();
+
+	double to_degrees(double radians);
+	double to_radian(double degree);
+
 
 };
 

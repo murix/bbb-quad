@@ -18,11 +18,9 @@ int main(int argc,char** argv){
 	i2c.open();
 
 	mpu6050 mpu(i2c.fd);
-	mpu.gyro_calibration(10);
-
 	while(1){
 		mpu.update();
-		printf("acc=%f|%f|%f tc=%f gyro=%f|%f|%f gyro_raw=%f|%f|%f gyro_off=%f|%f|%f\r\n",
+		printf("acc=%+.2f|%+.2f|%+.2f tc=%+.2f gyro=%+.2f|%+.2f|%+.2f gyro_angles(degree)=%+.2f|%+.2f|%+.2f\r\n",
 				mpu.acc[0],
 				mpu.acc[1],
 				mpu.acc[2],
@@ -33,9 +31,9 @@ int main(int argc,char** argv){
 				mpu.gyro_raw[0],
 				mpu.gyro_raw[1],
 				mpu.gyro_raw[2],
-				mpu.gyro_off[0],
-				mpu.gyro_off[1],
-				mpu.gyro_off[2]
+				mpu.to_degrees(mpu.gyro_integrate[0]),
+				mpu.to_degrees(mpu.gyro_integrate[1]),
+				mpu.to_degrees(mpu.gyro_integrate[2])
 		);
 	}
 

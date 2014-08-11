@@ -29,7 +29,7 @@ int main(int argc,char** argv){
 
 	while(1){
 		mag.update();
-		printf("mag=%f|%f|%f\r\n",mag.mag[0],mag.mag[1],mag.mag[2]);
+		printf("mag=%f|%f|%f heading(degrees)=%f\r\n",mag.mag[0],mag.mag[1],mag.mag[2],mag.to_degrees(mag.heading));
 
 	}
 

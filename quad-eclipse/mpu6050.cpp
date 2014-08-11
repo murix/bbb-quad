@@ -15,9 +15,16 @@
 #include <stdio.h>
 // int types
 #include <stdint.h>
+//sqrt
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 
 #include "mpu6050.h"
+#include "timestamps.h"
 
 mpu6050::mpu6050(int fd){
 	this->fd=fd;
@@ -26,8 +33,23 @@ mpu6050::mpu6050(int fd){
 	this->gyro_off[0]=0;
 	this->gyro_off[1]=0;
 	this->gyro_off[2]=0;
+
 	//
 	init();
+	//pre calibration
+	gyro_calibration(10);
+
+	gyro_integrate_reset();
+	this->t_back=get_timestamp_in_seconds();
+	this->t_now=get_timestamp_in_seconds();
+	this->t_diff=0;
+}
+
+void mpu6050::gyro_integrate_reset(){
+	//
+	this->gyro_integrate[0]=0;
+	this->gyro_integrate[1]=0;
+	this->gyro_integrate[2]=0;
 }
 
 void mpu6050::gyro_calibration(int samples){
@@ -46,6 +68,9 @@ void mpu6050::gyro_calibration(int samples){
 	this->gyro_off[0] /= (float) samples;
 	this->gyro_off[1] /= (float) samples;
 	this->gyro_off[2] /= (float) samples;
+
+	//
+	gyro_integrate_reset();
 }
 
 void mpu6050::init(){
@@ -62,6 +87,12 @@ void mpu6050::init(){
 }
 
 void mpu6050::update(){
+	//
+	t_back=t_now;
+	t_now=get_timestamp_in_seconds();
+	t_diff=t_now-t_back;
+	//printf("%f\r\n",t_diff);
+
 	//
 	if(ioctl(fd,I2C_SLAVE,0x68)<0){
 		perror("i2c slave mpu6050 Failed");
@@ -84,6 +115,22 @@ void mpu6050::update(){
 	gyro[0]=gyro_raw[0]-gyro_off[0];
 	gyro[1]=gyro_raw[1]-gyro_off[1];
 	gyro[2]=gyro_raw[2]-gyro_off[2];
+
+	//radian = speed * time
+	gyro_step[0]=to_radian(gyro[0])*t_diff;
+	gyro_step[1]=to_radian(gyro[1])*t_diff;
+	gyro_step[2]=to_radian(gyro[2])*t_diff;
+	//radian
+	gyro_integrate[0] += gyro_step[0];
+	gyro_integrate[1] += gyro_step[1];
+	gyro_integrate[2] += gyro_step[2];
+
 }
 
+double mpu6050::to_degrees(double radians){
+	return radians*(180.0/M_PI);
+}
+double mpu6050::to_radian(double degree){
+	return degree * M_PI/180;
+}
 

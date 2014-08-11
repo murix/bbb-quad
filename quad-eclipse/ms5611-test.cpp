@@ -20,12 +20,9 @@ int main (void)
 	i2c.open();
 
 	ms5611 baro(i2c.fd);
-	baro.update();
-	double p0=baro.P;
 	while(1){
 		baro.update();
-		double m=baro.altimeter(p0,baro.P,baro.T);
-		printf("baro t=%f p=%f altimeter=%f\r\n",baro.T,baro.P,m);
+		printf("baro t=%f p0=%f p=%f altimeter=%f\r\n",baro.T,baro.P0,baro.P,baro.H);
 	}
 
 	return 0;
