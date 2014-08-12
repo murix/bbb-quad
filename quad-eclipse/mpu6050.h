@@ -12,10 +12,16 @@ class mpu6050 {
 public:
 	int fd;
 	float acc[3];
+	float accn;
 	float gyro_raw[3];
 	float gyro[3];
 	float gyro_off[3];
 	float tc;
+	float acc_pitch;
+	float acc_roll;
+	float fusion_pitch;
+	float fusion_roll;
+
 
 
 	void gyro_calibration(int samples);

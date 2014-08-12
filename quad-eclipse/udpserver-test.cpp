@@ -42,22 +42,29 @@ int main(int argc,char** argv){
 		mag.update();
 		baro.update();
 
-		pdata.acc[0]=mpu.acc[0];
-		pdata.acc[1]=mpu.acc[1];
-		pdata.acc[2]=mpu.acc[2];
+		pdata.acc_x=mpu.acc[0];
+		pdata.acc_y=mpu.acc[1];
+		pdata.acc_z=mpu.acc[2];
+		pdata.acc_n=mpu.accn;
+		pdata.acc_pitch=mpu.acc_pitch;
+		pdata.acc_roll=mpu.acc_roll;
 
-		pdata.gyro[0]=mpu.gyro[0];
-		pdata.gyro[1]=mpu.gyro[1];
-		pdata.gyro[2]=mpu.gyro[2];
+		pdata.gyro_x=mpu.gyro[0];
+		pdata.gyro_y=mpu.gyro[1];
+		pdata.gyro_z=mpu.gyro[2];
+		pdata.gyro_pitch=mpu.gyro_integrate[0];
+		pdata.gyro_roll=mpu.gyro_integrate[1];
+		pdata.gyro_yaw=mpu.gyro_integrate[2];
 
-		pdata.gyro_angles[0]=mpu.gyro_integrate[0];
-		pdata.gyro_angles[1]=mpu.gyro_integrate[1];
-		pdata.gyro_angles[2]=mpu.gyro_integrate[2];
+		pdata.fusion_pitch=mpu.fusion_pitch;
+		pdata.fusion_roll=mpu.fusion_roll;
 
-		pdata.mag[0]=mag.mag[0];
-		pdata.mag[1]=mag.mag[1];
-		pdata.mag[2]=mag.mag[2];
+		pdata.mag_x=mag.mag[0];
+		pdata.mag_y=mag.mag[1];
+		pdata.mag_z=mag.mag[2];
+		pdata.mag_n=mag.magn;
 		pdata.mag_heading=mag.heading;
+
 
 		pdata.baro_p0=baro.P0;
 		pdata.baro_p=baro.P;

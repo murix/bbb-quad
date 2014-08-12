@@ -49,21 +49,31 @@ void *udpserver(void *arg)
 		Json::Value fromScratch;
 
 		//
-		fromScratch["acc_x"]=pdata->acc[0];
-		fromScratch["acc_y"]=pdata->acc[1];
-		fromScratch["acc_z"]=pdata->acc[2];
-		fromScratch["acc_n"]=pdata->accN;
+		fromScratch["acc_x"]=pdata->acc_x;
+		fromScratch["acc_y"]=pdata->acc_y;
+		fromScratch["acc_z"]=pdata->acc_z;
+		fromScratch["acc_n"]=pdata->acc_n;
+		fromScratch["pitch_acc"]=pdata->acc_pitch;
+		fromScratch["roll_acc"]=pdata->acc_roll;
 
 		//
-		fromScratch["gyro_x"]=pdata->gyro[0];
-		fromScratch["gyro_y"]=pdata->gyro[1];
-		fromScratch["gyro_z"]=pdata->gyro[2];
+		fromScratch["gyro_x"]=pdata->gyro_x;
+		fromScratch["gyro_y"]=pdata->gyro_y;
+		fromScratch["gyro_z"]=pdata->gyro_z;
+		fromScratch["pitch_gyro"]=pdata->gyro_pitch;
+		fromScratch["roll_gyro"]=pdata->gyro_roll;
+		fromScratch["yaw_gyro"]=pdata->gyro_yaw;
 
 		//
-		fromScratch["mag_x"]=pdata->mag[0];
-		fromScratch["mag_y"]=pdata->mag[1];
-		fromScratch["mag_z"]=pdata->mag[2];
-		fromScratch["mag_n"]=pdata->magN;
+		fromScratch["fusion_pitch"]=pdata->fusion_pitch;
+		fromScratch["fusion_roll"]=pdata->fusion_roll;
+
+
+		//
+		fromScratch["mag_x"]=pdata->mag_x;
+		fromScratch["mag_y"]=pdata->mag_y;
+		fromScratch["mag_z"]=pdata->mag_z;
+		fromScratch["mag_n"]=pdata->mag_n;
 		fromScratch["mag_head"]=pdata->mag_heading;
 
 
@@ -77,17 +87,7 @@ void *udpserver(void *arg)
 		fromScratch["baro_t"]=pdata->baro_t;
 		fromScratch["baro_h"]=pdata->baro_h;
 
-		fromScratch["pitch_gyro"]=pdata->gyro_angles[0];
-		fromScratch["roll_gyro"]=pdata->gyro_angles[1];
-		fromScratch["yaw_gyro"]=pdata->gyro_angles[2];
 
-		fromScratch["pitch_acc"]=pdata->acc_angles[0];
-		fromScratch["roll_acc"]=pdata->acc_angles[1];
-		fromScratch["yaw_acc"]=pdata->acc_angles[2];
-
-		fromScratch["pitch_mag"]=pdata->mag_angles[0];
-		fromScratch["roll_mag"]=pdata->mag_angles[1];
-		fromScratch["yaw_mag"]=pdata->mag_angles[2];
 
 
 		std::string txt = fromScratch.toStyledString();

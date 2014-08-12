@@ -11,19 +11,28 @@
 typedef struct {
 	// ARM: float and uint32_t are thread safe
 	//
-	float acc[3];
-	float accN;
-	float acc_angles[3];
+	float acc_x;
+	float acc_y;
+	float acc_z;
+	float acc_n;
+	float acc_pitch;
+	float acc_roll;
 
+	float gyro_x;
+	float gyro_y;
+	float gyro_z;
+	float gyro_pitch;
+	float gyro_roll;
+	float gyro_yaw;
 
-	float gyro[3];
-	float gyro_angles[3];
+	float fusion_pitch;
+	float fusion_roll;
 
-	float mag[3];
-	float magN;
+	float mag_x;
+	float mag_y;
+	float mag_z;
+	float mag_n;
 	float mag_heading;
-	float mag_angles[3];
-
 	//
 	//
 	float dt;

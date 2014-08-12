@@ -43,6 +43,9 @@ mpu6050::mpu6050(int fd){
 	this->t_back=get_timestamp_in_seconds();
 	this->t_now=get_timestamp_in_seconds();
 	this->t_diff=0;
+
+	this->fusion_pitch=0;
+	this->fusion_roll=0;
 }
 
 void mpu6050::gyro_integrate_reset(){
@@ -117,13 +120,29 @@ void mpu6050::update(){
 	gyro[2]=gyro_raw[2]-gyro_off[2];
 
 	//radian = speed * time
-	gyro_step[0]=to_radian(gyro[0])*t_diff;
+	gyro_step[0]=-to_radian(gyro[0])*t_diff;
 	gyro_step[1]=to_radian(gyro[1])*t_diff;
 	gyro_step[2]=to_radian(gyro[2])*t_diff;
 	//radian
 	gyro_integrate[0] += gyro_step[0];
 	gyro_integrate[1] += gyro_step[1];
 	gyro_integrate[2] += gyro_step[2];
+
+
+	//accelerometer
+	accn=sqrt(pow(acc[0],2)+pow(acc[1],2)+pow(acc[2],2));
+
+
+	//
+	acc_pitch=atan2(-acc[1],sqrt(pow(acc[0],2)+pow(acc[2],2)));
+	acc_roll =atan2(-acc[0],sqrt(pow(acc[1],2)+pow(acc[2],2)));
+
+	//
+	double alpha=0.98;
+	if(acc[2]<0) alpha=1;
+	fusion_pitch = alpha*(fusion_pitch + gyro_step[0] ) + (1-alpha)*acc_pitch;
+	fusion_roll  = alpha*(fusion_roll  + gyro_step[1] ) + (1-alpha)*acc_roll;
+
 
 }
 
