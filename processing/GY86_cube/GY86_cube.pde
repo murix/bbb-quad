@@ -16,6 +16,7 @@ double hz_net;
 float mag_x,mag_y,mag_z,mag_n,mag_head;
 float acc_x,acc_y,acc_z,acc_n,acc_pitch,acc_roll,acc_yaw;
 float gyro_x,gyro_y,gyro_z,gyro_pitch,gyro_roll,gyro_yaw;
+float fusion_pitch,fusion_roll;
 
 void sendrecv() {
   (new Thread() {
@@ -83,6 +84,8 @@ void sendrecv() {
           mag_n=json.getFloat("mag_n");
           mag_head=json.getFloat("mag_head");
 
+          fusion_pitch=json.getFloat("fusion_pitch");
+          fusion_roll=json.getFloat("fusion_roll");
 
          
 
@@ -283,6 +286,14 @@ void draw() {
   rotateX(acc_pitch); // screen x -> sensor x
   rotateY(0); // screen y -> sensor z
   rotateZ(acc_roll); // screen z -> sensor y
+  buildBoxShape(15, 5, 10);
+  popMatrix();
+
+  pushMatrix();
+  translate(75, -25, -25);
+  rotateX(fusion_pitch); // screen x -> sensor x
+  rotateY(0); // screen y -> sensor z
+  rotateZ(fusion_roll); // screen z -> sensor y
   buildBoxShape(15, 5, 10);
   popMatrix();
 
