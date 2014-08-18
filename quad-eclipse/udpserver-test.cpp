@@ -39,8 +39,8 @@ int main(int argc,char** argv){
 
 	while(1){
 		mpu.update();
-		//mag.update();
-		//baro.update();
+		mag.update();
+		baro.update();
 
 		pdata.acc_x=mpu.acc[0];
 		pdata.acc_y=mpu.acc[1];

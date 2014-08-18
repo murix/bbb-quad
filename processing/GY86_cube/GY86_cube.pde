@@ -182,25 +182,27 @@ void draw() {
   ///////////////////////////////////////////////////////////////////////////
 
 
+  int axis_len=20;
   pushMatrix();
+  translate(+230, +140, 0);
   stroke(100, 0, 0);
-  line(0,0,0,-60,0,0);
-  text("-X",-60,0,0);
+  line(0,0,0,-axis_len,0,0);
+  text("-X",-axis_len,0,0);
   stroke(255, 0, 0);
-  line(0,0,0,60,0,0);
-  text("+X",60,0,0);
+  line(0,0,0,axis_len,0,0);
+  text("+X",axis_len,0,0);
   stroke(0, 100, 0);
-  line(0,0,0,0,-60,0);
-  text("-Y",0,-60,0);
+  line(0,0,0,0,-axis_len,0);
+  text("-Y",0,-axis_len,0);
   stroke(0, 255, 0);
-  line(0,0,0,0,60,0);
-  text("+Y",0,60,0);
+  line(0,0,0, 0,axis_len,0);
+  text("+Y",0,axis_len,0);
   stroke(0, 0, 100);
-  line(0,0,0,0,0,-60);
-  text("-Z",0,0,-60);
+  line(0,0,0,0,0,-axis_len);
+  text("-Z",0,0,-axis_len);
   stroke(0, 0, 255);
-  line(0,0,0,0,0,60);
-  text("+Z",0,0,60);
+  line(0,0,0,0,0,axis_len);
+  text("+Z",0,0,axis_len);
   popMatrix();
 
   ///////////////////////////////////////////////////////////////////////////
@@ -209,13 +211,9 @@ void draw() {
   ///////////////////////////////////////////////////////////////////////////
 
   pushMatrix();
-  text("Gyroscope\nPitch (degrees): " + degrees(gyro_pitch) + "\nRoll (degrees): " + degrees(gyro_roll)+"\nYaw (degrees): " + degrees(gyro_yaw), -300, -150,-25);
-  popMatrix();
-  pushMatrix();
-  text("Fusion\nPitch: " + degrees(acc_pitch) + "\nRoll: " + degrees(acc_roll)+"\n", +100, -150,-25);
-  popMatrix();
-  pushMatrix();
-  text("HMC5883\nHeading (degrees): " + degrees(mag_head), -200, +100,-25);
+  text("Gyroscope\nPitch (degrees): " + degrees(gyro_pitch) + "\nRoll (degrees): " + degrees(gyro_roll)+"\nYaw (degrees): " + degrees(gyro_yaw), -280, -150,0);
+  text("Accelerometer\nPitch (degrees): " + degrees(acc_pitch)    + "\nRoll (degrees): " + degrees(acc_roll   )+"\n\nMagnetometer\nYaw (degrees): " + degrees(mag_head), -100, -150,0);
+  text("Fusion       \nPitch (degrees): " + degrees(fusion_pitch) + "\nRoll (degrees): " + degrees(fusion_roll)+"\n", +100, -150,0);
   popMatrix();
 
   ///////////////////////////////////////////////////////////////////////////
@@ -224,7 +222,7 @@ void draw() {
   ///////////////////////////////////////////////////////////////////////////
 
   pushMatrix();
-  translate(-25, -25, +25);
+  translate(-230, 25, 00);
   strokeWeight(3);
 
   float gyro_scale=20;
@@ -245,7 +243,7 @@ void draw() {
 
 
   pushMatrix();
-  translate(-25, -25, -25);
+  translate(-230, -25, 0);
   rotateX(gyro_pitch); // screen x -> sensor x
   rotateY(gyro_yaw); // screen y -> sensor z
   rotateZ(gyro_roll); // screen z -> sensor y
@@ -260,7 +258,7 @@ void draw() {
 
 
   pushMatrix();
-  translate(25, -25, +25);
+  translate(-150, 25, 0);
   strokeWeight(3);
   
   stroke( 255, 0, 0 );     
@@ -282,7 +280,7 @@ void draw() {
 
 
   pushMatrix();
-  translate(25, -25, -25);
+  translate(-150, -25, 0);
   rotateX(acc_pitch); // screen x -> sensor x
   rotateY(0); // screen y -> sensor z
   rotateZ(acc_roll); // screen z -> sensor y
@@ -290,7 +288,7 @@ void draw() {
   popMatrix();
 
   pushMatrix();
-  translate(75, -25, -25);
+  translate(150, -25, 0);
   rotateX(fusion_pitch); // screen x -> sensor x
   rotateY(0); // screen y -> sensor z
   rotateZ(fusion_roll); // screen z -> sensor y
@@ -302,7 +300,7 @@ void draw() {
   ///////////////////////////////////////////////////////////////////////////
   
   pushMatrix();
-  translate(-25, +25, +25);
+  translate(-50, +25, 0);
   box(1, 1, 1);
   strokeWeight(3);
   
@@ -326,7 +324,7 @@ void draw() {
 
   
   pushMatrix();
-  translate(-25, +25, -25);
+  translate(-50, -25, 0);
   rotateY(mag_head); 
   buildBoxShape(15, 5, 10);
   popMatrix();
