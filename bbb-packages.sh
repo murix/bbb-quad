@@ -32,13 +32,13 @@ INSTALL="$INSTALL  dosfstools git-core kpartx u-boot-tools wget parted pv"
 apt-get update
 
 # purge
-apt-get -y purge $PURGE
+#apt-get -y purge $PURGE
 
 # remove any trash
-apt-get -y autoremove
+#apt-get -y autoremove
 
 # purge remain trash
-apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
+#apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
 
 # upgrade remain existing packages
 apt-get -y upgrade
