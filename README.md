@@ -40,8 +40,12 @@ iptables -t nat -A POSTROUTING -j MASQUERADE
 
 ifconfig usb0 192.168.7.1
 
-Connect BBB serial TTL - J1 header
-==================================
+USB-Serial convert to BBB J1 header
+===================================
+
+pin1-GND
+pin4-RX
+pin5-TX
 
 minicom -c on -o -D /dev/ttyACM0
 
@@ -57,6 +61,7 @@ echo nameserver 8.8.8.8 > /etc/resolv.conf
 
 Cleanup/Upgrade BBB Debian
 ==========================
+
 
 git clone git@github.com:murix/bbb-scripts.git
 
