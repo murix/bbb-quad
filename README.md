@@ -36,7 +36,7 @@ Setup PC as internet USB router
 
 sysctl -w net.ipv4.ip_forward=1
 
-iptables -t nat -A POSTROUTING -j MASQUARE
+iptables -t nat -A POSTROUTING -j MASQUERADE
 
 ifconfig usb0 192.168.7.1
 
