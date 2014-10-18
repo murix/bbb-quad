@@ -63,7 +63,7 @@ Cleanup/Upgrade BBB Debian
 ==========================
 
 
-git clone git@github.com:murix/bbb-scripts.git
+git clone https://github.com/murix/bbb-scripts.git
 
 ./bbb-scripts/bbb-packages.sh
 
