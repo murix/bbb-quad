@@ -10,6 +10,9 @@ PURGE="$PURGE gstreamer0.10-plugins-base gstreamer0.10-plugins-good libopencore-
 PURGE="$PURGE libavcodec-extra-53"
 PURGE="$PURGE python-wicd wicd-cli wicd-curses wicd-daemon wicd-gtk"
 
+#
+INSTALL="$INSTALL cmake libjsoncpp-dev"
+
 INSTALL="$INSTALL  udhcpd dbus python-dbus network-manager network-manager-gnome"
 INSTALL="$INSTALL  mc less ipython sshfs aptitude python-matplotlib minicom"
 #GPS
