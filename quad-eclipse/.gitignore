@@ -15,3 +15,4 @@ mpu6050-test
 socket-test
 hmc5883-test
 udpserver-test
+cc1101-tap

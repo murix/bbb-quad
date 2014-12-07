@@ -5,6 +5,9 @@ cmake_minimum_required (VERSION 2.6)
 
 project (bbb-multicopter)
 
+#
+add_executable(cc1101-tap cc1101-tap.cpp)
+
 # barometer
 add_executable(ms5611-test  ms5611-test.cpp  bbb_i2c.cpp ms5611.cpp )
 

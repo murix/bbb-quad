@@ -18,21 +18,27 @@ static void pabort(const char *s)
 static void transfer(int fd,uint8_t* txbuf,int txlen,uint8_t* rxbuf,int rxlen)
 {
 	int ret;
-	struct spi_ioc_transfer tr = {
-		.tx_buf = (unsigned long)txbuf, //tx 
-		.rx_buf = (unsigned long)rxbuf, //rx
-		.len = txlen,                   //bytes
-	};
-
-	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
-	if (ret < 1)
-		pabort("can't send spi message");
+	struct spi_ioc_transfer tr;
+	tr.tx_buf = (unsigned long)txbuf; //tx 
+	tr.rx_buf = (unsigned long)rxbuf; //rx
+	tr.len = txlen;                   //bytes
+	tr.speed_hz= 5000000;
+	tr.bits_per_word=8;
+	tr.delay_usecs=0;
+	tr.cs_change=1;
+	
+	
+	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr); if (ret < 1) pabort("can't send spi message");
 }
 
 
 static int openspi(void){
-
-        char *device = "/dev/spidev1.0";
+  
+        system("echo ADAFRUIT-SPI0 > /sys/devices/bone_capemgr.9/slots");
+        //system("echo BB-SPIDEV0 > /sys/devices/bone_capemgr.9/slots");
+	usleep(500);
+	
+        const char *device = "/dev/spidev1.0";
         uint8_t bits = 8;
         uint32_t speed = 5000000;
         uint8_t mode = 0;
