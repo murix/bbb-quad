@@ -74,6 +74,14 @@ void set_all(PRUPWM* myPWM,uint32_t* dutyns){
 #define PWM_NORMAL_MAX   1950000
 #define PWM_NORMAL_STEP     1000
 
+#define PWM_STEP PWM_NORMAL_STEP
+#define PWM_MAX PWM_NORMAL_MAX
+#define PWM_MIN PWM_NORMAL_MIN
+#define PWM_NORMAL_ARM PWM_NORMAL_STOP
+#define PWM_ARM PWM_NORMAL_STOP
+
+
+
 // calibration only
 #define PWM_CALIB_MIN    1000000 
 #define PWM_CALIB_MAX    2000000
