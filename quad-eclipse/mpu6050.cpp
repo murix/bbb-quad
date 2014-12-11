@@ -15,6 +15,8 @@
 #include <stdio.h>
 // int types
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 //sqrt
 #include <math.h>
 
@@ -80,6 +82,7 @@ void mpu6050::init(){
 	//
 	if(ioctl(fd,I2C_SLAVE,0x68)<0){
 		perror("i2c slave mpu6050 Failed");
+		exit(1);
 	}
 	//master enable
 	i2c_smbus_write_byte_data(fd,0x6a,0x00);

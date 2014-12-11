@@ -6,13 +6,14 @@ import math
 import sys
 import os
 
-os.system("echo BB-I2C1  > /sys/devices/bone_capemgr.9/slots")
-time.sleep(2);
+#os.system("echo BB-I2C1  > /sys/devices/bone_capemgr.9/slots")
+#time.sleep(2);
 
 def gy86_read():
- mpu6050 = Adafruit_I2C(0x68,2) # ADC 16bit
- hmc5883 = Adafruit_I2C(0x1e,2) # ADC 12bit
- ms5611  = Adafruit_I2C(0x77,2) # ADC 24bit
+ i2cbus = 1
+ mpu6050 = Adafruit_I2C(0x68,i2cbus) # ADC 16bit
+ hmc5883 = Adafruit_I2C(0x1e,i2cbus) # ADC 12bit
+ ms5611  = Adafruit_I2C(0x77,i2cbus) # ADC 24bit
 
  #####################################################
  # mpu6050 i2c master enable bit

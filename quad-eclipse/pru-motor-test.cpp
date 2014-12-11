@@ -66,7 +66,7 @@ void set_all(PRUPWM* myPWM,uint32_t* dutyns){
 }
 
 //
-#define PWM_HZ          50
+#define PWM_HZ          400
 
 // deve ser menos de que o minimo da calibracao
 #define PWM_NORMAL_STOP   900000
