@@ -40,7 +40,8 @@ void sendrecv() {
           clientSocket.setSoTimeout(1000); 
 
           //
-          InetAddress IPAddress = InetAddress.getByName("beaglebone.local");
+          //InetAddress IPAddress = InetAddress.getByName("beaglebone.local");
+          InetAddress IPAddress = InetAddress.getByName("192.168.8.50");
           String command="g";
           byte[] command_bin=command.getBytes();
           DatagramPacket sendPacket = new DatagramPacket(command_bin, command_bin.length, IPAddress, 32000);       

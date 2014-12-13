@@ -1,14 +1,18 @@
 #!/bin/bash
 
-PURGE=""
-INSTALL=""
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
 
-PURGE="$PURGE nodejs apache2.2-common gnome-icon-theme libx11-doc libopencv-dev"
-PURGE="$PURGE libgl1-mesa-dri locales vim vim-runtime freepats libicu48 libflite1"
-PURGE="$PURGE libwebkitgtk-1.0-0 libavcodec53 gstreamer0.10-ffmpeg gstreamer0.10-plugins-bad"
-PURGE="$PURGE gstreamer0.10-plugins-base gstreamer0.10-plugins-good libopencore-amrnb0 libopencore-amrwb0"
-PURGE="$PURGE libavcodec-extra-53"
+PURGE=""
 PURGE="$PURGE python-wicd wicd-cli wicd-curses wicd-daemon wicd-gtk"
+
+
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+
+INSTALL=""
 
 #
 INSTALL="$INSTALL cmake libjsoncpp-dev"
@@ -30,18 +34,19 @@ INSTALL="$INSTALL  libgps-dev libmodbus-dev libnl-dev libpthread-stubs0-dev libs
 #omap-image-builder deps
 INSTALL="$INSTALL  dosfstools git-core kpartx u-boot-tools wget parted pv"
 
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+
 
 # get new list of packages
-apt-get update
+apt-get -y update
 
 # purge
-#apt-get -y purge $PURGE
+apt-get -y purge $PURGE
 
 # remove any trash
-#apt-get -y autoremove
-
-# purge remain trash
-#apt-get -y purge `dpkg --get-selections | grep deinstall | awk '{print $1}'`
+apt-get -y autoremove
 
 # upgrade remain existing packages
 apt-get -y upgrade
@@ -55,9 +60,4 @@ apt-get clean
 # install python modules
 easy_install -U distribute
 pip install Adafruit_BBIO
-
-
-
-
-
 
