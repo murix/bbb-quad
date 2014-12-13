@@ -22,6 +22,9 @@
 
 #include "udpserver.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 
 void *udpserver(void *arg)
 {
@@ -40,8 +43,12 @@ void *udpserver(void *arg)
 	servaddr.sin_port=htons(32000);
 	bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
+        int count=0;
 	for (;;)
 	{
+                printf("udpserver count=%d\r\n",count);
+		count++;
+                    
 		len = sizeof(cliaddr);
 		n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
 		mesg[n] = 0;
