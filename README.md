@@ -4,6 +4,15 @@ Beagleboard Black Quad Copter
 Development a simplest quadcopter using beaglebone black
 
 
+MLO + uboot: am335x-evm-v2015.01-rc3-r4
+
+kernel: 3.8.3-bone68
+
+FS: Debian 7.7 
+
+
+
+
 BBB Lastest images
 ==================
 http://beagleboard.org/latest-images/
