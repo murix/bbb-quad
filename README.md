@@ -1,10 +1,11 @@
-bbb-scripts
-===========
+Beagleboard Black Quad Copter
+=============================
 
-Tested in xUbuntu 14.04 64-bit
+Development a simplest quadcopter using beaglebone black
 
-Official Lastest images
-=======================
+
+BBB Lastest images
+==================
 http://beagleboard.org/latest-images/
 
 Create custom images (advanced)
@@ -40,15 +41,6 @@ iptables -t nat -A POSTROUTING -j MASQUERADE
 
 ifconfig usb0 192.168.7.1
 
-USB-Serial convert to BBB J1 header
-===================================
-
-pin1-GND
-pin4-RX
-pin5-TX
-
-minicom -c on -o -D /dev/ttyACM0
-
 
 Connect BBB to internet via USB
 ===============================
@@ -58,23 +50,4 @@ ifconfig usb0 192.168.7.2
 route add default gw 192.168.7.1
 
 echo nameserver 8.8.8.8 > /etc/resolv.conf
-
-Cleanup/Upgrade BBB Debian
-==========================
-
-
-git clone https://github.com/murix/bbb-scripts.git
-
-./bbb-scripts/bbb-packages.sh
-
-
-SSH & GIT setup
-===============
-
-./git-config.sh
-
-
-
-
-
 
