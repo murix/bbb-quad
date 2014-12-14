@@ -8,15 +8,32 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
-static int openadc(void){
-  int fd;
+void openadc(void){
+  
 
         system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
         //system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
 
+
+
+while(1){
+        FILE* fd = fopen("/sys/devices/ocp.3/helper.12/AIN0","r");
+        if(!fd){
+          return ;
+        }
+        fseek(fd,0,SEEK_SET);
+        float val;
+        int ret = fscanf(fd,"%f",&val);
+        printf("%f\r\n", ((val/1000.0)*(5.0/0.265)) );
+	usleep(10*1000);
+        fclose(fd);
+
+}
+	
+
     
 
-        return fd;
+        
 }
 
 
