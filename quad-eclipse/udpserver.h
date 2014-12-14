@@ -42,6 +42,8 @@ typedef struct {
 	float baro_p;
 	float baro_t;
 	float baro_h;
+        //
+        float vbat;
 
 } imu_data_t;
 

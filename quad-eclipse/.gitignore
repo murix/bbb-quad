@@ -1,19 +1,13 @@
 
+# pru firmware and devicetree
 bone_pru0_out-00A0.dtbo
 pasm-pwm.bin
-bbb-gps
-gy86
-ms5611-test
-pru-motor-test
 
+# cmake temp
 CMakeFiles
 cmake_install.cmake
 CMakeCache.txt
 Makefile
 
-mpu6050-test
-socket-test
-hmc5883-test
-udpserver-test
-cc1101-tap
-adc
+# test binaries
+test-*

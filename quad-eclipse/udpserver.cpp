@@ -95,6 +95,7 @@ void *udpserver(void *arg)
 		fromScratch["baro_h"]=pdata->baro_h;
 
 
+                fromScratch["vbat"]=pdata->vbat;
 
 
 		std::string txt = fromScratch.toStyledString();
