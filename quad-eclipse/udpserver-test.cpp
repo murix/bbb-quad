@@ -14,12 +14,17 @@
 #include "mpu6050.h"
 #include "hmc5883.h"
 #include "ms5611.h"
+#include "bbb-adc.h"
 
 //printf
 #include <stdio.h>
 
 
 int main(int argc,char** argv){
+
+        adc_monitor adc;
+        adc.init();
+
 
 	bbb_i2c i2c;
 	i2c.open();
@@ -41,6 +46,8 @@ int main(int argc,char** argv){
 		mpu.update();
 		mag.update();
 		baro.update();
+                adc.update();
+
 
 		pdata.acc_x=mpu.acc[0];
 		pdata.acc_y=mpu.acc[1];
@@ -70,6 +77,8 @@ int main(int argc,char** argv){
 		pdata.baro_p=baro.P;
 		pdata.baro_t=baro.T;
 		pdata.baro_h=baro.H;
+
+                pdata.vbat=adc.vbat;
 	}
 
 	return 0;
