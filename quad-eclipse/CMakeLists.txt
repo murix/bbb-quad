@@ -8,6 +8,8 @@ project (bbb-multicopter)
 #
 add_executable(cc1101-tap cc1101-tap.cpp)
 
+add_executable(adc adc.cpp)
+
 # barometer
 add_executable(ms5611-test  ms5611-test.cpp  bbb_i2c.cpp ms5611.cpp )
 
