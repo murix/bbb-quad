@@ -126,20 +126,26 @@ void *motorserver(void *arg){
         }
      }
 
+
+        printf("prepare to break motors\r\n");
         // apply FLY_MIN
         for(int ch=0;ch<8;ch++){
-	   myPWM->setChannelValue(ch,PWM_FLY_MIN);
+           if(cache[ch]>PWM_FLY_ARM){
+	      myPWM->setChannelValue(ch,PWM_FLY_MIN);
+           }
         }
         printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_MIN);
 
         //wait 10 ms - 4 cycles of 400hz pwm
-        usleep(100* 1000);
+        printf("wait motors go to minium speed\r\n");
+        usleep(1000* 1000);
 
         // apply ARM
         for(int ch=0;ch<8;ch++){
 	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
         }
         printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
+        printf("all motors has stoped\r\n");
 
 
 
