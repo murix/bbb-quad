@@ -126,6 +126,16 @@ void *motorserver(void *arg){
         }
      }
 
+        // apply FLY_MIN
+        for(int ch=0;ch<8;ch++){
+	   myPWM->setChannelValue(ch,PWM_FLY_MIN);
+        }
+        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_MIN);
+
+        //wait 10 ms - 4 cycles of 400hz pwm
+        usleep(10* 100);
+
+        // apply ARM
         for(int ch=0;ch<8;ch++){
 	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
         }
