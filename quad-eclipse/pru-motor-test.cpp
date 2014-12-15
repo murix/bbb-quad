@@ -66,26 +66,13 @@ void set_all(PRUPWM* myPWM,uint32_t* dutyns){
 }
 
 //
-#define PWM_HZ          400
-
-// deve ser menos de que o minimo da calibracao
-#define PWM_NORMAL_STOP   900000
-#define PWM_NORMAL_MIN   1050000
-#define PWM_NORMAL_MAX   1950000
-#define PWM_NORMAL_STEP     1000
-
-#define PWM_STEP PWM_NORMAL_STEP
-#define PWM_MAX PWM_NORMAL_MAX
-#define PWM_MIN PWM_NORMAL_MIN
-#define PWM_NORMAL_ARM PWM_NORMAL_STOP
-#define PWM_ARM PWM_NORMAL_STOP
-
-
-
-// calibration only
-#define PWM_CALIB_MIN    1000000 
-#define PWM_CALIB_MAX    2000000
-
+#define PWM_HZ              400
+#define PWM_FLY_ARM      970000
+#define PWM_CALIB_MIN   1000000
+#define PWM_FLY_MIN     1070000
+#define PWM_FLY_MAX     1900000
+#define PWM_CALIB_MAX   1950000
+#define PWM_STEP           1000
 
 uint32_t dutyns[8];
 
@@ -104,33 +91,49 @@ int main() {
 	myPWM->start();
 
 	//
-	for(int i=0;i<8;i++) 
-           dutyns[i]=PWM_NORMAL_ARM;
+	for(int i=0;i<8;i++){
+           dutyns[i]=PWM_FLY_ARM;
+        }
 	//
 	set_all(myPWM,dutyns);
 
+ 
+        
+
 	while(1){
 	   printf("PWM frequency %d Hz\r\n",PWM_HZ);
-	   printf("cmd +: increase      duty by %8d ns, max=%d ns\r\n",PWM_NORMAL_STEP,PWM_NORMAL_MAX);
-	   printf("cmd -: decrease      duty by %8d ns, min=%d ns\r\n",PWM_NORMAL_STEP,PWM_NORMAL_MIN);
-	   printf("cmd d: esc calibration max -> duty=%8d ns\r\n",PWM_MAX);
-	   printf("cmd c: esc calibration min -> duty=%8d ns\r\n",PWM_MIN);
-	   printf("cmd s: motor arm -> duty=%8d ns\r\n",PWM_NORMAL_STOP);
-	   printf("cmd x: quit\r\n");
+
+	   printf("cmd z: motor fly arm\r\n");
+	   printf("cmd x: motor fly min\r\n");
+	   printf("cmd c: motor fly max\r\n");
+
+	   printf("cmd s: esc calibration min\r\n");
+	   printf("cmd d: esc calibration max\r\n");
+
+	   printf("cmd +: increase\r\n");
+	   printf("cmd -: decrease\r\n");
+	   printf("cmd a: quit\r\n");
 	
 	   char c = getch();
+            
+    
+	   if (c =='z'){ for(int i=0;i<8;i++) dutyns[i]=PWM_FLY_ARM;   }
+	   if (c =='x'){ for(int i=0;i<8;i++) dutyns[i]=PWM_FLY_MIN;   }
+	   if (c =='c'){ for(int i=0;i<8;i++) dutyns[i]=PWM_FLY_MAX;   }
+              
+	   if (c =='s'){ for(int i=0;i<8;i++) dutyns[i]=PWM_CALIB_MIN; }
+	   if (c =='d'){ for(int i=0;i<8;i++) dutyns[i]=PWM_CALIB_MAX; }
+
 	   if (c =='+'){ for(int i=0;i<8;i++) dutyns[i]+=PWM_STEP; }
 	   if (c =='-'){ for(int i=0;i<8;i++) dutyns[i]-=PWM_STEP; }
-	   if (c =='d'){ for(int i=0;i<8;i++) dutyns[i]=PWM_MAX; }
-	   if (c =='c'){ for(int i=0;i<8;i++) dutyns[i]=PWM_MIN; }
-	   if (c ==' '){ for(int i=0;i<8;i++) dutyns[i]=PWM_ARM; }
-	   if (c =='x') break;
+	   if (c =='a') break;
+
 	   //
-	   if (c =='1') dutyns[0]+=PWM_STEP;//FL H
-	   if (c =='2') dutyns[1]+=PWM_STEP;//FR L
+	   if (c =='1') dutyns[0]+=PWM_STEP;
+	   if (c =='2') dutyns[1]+=PWM_STEP;
 	   if (c =='3') dutyns[2]+=PWM_STEP;
-	   if (c =='4') dutyns[3]+=PWM_STEP;//RL I
-	   if (c =='5') dutyns[4]+=PWM_STEP;//RR K
+	   if (c =='4') dutyns[3]+=PWM_STEP;
+	   if (c =='5') dutyns[4]+=PWM_STEP;
 	   if (c =='6') dutyns[5]+=PWM_STEP;
 	   if (c =='7') dutyns[6]+=PWM_STEP;
 	   if (c =='8') dutyns[7]+=PWM_STEP;
@@ -144,17 +147,27 @@ int main() {
 	   if (c =='u') dutyns[6]-=PWM_STEP;
 	   if (c =='i') dutyns[7]-=PWM_STEP;
 
+           //safety check
+	   for(int i=0;i<8;i++){
+                // minimum
+                if(dutyns[i]<PWM_FLY_ARM  ) dutyns[i]=PWM_FLY_ARM;
+                // maximum
+                if(dutyns[i]>PWM_CALIB_MAX) dutyns[i]=PWM_CALIB_MAX;
+            }
 
-
-	   for(int i=0;i<8;i++) printf("|%d",dutyns[i]);
+	   for(int i=0;i<8;i++){
+             printf("|%d",dutyns[i]);
+           }
 	   printf("|\r\n");
 
 	   set_all(myPWM,dutyns);
 	
 	}
 
-    //Leave motors ARMED
-	for(int i=0;i<8;i++) dutyns[i]=PWM_ARM;
+        //Leave motors ARMED
+	for(int i=0;i<8;i++){
+             dutyns[i]=PWM_FLY_ARM;
+        }
 	//
 	set_all(myPWM,dutyns);
 }
