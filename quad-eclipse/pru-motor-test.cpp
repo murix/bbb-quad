@@ -65,7 +65,7 @@ int getch()
 #define PWM_FLY_MIN     1070000
 #define PWM_FLY_MAX     1900000
 #define PWM_CALIB_MAX   1950000
-#define PWM_STEP          10000
+#define PWM_STEP           5000
 #define PWM_CHANGE      2500000
 
 typedef struct {
