@@ -100,7 +100,9 @@ void *motorserver(void *arg){
 	
 
      int speeds[8];
-     bzero(&speeds,sizeof(speeds));
+     for(int ch=0;ch<8;ch++){
+       speeds[ch]=PWM_FLY_ARM;
+     }
 
      for(;;){
         for(int ch=0;ch<8;ch++){
@@ -120,7 +122,7 @@ void *motorserver(void *arg){
 
            if(need_change){
               myPWM->setChannelValue(ch,speeds[ch]);
-              printf("PRU Motor frequency=%d Hz ch=%d @ %d ns\r\n",PWM_HZ,ch,speeds[ch]);
+              //printf("PRU Motor frequency=%d Hz ch=%d @ %d ns\r\n",PWM_HZ,ch,speeds[ch]);
            }
         }
         
