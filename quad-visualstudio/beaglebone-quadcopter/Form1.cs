@@ -242,8 +242,11 @@ namespace beaglebone_quadcopter
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-          
-            //Gamepad_State_SlimDX joy = new Gamepad_State_SlimDX(UserIndex.One);
+
+            //atenção com versao do slimdx no nuget, verifique se o runtime é 4.0 e instale tambem o slimdx runtime 4.0
+            //se a versão do runtime for 2.0 é preciso adicionar no app.config <startup useLegacyV2RuntimeActivationPolicy="true">
+            Gamepad_State_SlimDX joy = new Gamepad_State_SlimDX(UserIndex.One);
+            
 
 
             int timeslice = (int)((1.0 / framerate) * 1000.0);
@@ -252,7 +255,7 @@ namespace beaglebone_quadcopter
             while (true) {
                 try
                 {
-                    //joy.Update();
+                    joy.Update();
                     
 
                     Byte[] sendBytes = Encoding.ASCII.GetBytes("Is anybody there");
@@ -297,7 +300,8 @@ namespace beaglebone_quadcopter
                         vbat = (double)json["vbat"];
                     }
                     else {
-                        Console.WriteLine(DateTime.Now+" timeout");
+                        TimeSpan timeItTook = DateTime.Now - start;
+                        Console.WriteLine(DateTime.Now + " timeout after " + timeItTook.Milliseconds+"ms");
                     }
                     //Console.WriteLine(vbat);
 
