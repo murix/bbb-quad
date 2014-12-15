@@ -99,22 +99,28 @@ void *motorserver(void *arg){
 
 	
 
-     int cache[8];
-     bzero(&cache,sizeof(cache));
+     int speeds[8];
+     bzero(&speeds,sizeof(speeds));
 
      for(;;){
         for(int ch=0;ch<8;ch++){
-           //cache outdated
-           if(cache[ch]!=pdata->dutyns[ch]){
-              //update cache
-              cache[ch]=pdata->dutyns[ch];
-              //safety cache
-              if(cache[ch]<PWM_FLY_ARM)   cache[ch]=PWM_FLY_ARM;
-              if(cache[ch]>PWM_CALIB_MAX) cache[ch]=PWM_CALIB_MAX;
-              //
-              myPWM->setChannelValue(ch,cache[ch]);
-              printf("PRU Motor frequency=%d Hz ch=%d @ %d ns\r\n",PWM_HZ,ch,cache[ch]);
+           
+           bool need_change=false;
+           //
+           if(speeds[ch] < pdata->dutyns[ch]){
+              speeds[ch] += PWM_STEP;
+              if(speeds[ch]>PWM_FLY_MAX) speeds[ch]=PWM_FLY_MAX;
+              need_change=true;
+           }
+           if(speeds[ch] > pdata->dutyns[ch]){
+              speeds[ch] -= PWM_STEP;
+              if(speeds[ch]<PWM_FLY_ARM) speeds[ch]=PWM_FLY_ARM;
+	      need_change=true;
+           }
 
+           if(need_change){
+              myPWM->setChannelValue(ch,speeds[ch]);
+              printf("PRU Motor frequency=%d Hz ch=%d @ %d ns\r\n",PWM_HZ,ch,speeds[ch]);
            }
         }
         
@@ -126,19 +132,6 @@ void *motorserver(void *arg){
         }
      }
 
-
-        printf("prepare to break motors\r\n");
-        // apply FLY_MIN
-        for(int ch=0;ch<8;ch++){
-           if(cache[ch]>PWM_FLY_ARM){
-	      myPWM->setChannelValue(ch,PWM_FLY_MIN);
-           }
-        }
-        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_MIN);
-
-        //wait 10 ms - 4 cycles of 400hz pwm
-        printf("wait motors go to minium speed\r\n");
-        usleep(1000* 1000);
 
         // apply ARM
         for(int ch=0;ch<8;ch++){
