@@ -81,21 +81,27 @@ void *motorserver(void *arg){
        //
        printf("enable PRU overlay\r\n");
        system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
-       printf("wait PRU overlay to be ready\r\n");
+       printf("wait PRU overlay to be ready...\r\n");
        usleep(1000000);
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
 	// Start the PRU
 	myPWM->start();
+        printf("PRU initialized\r\n");
+
 
         for(int ch=0;ch<8;ch++){
 	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
         }
+        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
+
 
 	
 
      int cache[8];
+     bzero(&cache,sizeof(cache));
+
      for(;;){
         for(int ch=0;ch<8;ch++){
            //cache outdated
@@ -107,12 +113,14 @@ void *motorserver(void *arg){
               if(cache[ch]>PWM_CALIB_MAX) cache[ch]=PWM_CALIB_MAX;
               //
               myPWM->setChannelValue(ch,cache[ch]);
+              printf("PRU Motor frequency=%d Hz ch=%d @ %d ns\r\n",PWM_HZ,ch,cache[ch]);
+
            }
         }
         
         // wait 2,5ms for 400hz pwm complete duty
         usleep(2500);
-        //
+        //command for terminate this thread
         if(pdata->cmd=='a'){
           break;
         }
@@ -121,6 +129,8 @@ void *motorserver(void *arg){
         for(int ch=0;ch<8;ch++){
 	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
         }
+        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
+
 
 
 }
@@ -149,17 +159,37 @@ int main() {
 	   printf("cmd a: quit\r\n");
 	
 	   motors.cmd = getch();
+
+	   if (motors.cmd =='1'){ motors.dutyns[0]+=PWM_STEP; } //
+	   if (motors.cmd =='2'){ motors.dutyns[1]+=PWM_STEP; } //
+	   if (motors.cmd =='3'){ motors.dutyns[2]+=PWM_STEP; }
+	   if (motors.cmd =='4'){ motors.dutyns[3]+=PWM_STEP; }
+	   if (motors.cmd =='5'){ motors.dutyns[4]+=PWM_STEP; }
+	   if (motors.cmd =='6'){ motors.dutyns[5]+=PWM_STEP; } //
+	   if (motors.cmd =='7'){ motors.dutyns[6]+=PWM_STEP; }
+	   if (motors.cmd =='8'){ motors.dutyns[7]+=PWM_STEP; } //
+
+	   if (motors.cmd =='q'){ motors.dutyns[0]-=PWM_STEP; }
+	   if (motors.cmd =='w'){ motors.dutyns[1]-=PWM_STEP; }
+	   if (motors.cmd =='e'){ motors.dutyns[2]-=PWM_STEP; }
+	   if (motors.cmd =='r'){ motors.dutyns[3]-=PWM_STEP; }
+	   if (motors.cmd =='t'){ motors.dutyns[4]-=PWM_STEP; }
+	   if (motors.cmd =='y'){ motors.dutyns[5]-=PWM_STEP; }
+	   if (motors.cmd =='u'){ motors.dutyns[6]-=PWM_STEP; }
+	   if (motors.cmd =='i'){ motors.dutyns[7]-=PWM_STEP; }
     
 	   if (motors.cmd =='z'){ for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_ARM;   }
 	   if (motors.cmd =='x'){ for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_MIN;   }
 	   if (motors.cmd =='c'){ for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_MAX;   }
               
+           if (motors.cmd =='a'){ break; }
 	   if (motors.cmd =='s'){ for(int i=0;i<8;i++) motors.dutyns[i]=PWM_CALIB_MIN; }
 	   if (motors.cmd =='d'){ for(int i=0;i<8;i++) motors.dutyns[i]=PWM_CALIB_MAX; }
 
 	   if (motors.cmd =='+'){ for(int i=0;i<8;i++) motors.dutyns[i]+=PWM_STEP; }
 	   if (motors.cmd =='-'){ for(int i=0;i<8;i++) motors.dutyns[i]-=PWM_STEP; }
-	   if (motors.cmd =='a') break;
+	   
+
 	}
         
         printf("wait motorserver terminate...\r\n");
