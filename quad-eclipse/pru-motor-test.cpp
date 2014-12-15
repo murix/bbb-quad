@@ -133,7 +133,7 @@ void *motorserver(void *arg){
         printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_MIN);
 
         //wait 10 ms - 4 cycles of 400hz pwm
-        usleep(10* 100);
+        usleep(100* 1000);
 
         // apply ARM
         for(int ch=0;ch<8;ch++){
