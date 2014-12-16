@@ -22,8 +22,8 @@
 
 int main(int argc,char** argv){
 
-        adc_monitor adc;
-        adc.init();
+        //adc_monitor adc;
+        //adc.init();
 
 
 	bbb_i2c i2c;
@@ -46,7 +46,7 @@ int main(int argc,char** argv){
 		mpu.update();
 		mag.update();
 		baro.update();
-                adc.update();
+                //adc.update();
 
 
 		pdata.acc_x=mpu.acc[0];
@@ -78,7 +78,7 @@ int main(int argc,char** argv){
 		pdata.baro_t=baro.T;
 		pdata.baro_h=baro.H;
 
-                pdata.vbat=adc.vbat;
+                //pdata.vbat=adc.vbat;
 	}
 
 	return 0;

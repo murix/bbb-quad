@@ -28,8 +28,8 @@
 //
 #include "pruPWM.h"
 
-
-
+#include "bbb-adc.h"
+#include <math.h>
 
 //
 #define PWM_HZ              400
@@ -38,7 +38,7 @@
 #define PWM_FLY_MIN     1070000
 #define PWM_FLY_MAX     1900000
 #define PWM_CALIB_MAX   1950000
-#define PWM_STEP           1000
+#define PWM_STEP           100
 #define PWM_CHANGE      2500000
 
 typedef struct {
@@ -48,8 +48,11 @@ typedef struct {
 } motor_t;
 
  int speeds[8];
+ adc_monitor adc;
 void *motorserver(void *arg){
      motor_t* pdata=(motor_t*) arg;
+
+ adc.init();
 
        //
        printf("enable PRU overlay\r\n");
@@ -70,25 +73,46 @@ void *motorserver(void *arg){
         printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
 
 
-	
+     
+    
 
     
      for(int ch=0;ch<8;ch++){
        speeds[ch]=PWM_FLY_ARM;
      }
 
+     float _vbatprev=0;
+     float _vbatnow=0;
+     float _vbatdiff=0;
+     int _pwm_step=1000;
      for(;;){
+        adc.update();
+        _vbatprev=_vbatnow;
+        _vbatnow=adc.vbat;
+        _vbatdiff=fabs(fabs(_vbatprev)-fabs(_vbatnow));
+        //diferenca pequena -> step aumenta
+        if(_vbatdiff<0.3){
+           _pwm_step+=100;
+        }
+        //diferenca grande -> step diminui 
+        else {
+          _pwm_step-=100;
+        }
+        if(_pwm_step<100) _pwm_step=100;
+        if(_pwm_step>1000) _pwm_step=1000;
+
+
         for(int ch=0;ch<8;ch++){
            
            bool need_change=false;
            //
            if(speeds[ch] < pdata->dutyns[ch]){
-              speeds[ch] += PWM_STEP;
+              speeds[ch] += _pwm_step;
               if(speeds[ch]>PWM_FLY_MAX) speeds[ch]=PWM_FLY_MAX;
               need_change=true;
            }
            if(speeds[ch] > pdata->dutyns[ch]){
-              speeds[ch] -= PWM_STEP;
+              speeds[ch] -= _pwm_step;
               if(speeds[ch]<PWM_FLY_ARM) speeds[ch]=PWM_FLY_ARM;
 	      need_change=true;
            }
@@ -102,18 +126,18 @@ void *motorserver(void *arg){
         // wait 2,5ms for 400hz pwm complete duty
         usleep(2500);
         //command for terminate this thread
-        if(pdata->cmd=='a'){
-          break;
-        }
+        //if(pdata->cmd=='a'){
+        //  break;
+        //}
      }
 
 
         // apply ARM
-        for(int ch=0;ch<8;ch++){
-	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
-        }
-        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
-        printf("all motors has stoped\r\n");
+        //for(int ch=0;ch<8;ch++){
+	//   myPWM->setChannelValue(ch,PWM_FLY_ARM);
+        //}
+        //printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
+        //printf("all motors has stoped\r\n");
 
 
 
@@ -232,7 +256,7 @@ void *udpserver(void *arg)
 		fromScratch["baro_h"]=pdata->baro_h;
 
 
-                fromScratch["vbat"]=pdata->vbat;
+                fromScratch["vbat"]=adc.vbat;
 
                 fromScratch["motor1"]=speeds[0];
                 fromScratch["motor2"]=speeds[1];
