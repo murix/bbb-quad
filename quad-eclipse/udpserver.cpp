@@ -90,16 +90,16 @@ void *motorserver(void *arg){
         _vbatprev=_vbatnow;
         _vbatnow=adc.vbat;
         _vbatdiff=fabs(fabs(_vbatprev)-fabs(_vbatnow));
-        //diferenca pequena -> step aumenta
-        if(_vbatdiff<0.3){
-           _pwm_step+=100;
-        }
-        //diferenca grande -> step diminui 
-        else {
-          _pwm_step-=100;
-        }
+
+        // fuzzy step
+        if(_vbatdiff<0.2)                 _pwm_step+=100;
+        if(_vbatdiff>0.1&&_vbatdiff<0.4)  _pwm_step-=100;
+        if(_vbatdiff>0.2&&_vbatdiff<0.6)  _pwm_step-=200;
+        if(_vbatdiff>0.5)                 _pwm_step-=300;
+
+        //safe
         if(_pwm_step<100) _pwm_step=100;
-        if(_pwm_step>1000) _pwm_step=1000;
+        if(_pwm_step>10000) _pwm_step=2000;
 
 
         for(int ch=0;ch<8;ch++){
