@@ -92,10 +92,12 @@ void *motorserver(void *arg){
         _vbatdiff=fabs(fabs(_vbatprev)-fabs(_vbatnow));
 
         // fuzzy step
-        if(_vbatdiff<0.2)                 _pwm_step+=100;
+        if(               _vbatdiff<0.2)  _pwm_step+=100;
         if(_vbatdiff>0.1&&_vbatdiff<0.4)  _pwm_step-=100;
         if(_vbatdiff>0.2&&_vbatdiff<0.6)  _pwm_step-=200;
-        if(_vbatdiff>0.5)                 _pwm_step-=300;
+        if(_vbatdiff>0.5&&_vbatdiff<0.8)  _pwm_step-=300;
+        if(_vbatdiff>0.7&&_vbatdiff<1.0)  _pwm_step-=400;
+        if(_vbatdiff>0.9               )  _pwm_step-=500;
 
         //safe
         if(_pwm_step<100) _pwm_step=100;
