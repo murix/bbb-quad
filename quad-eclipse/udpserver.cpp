@@ -47,7 +47,7 @@ typedef struct {
 
 } motor_t;
 
-
+ int speeds[8];
 void *motorserver(void *arg){
      motor_t* pdata=(motor_t*) arg;
 
@@ -72,7 +72,7 @@ void *motorserver(void *arg){
 
 	
 
-     int speeds[8];
+    
      for(int ch=0;ch<8;ch++){
        speeds[ch]=PWM_FLY_ARM;
      }
@@ -233,6 +233,11 @@ void *udpserver(void *arg)
 
 
                 fromScratch["vbat"]=pdata->vbat;
+
+                fromScratch["motor1"]=speeds[0];
+                fromScratch["motor2"]=speeds[1];
+                fromScratch["motor3"]=speeds[5];
+                fromScratch["motor4"]=speeds[7];
 
 
 		std::string txt = fromScratch.toStyledString();
