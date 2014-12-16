@@ -99,7 +99,7 @@ void *motorserver(void *arg){
 
         //safe
         if(_pwm_step<100) _pwm_step=100;
-        if(_pwm_step>10000) _pwm_step=2000;
+        if(_pwm_step>2500) _pwm_step=2500;
 
 
         for(int ch=0;ch<8;ch++){
