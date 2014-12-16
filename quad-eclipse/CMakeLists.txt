@@ -29,6 +29,6 @@ target_link_libraries(test-uart-gps gps)
 target_link_libraries(test-pru-pwm-motors prussdrv pthread)
 
 # udp server
-       add_executable(test-udp-json udpserver-test.cpp udpserver.cpp bbb_i2c.cpp mpu6050.cpp timestamps.cpp hmc5883.cpp ms5611.cpp bbb-adc.cpp)
-target_link_libraries(test-udp-json pthread jsoncpp)
+       add_executable(test-udp-json udpserver-test.cpp udpserver.cpp bbb_i2c.cpp mpu6050.cpp timestamps.cpp hmc5883.cpp ms5611.cpp bbb-adc.cpp pru.cpp pruPWM.cpp)
+target_link_libraries(test-udp-json pthread jsoncpp prussdrv)
 

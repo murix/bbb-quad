@@ -25,6 +25,102 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//
+#include "pruPWM.h"
+
+
+
+
+//
+#define PWM_HZ              400
+#define PWM_FLY_ARM      970000
+#define PWM_CALIB_MIN   1000000
+#define PWM_FLY_MIN     1070000
+#define PWM_FLY_MAX     1900000
+#define PWM_CALIB_MAX   1950000
+#define PWM_STEP           1000
+#define PWM_CHANGE      2500000
+
+typedef struct {
+ char cmd;
+ uint32_t dutyns[8];
+
+} motor_t;
+
+
+void *motorserver(void *arg){
+     motor_t* pdata=(motor_t*) arg;
+
+       //
+       printf("enable PRU overlay\r\n");
+       system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
+       printf("wait PRU overlay to be ready...\r\n");
+       usleep(1000000);
+
+	// Initialise PRU PWM
+	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
+	// Start the PRU
+	myPWM->start();
+        printf("PRU initialized\r\n");
+
+
+        for(int ch=0;ch<8;ch++){
+	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
+        }
+        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
+
+
+	
+
+     int speeds[8];
+     for(int ch=0;ch<8;ch++){
+       speeds[ch]=PWM_FLY_ARM;
+     }
+
+     for(;;){
+        for(int ch=0;ch<8;ch++){
+           
+           bool need_change=false;
+           //
+           if(speeds[ch] < pdata->dutyns[ch]){
+              speeds[ch] += PWM_STEP;
+              if(speeds[ch]>PWM_FLY_MAX) speeds[ch]=PWM_FLY_MAX;
+              need_change=true;
+           }
+           if(speeds[ch] > pdata->dutyns[ch]){
+              speeds[ch] -= PWM_STEP;
+              if(speeds[ch]<PWM_FLY_ARM) speeds[ch]=PWM_FLY_ARM;
+	      need_change=true;
+           }
+
+           if(need_change){
+              myPWM->setChannelValue(ch,speeds[ch]);
+              //printf("PRU Motor frequency=%d Hz ch=%d @ %d ns\r\n",PWM_HZ,ch,speeds[ch]);
+           }
+        }
+        
+        // wait 2,5ms for 400hz pwm complete duty
+        usleep(2500);
+        //command for terminate this thread
+        if(pdata->cmd=='a'){
+          break;
+        }
+     }
+
+
+        // apply ARM
+        for(int ch=0;ch<8;ch++){
+	   myPWM->setChannelValue(ch,PWM_FLY_ARM);
+        }
+        printf("PRU Motors frequency=%d Hz ch=all @ %d ns\r\n",PWM_HZ,PWM_FLY_ARM);
+        printf("all motors has stoped\r\n");
+
+
+
+}
+
+
+
 
 void *udpserver(void *arg)
 {
@@ -43,15 +139,56 @@ void *udpserver(void *arg)
 	servaddr.sin_port=htons(32000);
 	bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
+
+        motor_t motors;
+        bzero(&motors,sizeof(motor_t));
+	pthread_t th1;
+	pthread_create(&th1, 0, motorserver, &motors);
+      
+
+
         int count=0;
 	for (;;)
 	{
-                printf("udpserver count=%d\r\n",count);
-		count++;
+            
                     
 		len = sizeof(cliaddr);
 		n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
 		mesg[n] = 0;
+
+                Json::Value root;
+                Json::Reader reader;
+                if(reader.parse(mesg,root,false)){
+                     bool joy_y = root.get("joy_y",false).asBool(); //up
+                     bool joy_a = root.get("joy_a",false).asBool(); //down
+                     bool joy_x = root.get("joy_x",false).asBool(); //right
+                     bool joy_b = root.get("joy_b",false).asBool(); //left
+
+                     bool joy_dpad_up    = root.get("joy_dpad_up",false).asBool(); //up
+                     bool joy_dpad_down  = root.get("joy_dpad_down",false).asBool(); //down
+                     bool joy_dpad_right = root.get("joy_dpad_right",false).asBool(); //right
+                     bool joy_dpad_left  = root.get("joy_dpad_left",false).asBool(); //left
+
+                     if(joy_y){
+                        for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_MAX;
+                     }
+                     if(joy_x){
+                        for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_MIN;
+                     }
+                     if(joy_a){
+                         for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_ARM; 
+                     }
+
+
+
+                } 
+                else {
+                   std::cout << reader.getFormatedErrorMessages() << "\r\n" ;
+                }
+
+
+                printf("udpserver count=%d\r\n",count);
+		count++;                
 
 		Json::Value fromScratch;
 
