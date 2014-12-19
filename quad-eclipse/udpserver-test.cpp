@@ -9,6 +9,9 @@
 //
 #include "udpserver.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 //
 #include "bbb_i2c.h"
 #include "mpu6050.h"
@@ -21,6 +24,24 @@
 
 
 int main(int argc,char** argv){
+
+
+// gera panic se kernel travar por 10 segundos
+system("sysctl -w kernel.hung_task_timeout_secs=10");
+system("sysctl -w kernel.hung_task_panic=1");
+
+// gera panic se kernel pegar simbolo doido
+system("sysctl -w kernel.panic_on_oops=1");
+
+// gera panic se kernel sofrer de lockup
+system("sysctl -w kernel.softlockup_panic=1");
+
+// gera panic se acabar a RAM
+system("sysctl -w vm.panic_on_oom=1");
+
+// reboot automatico em 2 segundos apos um kernel panic
+system("sysctl -w kernel.panic=2");
+
 
         //adc_monitor adc;
         //adc.init();
