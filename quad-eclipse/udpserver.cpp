@@ -213,6 +213,26 @@ void *udpserver(void *arg)
                          for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_ARM; 
                      }
 
+                     // 0 = frente direita
+                     // 1 = frente esquerda
+                     // 5 = traseiro direita
+                     // 7 = traseiro esquerda
+                     double joy_left_x= root.get("joy_left_x",0).asDouble();
+                     if(joy_left_x>0){
+                       motors.dutyns[0] = joy_left_x * PWM_FLY_MAX;
+                     }
+                     if(joy_left_x<0){
+                       motors.dutyns[1] = fabs(joy_left_x) * PWM_FLY_MAX;
+                     }
+                     double joy_right_x= root.get("joy_right_x",0).asDouble();
+                     if(joy_right_x>0){
+                       motors.dutyns[5] = joy_right_x * PWM_FLY_MAX;
+                     }
+                     if(joy_right_x<0){
+                       motors.dutyns[7] = fabs(joy_right_x) * PWM_FLY_MAX;
+                     }
+
+
 
 
                 } 
