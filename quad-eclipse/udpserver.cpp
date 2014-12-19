@@ -160,9 +160,11 @@ void *udpserver(void *arg)
 	sockfd=socket(AF_INET,SOCK_DGRAM,0);
 
 	bzero(&servaddr,sizeof(servaddr));
+
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
 	servaddr.sin_port=htons(32000);
+
 	bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
 
@@ -180,7 +182,13 @@ void *udpserver(void *arg)
                     
 		len = sizeof(cliaddr);
 		n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
+                if(n==-1){
+                   printf("recvfrom error\r\n");
+                   continue;
+                }
 		mesg[n] = 0;
+                printf("packet from %s:%d -> %s\r\n",inet_ntoa(cliaddr.sin_addr),ntohs(cliaddr.sin_port),mesg);
+                  
 
                 Json::Value root;
                 Json::Reader reader;
