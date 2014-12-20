@@ -190,7 +190,7 @@ void *udpserver(void *arg)
                    continue;
                 }
 		mesg[n] = 0;
-                printf("packet from %s:%d -> %s\r\n",inet_ntoa(cliaddr.sin_addr),ntohs(cliaddr.sin_port),mesg);
+                printf("packet from %s:%d\r\n",inet_ntoa(cliaddr.sin_addr),ntohs(cliaddr.sin_port));
                   
 
                 Json::Value root;
@@ -206,7 +206,7 @@ void *udpserver(void *arg)
                      bool joy_dpad_right = root.get("joy_dpad_right",false).asBool(); //right
                      bool joy_dpad_left  = root.get("joy_dpad_left",false).asBool(); //left
 
-/*
+
                      if(joy_y){
                         for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_MAX;
                      }
@@ -216,14 +216,14 @@ void *udpserver(void *arg)
                      if(joy_a){
                          for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_ARM; 
                      }
-*/
+
 
 
                      // 0 = frente direita
                      // 1 = frente esquerda
                      // 5 = traseiro direita
                      // 7 = traseiro esquerda
-/*
+
                      double joy_left_x= root.get("joy_left_x",0).asDouble();
                      if(joy_left_x>0){
                        motors.dutyns[0] = joy_left_x * PWM_FLY_MAX;
@@ -238,13 +238,13 @@ void *udpserver(void *arg)
                      if(joy_right_x<0){
                        motors.dutyns[7] = fabs(joy_right_x) * PWM_FLY_MAX;
                      }
-*/
+
 
 
 
                 } 
                 else {
-                   std::cout << reader.getFormatedErrorMessages() << "\r\n" ;
+                   //std::cout << reader.getFormatedErrorMessages() << "\r\n" ;
                 }
 
 
