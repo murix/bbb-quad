@@ -86,11 +86,13 @@ void *motorserver(void *arg){
      float _vbatdiff=0;
      int _pwm_step=1000;
      for(;;){
+
+
+/*
         adc.update();
         _vbatprev=_vbatnow;
         _vbatnow=adc.vbat;
         _vbatdiff=fabs(fabs(_vbatprev)-fabs(_vbatnow));
-
         // fuzzy step
         if(               _vbatdiff<0.2)  _pwm_step+=100;
         if(_vbatdiff>0.1&&_vbatdiff<0.4)  _pwm_step+=50;
@@ -98,10 +100,11 @@ void *motorserver(void *arg){
         if(_vbatdiff>0.5&&_vbatdiff<0.8)  _pwm_step-=100;
         if(_vbatdiff>0.7&&_vbatdiff<1.0)  _pwm_step-=150;
         if(_vbatdiff>0.9               )  _pwm_step-=200;
-
         //safe
         if(_pwm_step<100) _pwm_step=100;
         if(_pwm_step>2500) _pwm_step=2500;
+*/
+
 
 
         for(int ch=0;ch<8;ch++){
@@ -203,6 +206,7 @@ void *udpserver(void *arg)
                      bool joy_dpad_right = root.get("joy_dpad_right",false).asBool(); //right
                      bool joy_dpad_left  = root.get("joy_dpad_left",false).asBool(); //left
 
+/*
                      if(joy_y){
                         for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_MAX;
                      }
@@ -212,11 +216,14 @@ void *udpserver(void *arg)
                      if(joy_a){
                          for(int i=0;i<8;i++) motors.dutyns[i]=PWM_FLY_ARM; 
                      }
+*/
+
 
                      // 0 = frente direita
                      // 1 = frente esquerda
                      // 5 = traseiro direita
                      // 7 = traseiro esquerda
+/*
                      double joy_left_x= root.get("joy_left_x",0).asDouble();
                      if(joy_left_x>0){
                        motors.dutyns[0] = joy_left_x * PWM_FLY_MAX;
@@ -231,7 +238,7 @@ void *udpserver(void *arg)
                      if(joy_right_x<0){
                        motors.dutyns[7] = fabs(joy_right_x) * PWM_FLY_MAX;
                      }
-
+*/
 
 
 
