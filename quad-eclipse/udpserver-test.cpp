@@ -465,6 +465,7 @@ int main(int argc,char** argv){
 
 	//
 	drone_t drone_data;
+	memset (&drone_data,0,sizeof(drone_data));
 
 	//
 	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot;
