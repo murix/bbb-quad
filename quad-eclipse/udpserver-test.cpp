@@ -145,6 +145,7 @@ void *task_adc(void *arg){
 	adc_monitor adc;
 	adc.init();
 	while(1){
+                usleep((1000*1000)/60);
 		adc.update();
 		drone->vbat=adc.vbat;
 	}
@@ -262,6 +263,8 @@ void *task_imu(void *arg){
 	ms5611 baro(i2c.fd);
 	//
 	while(1){
+                usleep((1000*1000)/60);
+
 		mpu.update();
 		mag.update();
 		baro.update();
