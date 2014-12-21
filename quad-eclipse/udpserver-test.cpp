@@ -296,6 +296,11 @@ void *task_imu(void *arg){
 	}
 }
 
+#define MOTOR_FR 0
+#define MOTOR_FL 1
+#define MOTOR_RR 5
+#define MOTOR_RL 7
+
 void *task_pilot(void *arg)
 {
 	drone_t* drone=(drone_t*) arg;
@@ -310,21 +315,18 @@ void *task_pilot(void *arg)
 		if(drone->joy_a){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_ARM;
 		}
-		// 0 = frente direita
-		// 1 = frente esquerda
-		// 5 = traseiro direita
-		// 7 = traseiro esquerda
+
 		if(drone->joy_left_x>0){
-			drone->motor_dutyns_target[0] = drone->joy_left_x * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_FR] = drone->joy_left_x * PWM_FLY_MAX;
 		}
 		if(drone->joy_left_x<0){
-			drone->motor_dutyns_target[1] = fabs(drone->joy_left_x) * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_FL] = fabs(drone->joy_left_x) * PWM_FLY_MAX;
 		}
 		if(drone->joy_right_x>0){
-			drone->motor_dutyns_target[5] = drone->joy_right_x * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_RR] = drone->joy_right_x * PWM_FLY_MAX;
 		}
 		if(drone->joy_right_x<0){
-			drone->motor_dutyns_target[7] = fabs(drone->joy_right_x) * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_RL] = fabs(drone->joy_right_x) * PWM_FLY_MAX;
 		}
 
 	}
@@ -430,10 +432,10 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 		telemetric_json["vbat"]=drone->vbat;
 
 		//
-		telemetric_json["motor1"]=drone->motor_dutyns_now[0];
-		telemetric_json["motor2"]=drone->motor_dutyns_now[1];
-		telemetric_json["motor3"]=drone->motor_dutyns_now[5];
-		telemetric_json["motor4"]=drone->motor_dutyns_now[7];
+		telemetric_json["motor_fl"]=drone->motor_dutyns_now[MOTOR_FL];
+		telemetric_json["motor_fr"]=drone->motor_dutyns_now[MOTOR_FR];
+		telemetric_json["motor_rl"]=drone->motor_dutyns_now[MOTOR_RL];
+		telemetric_json["motor_rr"]=drone->motor_dutyns_now[MOTOR_RR];
 
 		//
 		std::string txt = telemetric_json.toStyledString();
