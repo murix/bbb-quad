@@ -24,19 +24,19 @@ namespace beaglebone_quadcopter
         }
             
 
-        double motor1 = 0.0;
-        double motor2 = 0.0;
-        double motor3 = 0.0;
-        double motor4 = 0.0;
+        double motor_fl = 0.0;
+        double motor_fr = 0.0;
+        double motor_rl = 0.0;
+        double motor_rr = 0.0;
         double vbat = 0.0;
         double rtt = 0.0;
 
         murix_series serie_vbat = new murix_series("vbat");
         murix_series serie_rtt = new murix_series("rtt_ms");
-        murix_series serie_motor1 = new murix_series("motor1");
-        murix_series serie_motor2 = new murix_series("motor2");
-        murix_series serie_motor3 = new murix_series("motor3");
-        murix_series serie_motor4 = new murix_series("motor4");
+        murix_series serie_motor_fl = new murix_series("motor_fl");
+        murix_series serie_motor_fr = new murix_series("motor_fr");
+        murix_series serie_motor_rl = new murix_series("motor_rl");
+        murix_series serie_motor_rr = new murix_series("motor_rr");
 
 
         private void Form1_Load(object sender, EventArgs e)
@@ -48,51 +48,21 @@ namespace beaglebone_quadcopter
             chart_vbat.Series.Add(serie_vbat);
 
             chart_motor.Series.Clear();
-            chart_motor.Series.Add(serie_motor1);
-            chart_motor.Series.Add(serie_motor2);
-            chart_motor.Series.Add(serie_motor3);
-            chart_motor.Series.Add(serie_motor4);
+            chart_motor.Series.Add(serie_motor_fl);
+            chart_motor.Series.Add(serie_motor_fr);
+            chart_motor.Series.Add(serie_motor_rl);
+            chart_motor.Series.Add(serie_motor_rr);
 
-            backgroundWorker1.WorkerReportsProgress = true;
-            backgroundWorker1.ProgressChanged += backgroundWorker1_ProgressChanged;
-            backgroundWorker1.RunWorkerAsync();
+            backgroundWorker_joystick.RunWorkerAsync();
 
+            timer_charts.Interval = (int)( 1000.0 / 60.0);
+            timer_charts.Start();
         }
-
-
-        void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            try
-            {
-                serie_vbat.circular_append_y(vbat, 1000);
-                serie_rtt.circular_append_y(rtt, 1000);
-                serie_motor1.circular_append_y(motor1 / 1000.0, 1000);
-                serie_motor2.circular_append_y(motor2 / 1000.0, 1000);
-                serie_motor3.circular_append_y(motor3 / 1000.0, 1000);
-                serie_motor4.circular_append_y(motor4 / 1000.0, 1000);
-
-                
-                chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
-                chart_rtt.ChartAreas[0].RecalculateAxesScale();
-
-                chart_vbat.ChartAreas[0].AxisY.IsStartedFromZero = false;
-                chart_vbat.ChartAreas[0].RecalculateAxesScale();
-
-                chart_motor.ChartAreas[0].AxisY.IsStartedFromZero = false;
-                chart_motor.ChartAreas[0].RecalculateAxesScale();
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-
-        
+       
 
         public string sendrecv(string ip,string json, int timeout)
         {
+            DateTime start = DateTime.Now;
             string returnData = "";
             try
             {
@@ -101,7 +71,7 @@ namespace beaglebone_quadcopter
 
                 Byte[] sendBytes = Encoding.ASCII.GetBytes(json);
                 
-                DateTime start = DateTime.Now;
+                
 
 
                 UdpClient udpClient = new UdpClient(ip, 32000);
@@ -112,7 +82,7 @@ namespace beaglebone_quadcopter
                 udpClient.Close();
 
 
-                rtt = DateTime.Now.Subtract(start).TotalMilliseconds;
+               
 
                 returnData = Encoding.ASCII.GetString(receiveBytes);
 
@@ -123,10 +93,12 @@ namespace beaglebone_quadcopter
                 Console.WriteLine(ex.StackTrace);
               
             }
+            rtt = DateTime.Now.Subtract(start).TotalMilliseconds;
             return returnData;
         }
 
 
+        bool controle_conectado = false;
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -140,7 +112,10 @@ namespace beaglebone_quadcopter
                     Gamepad_State_SlimDX joy = new Gamepad_State_SlimDX(UserIndex.One);
                     joy.Update();
 
+                    controle_conectado=joy.Connected;
+
                     JObject jsonjoy = new JObject();
+                    
 
                     jsonjoy["joy_start"] = joy.Start;
                     jsonjoy["joy_back"] = joy.Back;
@@ -181,14 +156,15 @@ namespace beaglebone_quadcopter
 
                         vbat = (double)json["vbat"];
 
-                        motor1 = (double)json["motor1"];
-                        motor2 = (double)json["motor2"];
-                        motor3 = (double)json["motor3"];
-                        motor4 = (double)json["motor4"];
+                        motor_fl = (double)json["motor_fl"];
+                        motor_fr = (double)json["motor_fr"];
+                        motor_rl = (double)json["motor_rl"];
+                        motor_rr = (double)json["motor_rr"];
 
-                        backgroundWorker1.ReportProgress(1);
+                        
                     }
 
+                    backgroundWorker_joystick.ReportProgress(1);
                     Thread.Yield();
                 }
                 catch (Exception ex)
@@ -202,6 +178,45 @@ namespace beaglebone_quadcopter
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             Environment.Exit(0);
+        }
+
+        private void timer_charts_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                serie_vbat.circular_append_y(vbat, 1000);
+                serie_rtt.circular_append_y(rtt, 1000);
+                serie_motor_fl.circular_append_y(motor_fl / 1000.0, 1000);
+                serie_motor_fr.circular_append_y(motor_fr / 1000.0, 1000);
+                serie_motor_rl.circular_append_y(motor_rl / 1000.0, 1000);
+                serie_motor_rr.circular_append_y(motor_rr / 1000.0, 1000);
+
+
+                chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_rtt.ChartAreas[0].RecalculateAxesScale();
+
+                chart_vbat.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_vbat.ChartAreas[0].RecalculateAxesScale();
+
+                chart_motor.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_motor.ChartAreas[0].RecalculateAxesScale();
+
+                if (controle_conectado)
+                {
+                    button_controle.BackColor = Color.Green;
+                    button_controle.ForeColor = Color.White;
+                    button_controle.Text = "Controle Xbox conectado";
+                }
+                else {
+                    button_controle.BackColor = Color.Red;
+                    button_controle.ForeColor = Color.White;
+                    button_controle.Text = "Controle Xbox desconectado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
