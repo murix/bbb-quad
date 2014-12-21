@@ -47,12 +47,19 @@ typedef struct {
 
 } motor_t;
 
+
+void *adc_updater(){
+   adc_monitor adc;
+   adc.init();
+}
+
  int speeds[8];
- adc_monitor adc;
+
+
 void *motorserver(void *arg){
      motor_t* pdata=(motor_t*) arg;
 
- adc.init();
+
 
        //
        printf("enable PRU overlay\r\n");
