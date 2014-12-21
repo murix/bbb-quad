@@ -23,15 +23,15 @@ namespace beaglebone_quadcopter
             InitializeComponent();
         }
 
-        
+
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            
-            
-      
 
-            
+
+
+
+
 
         }
 
@@ -53,7 +53,8 @@ namespace beaglebone_quadcopter
                     MethodInvoker action = delegate { _output.AppendText(value.ToString()); };
                     _output.BeginInvoke(action);
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Console.WriteLine(ex.Message);
                 }
             }
@@ -209,7 +210,7 @@ namespace beaglebone_quadcopter
                 : base(name)
             {
                 this.ChartType = SeriesChartType.Line;
-                this.XValueType = ChartValueType.Time;
+               // this.XValueType = ChartValueType.Time;
             }
             public void circular_append_y(double value, int max_items)
             {
@@ -217,10 +218,11 @@ namespace beaglebone_quadcopter
                 try
                 {
                     while (this.Points.Count > max_items) this.Points.RemoveAt(0);
-                    this.Points.AddXY(DateTime.Now, value);
+                    this.Points.AddY(value);
                     circular_count++;
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Console.WriteLine(ex.Message);
                 }
             }
@@ -236,25 +238,27 @@ namespace beaglebone_quadcopter
         {
             chart1.Series.Clear();
             chart1.Series.Add(serie_vbat);
+            chart1.Series.Add(serie_rtt);
 
             chart2.Series.Clear();
             chart2.Series.Add(serie_motor1);
             chart2.Series.Add(serie_motor2);
             chart2.Series.Add(serie_motor3);
             chart2.Series.Add(serie_motor4);
-           
-               
-                _writer = new TextBoxStreamWriter(this.textBox1);
-                Console.SetOut(_writer);
 
-                backgroundWorker1.WorkerReportsProgress = true;
-                backgroundWorker1.ProgressChanged += backgroundWorker1_ProgressChanged;
-                backgroundWorker1.RunWorkerAsync();
 
-           
+            _writer = new TextBoxStreamWriter(this.textBox1);
+            //Console.SetOut(_writer);
+
+            backgroundWorker1.WorkerReportsProgress = true;
+            backgroundWorker1.ProgressChanged += backgroundWorker1_ProgressChanged;
+            backgroundWorker1.RunWorkerAsync();
+
+
         }
 
         murix_series serie_vbat = new murix_series("vbat");
+        murix_series serie_rtt = new murix_series("rtt_ms");
         murix_series serie_motor1 = new murix_series("motor1");
         murix_series serie_motor2 = new murix_series("motor2");
         murix_series serie_motor3 = new murix_series("motor3");
@@ -266,62 +270,62 @@ namespace beaglebone_quadcopter
 
         void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            if (vbat != 0)
+            try
             {
                 serie_vbat.circular_append_y(vbat, 1000);
+                serie_rtt.circular_append_y(rtt, 1000);
+
+                chart1.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart1.ChartAreas[0].RecalculateAxesScale();
+
+                serie_motor1.circular_append_y(motor1 / 1000.0, 1000);
+                serie_motor2.circular_append_y(motor2 / 1000.0, 1000);
+                serie_motor3.circular_append_y(motor3 / 1000.0, 1000);
+                serie_motor4.circular_append_y(motor4 / 1000.0, 1000);
+
+                chart2.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart2.ChartAreas[0].RecalculateAxesScale();
             }
-            serie_motor1.circular_append_y(motor1 / 1000.0, (int)(framerate * serie_len_in_seconds));
-            serie_motor2.circular_append_y(motor2 / 1000.0, (int)(framerate * serie_len_in_seconds));
-            serie_motor3.circular_append_y(motor3 / 1000.0, (int)(framerate * serie_len_in_seconds));
-            serie_motor4.circular_append_y(motor4 / 1000.0, (int)(framerate * serie_len_in_seconds));
-
-            //yyyyMMdd
-            chart1.ChartAreas[0].AxisX.LabelStyle.Format = "HH:mm:ss";
-            //chart1.ChartAreas[0].AxisX.Interval = 1;
-            //chart1.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Seconds;
-            //chart1.ChartAreas[0].AxisX.IntervalOffset = 3;
-
-
-          
-
-            chart1.ChartAreas[0].AxisY.IsStartedFromZero = false;
-            chart1.ChartAreas[0].RecalculateAxesScale();
-
-            chart2.ChartAreas[0].AxisY.IsStartedFromZero = false;
-            chart2.ChartAreas[0].RecalculateAxesScale();
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
 
-        public static string sendrecv(string json,int timeout) {
+        static double rtt = 0.0;
+
+        public static string sendrecv(string ip,string json, int timeout)
+        {
             string returnData = "";
             try
             {
-                UdpClient udpClient = new UdpClient("192.168.8.50", 32000);
+                IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+
+
                 Byte[] sendBytes = Encoding.ASCII.GetBytes(json);
-                udpClient.Send(sendBytes, sendBytes.Length);
+                
                 DateTime start = DateTime.Now;
-                while (true)
-                {
-                    //
-                    TimeSpan timeItTook = DateTime.Now - start;
-                    //exit by timeout
-                    if (timeItTook.Milliseconds > timeout)
-                    {
-                        break;
-                    }
-                    //exit by receive data
-                    if (udpClient.Available > 0)
-                    {
-                        IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                        Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-                        returnData = Encoding.ASCII.GetString(receiveBytes);
-                        return returnData;
-                    }
-                    Thread.Sleep(1);
-                }
+
+
+                UdpClient udpClient = new UdpClient(ip, 32000);
+                udpClient.Client.SendTimeout = 1000;
+                udpClient.Client.ReceiveTimeout = 1000;
+                udpClient.Send(sendBytes, sendBytes.Length);
+                Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+                udpClient.Close();
+
+
+                rtt = DateTime.Now.Subtract(start).TotalMilliseconds;
+
+                returnData = Encoding.ASCII.GetString(receiveBytes);
+
+
             }
-            catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+               // Thread.Sleep(1000);
             }
             return returnData;
         }
@@ -331,7 +335,8 @@ namespace beaglebone_quadcopter
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
 
-            while (true) {
+            while (true)
+            {
                 try
                 {
                     //atenção com versao do slimdx no nuget, verifique se o runtime é 4.0 e instale tambem o slimdx runtime 4.0
@@ -370,7 +375,13 @@ namespace beaglebone_quadcopter
 
                     //
                     int timeslice = (int)((1.0 / framerate) * 1000.0);
-                    string fromdrone = sendrecv(jsonjoy.ToString(), timeslice);
+
+                    string ip="192.168.9.50";
+                    if (radioButton_ether.Checked) {
+                        ip = "192.168.9.51";
+                    }
+
+                    string fromdrone = sendrecv(ip,jsonjoy.ToString(), 1000);
                     //Console.WriteLine(fromdrone);
                     if (fromdrone.Length > 0)
                     {
@@ -385,7 +396,8 @@ namespace beaglebone_quadcopter
 
                         backgroundWorker1.ReportProgress(1);
                     }
-                    Thread.Sleep(timeslice);
+                    
+                    Thread.Sleep(10);
                 }
                 catch (Exception ex)
                 {
