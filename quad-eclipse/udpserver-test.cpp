@@ -477,6 +477,12 @@ int main(int argc,char** argv){
 	pthread_create(&id_rx_joystick_and_tx_telemetric, 0, task_rx_joystick_and_tx_telemetric, &drone_data);
 	pthread_create(&id_pilot                        , 0, task_pilot                        , &drone_data);
 
+	pthread_getname_np(id_adc,"task adc");
+	pthread_getname_np(id_imu,"task imu");
+	pthread_getname_np(id_motors,"task motors");
+	pthread_getname_np(id_rx_joystick_and_tx_telemetric,"task joy/telecom");
+	pthread_getname_np(id_pilot,"task pilot");
+
 	//
 	pthread_join(id_adc,NULL);
 	pthread_join(id_imu,NULL);
