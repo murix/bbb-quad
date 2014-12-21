@@ -22,240 +22,14 @@ namespace beaglebone_quadcopter
         {
             InitializeComponent();
         }
-
-
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-
-
-
-
-
-
-        }
-
-
-        public class TextBoxStreamWriter : TextWriter
-        {
-            TextBox _output = null;
-
-            public TextBoxStreamWriter(TextBox output)
-            {
-                _output = output;
-            }
-
-            public override void Write(char value)
-            {
-                //cross thread
-                try
-                {
-                    MethodInvoker action = delegate { _output.AppendText(value.ToString()); };
-                    _output.BeginInvoke(action);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }
-
-            public override Encoding Encoding
-            {
-                get { return System.Text.Encoding.UTF8; }
-            }
-        }
-
-        // That's our custom TextWriter class
-        TextBoxStreamWriter _writer = null;
-
-
-        public class Gamepad_State_SlimDX
-        {
-            uint lastPacket;
-
-            public Gamepad_State_SlimDX(UserIndex userIndex)
-            {
-                UserIndex = userIndex;
-                Controller = new Controller(userIndex);
-            }
-
-            public readonly UserIndex UserIndex;
-            public readonly Controller Controller;
-
-            public DPadState DPad { get; private set; }
-            public ThumbstickState LeftStick { get; private set; }
-            public ThumbstickState RightStick { get; private set; }
-
-            public bool A { get; private set; }
-            public bool B { get; private set; }
-            public bool X { get; private set; }
-            public bool Y { get; private set; }
-
-            public bool RightShoulder { get; private set; }
-            public bool LeftShoulder { get; private set; }
-
-            public bool Start { get; private set; }
-            public bool Back { get; private set; }
-
-            public float RightTrigger { get; private set; }
-            public float LeftTrigger { get; private set; }
-
-            public bool Connected
-            {
-                get { return Controller.IsConnected; }
-            }
-
-            public void Vibrate(float leftMotor, float rightMotor)
-            {
-                Controller.SetVibration(new Vibration
-                {
-                    LeftMotorSpeed = (ushort)(MathHelper.Saturate(leftMotor) * ushort.MaxValue),
-                    RightMotorSpeed = (ushort)(MathHelper.Saturate(rightMotor) * ushort.MaxValue)
-                });
-            }
-
-            public void Update()
-            {
-                // If not connected, nothing to update
-                if (!Connected) return;
-
-                // If same packet, nothing to update
-                State state = Controller.GetState();
-                if (lastPacket == state.PacketNumber) return;
-                lastPacket = state.PacketNumber;
-
-                var gamepadState = state.Gamepad;
-
-                // Shoulders
-                LeftShoulder = (gamepadState.Buttons & GamepadButtonFlags.LeftShoulder) != 0;
-                RightShoulder = (gamepadState.Buttons & GamepadButtonFlags.RightShoulder) != 0;
-
-                // Triggers
-                LeftTrigger = gamepadState.LeftTrigger / (float)byte.MaxValue;
-                RightTrigger = gamepadState.RightTrigger / (float)byte.MaxValue;
-
-                // Buttons
-                Start = (gamepadState.Buttons & GamepadButtonFlags.Start) != 0;
-                Back = (gamepadState.Buttons & GamepadButtonFlags.Back) != 0;
-
-                A = (gamepadState.Buttons & GamepadButtonFlags.A) != 0;
-                B = (gamepadState.Buttons & GamepadButtonFlags.B) != 0;
-                X = (gamepadState.Buttons & GamepadButtonFlags.X) != 0;
-                Y = (gamepadState.Buttons & GamepadButtonFlags.Y) != 0;
-
-                // D-Pad
-                DPad = new DPadState((gamepadState.Buttons & GamepadButtonFlags.DPadUp) != 0,
-                                     (gamepadState.Buttons & GamepadButtonFlags.DPadDown) != 0,
-                                     (gamepadState.Buttons & GamepadButtonFlags.DPadLeft) != 0,
-                                     (gamepadState.Buttons & GamepadButtonFlags.DPadRight) != 0);
-
-                // Thumbsticks
-                LeftStick = new ThumbstickState(
-                    Normalize(gamepadState.LeftThumbX, gamepadState.LeftThumbY, Gamepad.GamepadLeftThumbDeadZone),
-                    (gamepadState.Buttons & GamepadButtonFlags.LeftThumb) != 0);
-                RightStick = new ThumbstickState(
-                    Normalize(gamepadState.RightThumbX, gamepadState.RightThumbY, Gamepad.GamepadRightThumbDeadZone),
-                    (gamepadState.Buttons & GamepadButtonFlags.RightThumb) != 0);
-            }
-
-            static Vector2 Normalize(short rawX, short rawY, short threshold)
-            {
-                var value = new Vector2(rawX, rawY);
-                var magnitude = value.Length();
-                var direction = value / (magnitude == 0 ? 1 : magnitude);
-
-                var normalizedMagnitude = 0.0f;
-                if (magnitude - threshold > 0)
-                    normalizedMagnitude = Math.Min((magnitude - threshold) / (short.MaxValue - threshold), 1);
-
-                return direction * normalizedMagnitude;
-            }
-
-            public struct DPadState
-            {
-                public readonly bool Up, Down, Left, Right;
-
-                public DPadState(bool up, bool down, bool left, bool right)
-                {
-                    Up = up; Down = down; Left = left; Right = right;
-                }
-            }
-
-            public struct ThumbstickState
-            {
-                public readonly Vector2 Position;
-                public readonly bool Clicked;
-
-                public ThumbstickState(Vector2 position, bool clicked)
-                {
-                    Clicked = clicked;
-                    Position = position;
-                }
-            }
-        }
-
-        public static class MathHelper
-        {
-            public static float Saturate(float value)
-            {
-                return value < 0 ? 0 : value > 1 ? 1 : value;
-            }
-        }
-
-        public class murix_series : Series
-        {
-
-            double circular_count = 0;
-            public murix_series(string name)
-                : base(name)
-            {
-                this.ChartType = SeriesChartType.Line;
-               // this.XValueType = ChartValueType.Time;
-            }
-            public void circular_append_y(double value, int max_items)
-            {
-                //max_items = 100;
-                try
-                {
-                    while (this.Points.Count > max_items) this.Points.RemoveAt(0);
-                    this.Points.AddY(value);
-                    circular_count++;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }
-        }
+            
 
         double motor1 = 0.0;
         double motor2 = 0.0;
         double motor3 = 0.0;
         double motor4 = 0.0;
-
         double vbat = 0.0;
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            chart1.Series.Clear();
-            chart1.Series.Add(serie_vbat);
-            chart1.Series.Add(serie_rtt);
-
-            chart2.Series.Clear();
-            chart2.Series.Add(serie_motor1);
-            chart2.Series.Add(serie_motor2);
-            chart2.Series.Add(serie_motor3);
-            chart2.Series.Add(serie_motor4);
-
-
-            _writer = new TextBoxStreamWriter(this.textBox1);
-            //Console.SetOut(_writer);
-
-            backgroundWorker1.WorkerReportsProgress = true;
-            backgroundWorker1.ProgressChanged += backgroundWorker1_ProgressChanged;
-            backgroundWorker1.RunWorkerAsync();
-
-
-        }
+        double rtt = 0.0;
 
         murix_series serie_vbat = new murix_series("vbat");
         murix_series serie_rtt = new murix_series("rtt_ms");
@@ -264,8 +38,26 @@ namespace beaglebone_quadcopter
         murix_series serie_motor3 = new murix_series("motor3");
         murix_series serie_motor4 = new murix_series("motor4");
 
-        double framerate = 25.0;
-        double serie_len_in_seconds = 60;
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            chart_rtt.Series.Clear();
+            chart_rtt.Series.Add(serie_rtt);
+
+            chart_vbat.Series.Clear();
+            chart_vbat.Series.Add(serie_vbat);
+
+            chart_motor.Series.Clear();
+            chart_motor.Series.Add(serie_motor1);
+            chart_motor.Series.Add(serie_motor2);
+            chart_motor.Series.Add(serie_motor3);
+            chart_motor.Series.Add(serie_motor4);
+
+            backgroundWorker1.WorkerReportsProgress = true;
+            backgroundWorker1.ProgressChanged += backgroundWorker1_ProgressChanged;
+            backgroundWorker1.RunWorkerAsync();
+
+        }
 
 
         void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -274,17 +66,21 @@ namespace beaglebone_quadcopter
             {
                 serie_vbat.circular_append_y(vbat, 1000);
                 serie_rtt.circular_append_y(rtt, 1000);
-
-                chart1.ChartAreas[0].AxisY.IsStartedFromZero = false;
-                chart1.ChartAreas[0].RecalculateAxesScale();
-
                 serie_motor1.circular_append_y(motor1 / 1000.0, 1000);
                 serie_motor2.circular_append_y(motor2 / 1000.0, 1000);
                 serie_motor3.circular_append_y(motor3 / 1000.0, 1000);
                 serie_motor4.circular_append_y(motor4 / 1000.0, 1000);
 
-                chart2.ChartAreas[0].AxisY.IsStartedFromZero = false;
-                chart2.ChartAreas[0].RecalculateAxesScale();
+                
+                chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_rtt.ChartAreas[0].RecalculateAxesScale();
+
+                chart_vbat.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_vbat.ChartAreas[0].RecalculateAxesScale();
+
+                chart_motor.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_motor.ChartAreas[0].RecalculateAxesScale();
+
             }
             catch (Exception ex)
             {
@@ -293,9 +89,9 @@ namespace beaglebone_quadcopter
         }
 
 
-        static double rtt = 0.0;
+        
 
-        public static string sendrecv(string ip,string json, int timeout)
+        public string sendrecv(string ip,string json, int timeout)
         {
             string returnData = "";
             try
@@ -325,7 +121,7 @@ namespace beaglebone_quadcopter
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace);
-               // Thread.Sleep(1000);
+              
             }
             return returnData;
         }
@@ -373,16 +169,12 @@ namespace beaglebone_quadcopter
 
 
 
-                    //
-                    int timeslice = (int)((1.0 / framerate) * 1000.0);
-
                     string ip="192.168.9.50";
                     if (radioButton_ether.Checked) {
                         ip = "192.168.9.51";
                     }
 
                     string fromdrone = sendrecv(ip,jsonjoy.ToString(), 1000);
-                    //Console.WriteLine(fromdrone);
                     if (fromdrone.Length > 0)
                     {
                         JObject json = JObject.Parse(fromdrone);
@@ -396,8 +188,8 @@ namespace beaglebone_quadcopter
 
                         backgroundWorker1.ReportProgress(1);
                     }
-                    
-                    Thread.Sleep(10);
+
+                    Thread.Yield();
                 }
                 catch (Exception ex)
                 {
