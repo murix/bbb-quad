@@ -317,16 +317,16 @@ void *task_pilot(void *arg)
 		}
 
 		if(drone->joy_left_x>0){
-			drone->motor_dutyns_target[MOTOR_FR] = drone->joy_left_x * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_FR] = PWM_FLY_ARM + drone->joy_left_x        * (PWM_FLY_MAX-PWM_FLY_ARM);
 		}
 		if(drone->joy_left_x<0){
-			drone->motor_dutyns_target[MOTOR_FL] = fabs(drone->joy_left_x) * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_FL] = PWM_FLY_ARM + fabs(drone->joy_left_x)  * (PWM_FLY_MAX-PWM_FLY_ARM);
 		}
 		if(drone->joy_right_x>0){
-			drone->motor_dutyns_target[MOTOR_RR] = drone->joy_right_x * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_RR] = PWM_FLY_ARM + drone->joy_right_x       * (PWM_FLY_MAX-PWM_FLY_ARM);
 		}
 		if(drone->joy_right_x<0){
-			drone->motor_dutyns_target[MOTOR_RL] = fabs(drone->joy_right_x) * PWM_FLY_MAX;
+			drone->motor_dutyns_target[MOTOR_RL] = PWM_FLY_ARM + fabs(drone->joy_right_x) * (PWM_FLY_MAX-PWM_FLY_ARM);
 		}
 
 	}
