@@ -263,7 +263,7 @@ void *task_imu(void *arg){
 	ms5611 baro(i2c.fd);
 	//
 	while(1){
-                usleep((1000*1000)/60);
+                usleep((1000*1000)/500);
 
 		mpu.update();
 		mag.update();
@@ -309,6 +309,9 @@ void *task_pilot(void *arg)
 	drone_t* drone=(drone_t*) arg;
 
 	while(1){
+
+                usleep((1000*1000)/100);
+
 		if(drone->joy_y){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_MAX;
 		}
@@ -480,11 +483,11 @@ int main(int argc,char** argv){
 	pthread_create(&id_rx_joystick_and_tx_telemetric, 0, task_rx_joystick_and_tx_telemetric, &drone_data);
 	pthread_create(&id_pilot                        , 0, task_pilot                        , &drone_data);
 
-	pthread_setname_np(id_adc,"task adc");
-	pthread_setname_np(id_imu,"task imu");
-	pthread_setname_np(id_motors,"task motors");
-	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"task joy/telecom");
-	pthread_setname_np(id_pilot,"task pilot");
+	pthread_setname_np(id_adc,"th adc");
+	pthread_setname_np(id_imu,"th imu");
+	pthread_setname_np(id_motors,"th motors");
+	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"th joy");
+	pthread_setname_np(id_pilot,"th pilot");
 
 	//
 	pthread_join(id_adc,NULL);
