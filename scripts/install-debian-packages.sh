@@ -16,7 +16,7 @@ PURGE="$PURGE network-manager network-manager-gnome"
 INSTALL=""
 
 #
-INSTALL="$INSTALL cmake libjsoncpp-dev libboost-all-dev"
+INSTALL="$INSTALL cmake libjsoncpp-dev libboost-all-dev libusb-dev htop"
 
 INSTALL="$INSTALL  udhcpd dbus python-dbus "
 INSTALL="$INSTALL  mc less ipython sshfs aptitude python-matplotlib minicom tcpdump"
