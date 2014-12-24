@@ -101,8 +101,11 @@ typedef struct {
 	float mag_heading;
 	//
 	//
-	float dt;
-	float hz;
+	float i2c_hz;
+	float pru_hz;
+	float adc_hz;
+	float pilot_hz;
+
 	//
 	float baro_p0;
 	float baro_p;
@@ -112,14 +115,12 @@ typedef struct {
 
 	//
 	float vbat;
-        float vbat_th_hz;
 
 
 	//
 	uint32_t motor_cmd;
 	uint32_t motor_dutyns_now[8];
 	uint32_t motor_dutyns_target[8];
-        float motor_th_hz;
 
 	//
 	bool joy_a;
@@ -146,10 +147,31 @@ void *task_adc(void *arg){
 	drone_t* drone=(drone_t*) arg;
 	adc_monitor adc;
 	adc.init();
+
+	//---------
+	double t_back=get_timestamp_in_seconds();;
+	double t_now=get_timestamp_in_seconds();;
+	double t_diff=0;
+
 	while(1){
-                usleep(1000);
+
+		//-------------
+			t_back=t_now;
+			t_now=get_timestamp_in_seconds();
+			t_diff=t_now-t_back;
+
+			///////////////////////////////////
+
+			drone->adc_hz = 1.0 / t_diff;
+
+			////////////////////////////////////
+
+
 		adc.update();
 		drone->vbat=adc.vbat;
+
+		usleep(2000);
+
 	}
 }
 
@@ -193,7 +215,24 @@ void *task_motors(void *arg){
 		myPWM->setChannelValue(ch,PWM_FLY_ARM);
 	}
 
+	//---------
+	double t_back=get_timestamp_in_seconds();;
+	double t_now=get_timestamp_in_seconds();;
+	double t_diff=0;
+
 	while(1){
+
+		//-------------
+		t_back=t_now;
+		t_now=get_timestamp_in_seconds();
+		t_diff=t_now-t_back;
+
+		///////////////////////////////////
+
+		drone->pru_hz = 1.0 / t_diff;
+
+		////////////////////////////////////
+
 
 		//incremental PWM
 		if(drone->motor_cmd==MOTOR_CMD_NORMAL){
@@ -265,12 +304,17 @@ void *task_imu(void *arg){
 	ms5611 baro(i2c.fd);
 	//
 	while(1){
-                usleep((1000*1000)/500);
+		usleep((1000*1000)/500);
 
 		mpu.update();
 		mag.update();
 		baro.update();
 
+		////////////////////////////////////////////////
+
+		drone->i2c_hz = 1.0/mpu.t_diff;
+
+		////////////////////////////////////////////////
 		drone->acc_x=mpu.acc[0];
 		drone->acc_y=mpu.acc[1];
 		drone->acc_z=mpu.acc[2];
@@ -288,16 +332,21 @@ void *task_imu(void *arg){
 		drone->fusion_pitch=mpu.fusion_pitch;
 		drone->fusion_roll=mpu.fusion_roll;
 
+		///////////////////////////////////////////////
+
 		drone->mag_x=mag.mag[0];
 		drone->mag_y=mag.mag[1];
 		drone->mag_z=mag.mag[2];
 		drone->mag_n=mag.magn;
 		drone->mag_heading=mag.heading;
 
+		///////////////////////////////////////////////
 		drone->baro_p0=baro.P0;
 		drone->baro_p=baro.P;
 		drone->baro_t=baro.T;
 		drone->baro_h=baro.H;
+
+		//////////////////////////////////////////////////
 	}
 }
 
@@ -310,9 +359,25 @@ void *task_pilot(void *arg)
 {
 	drone_t* drone=(drone_t*) arg;
 
+	//---------
+	double t_back=get_timestamp_in_seconds();;
+	double t_now=get_timestamp_in_seconds();;
+	double t_diff=0;
+
 	while(1){
 
-                usleep((1000*1000)/100);
+		//-------------
+		t_back=t_now;
+		t_now=get_timestamp_in_seconds();
+		t_diff=t_now-t_back;
+
+		///////////////////////////////////
+
+		drone->pilot_hz = 1.0 / t_diff;
+
+		///////////////////////////////////
+
+		usleep((1000*1000)/100);
 
 		if(drone->joy_y){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_MAX;
@@ -427,8 +492,10 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 		telemetric_json["mag_head"]=drone->mag_heading;
 
 		//
-		telemetric_json["time_hz"]=drone->hz;
-		telemetric_json["time_dt"]=drone->dt;
+		telemetric_json["i2c_hz"]=drone->i2c_hz;
+		telemetric_json["adc_hz"]=drone->adc_hz;
+		telemetric_json["pru_hz"]=drone->pru_hz;
+		telemetric_json["pilot_hz"]=drone->pilot_hz;
 
 		//
 		telemetric_json["baro_p0"]=drone->baro_p0;

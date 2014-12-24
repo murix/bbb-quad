@@ -5,7 +5,7 @@ using System.Text;
 
 namespace beaglebone_quadcopter
 {
-    public static class MathHelper
+    public static class MathHelper2
     {
         public static float Saturate(float value)
         {

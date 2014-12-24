@@ -47,8 +47,8 @@ namespace beaglebone_quadcopter
         {
             Controller.SetVibration(new Vibration
             {
-                LeftMotorSpeed = (ushort)(MathHelper.Saturate(leftMotor) * ushort.MaxValue),
-                RightMotorSpeed = (ushort)(MathHelper.Saturate(rightMotor) * ushort.MaxValue)
+                LeftMotorSpeed = (ushort)(MathHelper2.Saturate(leftMotor) * ushort.MaxValue),
+                RightMotorSpeed = (ushort)(MathHelper2.Saturate(rightMotor) * ushort.MaxValue)
             });
         }
 
