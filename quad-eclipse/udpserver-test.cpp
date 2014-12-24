@@ -198,12 +198,12 @@ void *task_motors(void *arg){
 			for(int ch=0;ch<8;ch++){
 				bool need_change=false;
 				//
-				if(drone->motor_dutyns_now[ch] < drone->motor_dutyns_target[ch]){
+				if(drone->motor_dutyns_now[ch] < drone->motor_dutyns_target[ch] && drone->vbat > 10){
 					drone->motor_dutyns_now[ch] += PWM_STEP_PER_CYCLE;
 					if(drone->motor_dutyns_now[ch]>PWM_FLY_MAX) drone->motor_dutyns_now[ch]=PWM_FLY_MAX;
 					need_change=true;
 				}
-				if(drone->motor_dutyns_now[ch] > drone->motor_dutyns_target[ch]){
+				if(drone->motor_dutyns_now[ch] > drone->motor_dutyns_target[ch] ){
 					drone->motor_dutyns_now[ch] -= PWM_STEP_PER_CYCLE;
 					if(drone->motor_dutyns_now[ch]<PWM_FLY_ARM) drone->motor_dutyns_now[ch]=PWM_FLY_ARM;
 					need_change=true;
