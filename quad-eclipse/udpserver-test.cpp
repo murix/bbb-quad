@@ -112,12 +112,14 @@ typedef struct {
 
 	//
 	float vbat;
+        float vbat_th_hz;
 
 
 	//
 	uint32_t motor_cmd;
 	uint32_t motor_dutyns_now[8];
 	uint32_t motor_dutyns_target[8];
+        float motor_th_hz;
 
 	//
 	bool joy_a;
@@ -145,7 +147,7 @@ void *task_adc(void *arg){
 	adc_monitor adc;
 	adc.init();
 	while(1){
-                usleep((1000*1000)/60);
+                usleep(1000);
 		adc.update();
 		drone->vbat=adc.vbat;
 	}
