@@ -112,6 +112,7 @@ typedef struct {
 	float baro_p;
 	float baro_t;
 	float baro_h;
+        float baro_hema;
 
 
 	//
@@ -346,6 +347,7 @@ void *task_imu(void *arg){
 		drone->baro_p=baro.P;
 		drone->baro_t=baro.T;
 		drone->baro_h=baro.H;
+                drone->baro_hema=baro.H_EMA;
 
 		//////////////////////////////////////////////////
 	}
@@ -503,6 +505,7 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 		telemetric_json["baro_p"]=drone->baro_p;
 		telemetric_json["baro_t"]=drone->baro_t;
 		telemetric_json["baro_h"]=drone->baro_h;
+		telemetric_json["baro_hema"]=drone->baro_hema;
 
 		//
 		telemetric_json["vbat"]=drone->vbat;

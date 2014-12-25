@@ -241,12 +241,15 @@ void ms5611::update(){
 		if(P0==0){
 			P0=P;
 		}
+                if(P<P0){
+                   P0=P;
+                }
 
 		H=altimeter(P0,P,T);
 
 
 		//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
-		double alpha=0.01;
+		double alpha=0.10;
 		H_EMA= (alpha * H) + (1.0 - alpha) * H_EMA;
 
 
