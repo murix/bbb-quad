@@ -12,7 +12,7 @@ add_executable(test-spi-cc1101-tap cc1101-tap.cpp)
 add_executable(test-adc-vbat bbb-adc.cpp bbb-adc-test.cpp)
 
 # barometer
-add_executable(test-i2c-gy86-ms5611  ms5611-test.cpp  bbb_i2c.cpp ms5611.cpp )
+add_executable(test-i2c-gy86-ms5611  ms5611-test.cpp  bbb_i2c.cpp ms5611.cpp timestamps.cpp)
 
 # accelerometer and gyroscope
 add_executable(test-i2c-gy86-mpu6050 mpu6050-test.cpp bbb_i2c.cpp mpu6050.cpp timestamps.cpp)

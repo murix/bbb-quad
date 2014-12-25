@@ -171,7 +171,7 @@ void *task_adc(void *arg){
 		adc.update();
 		drone->vbat=adc.vbat;
 
-		usleep(2000);
+		usleep(1000);
 
 	}
 }
@@ -378,7 +378,7 @@ void *task_pilot(void *arg)
 
 		///////////////////////////////////
 
-		usleep(3000);
+		usleep(5000);
 
 		if(drone->joy_y){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_MAX;
