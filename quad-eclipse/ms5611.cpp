@@ -249,7 +249,7 @@ void ms5611::update(){
 
 
 		//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
-		double alpha=0.01;
+		double alpha=0.10;
 		H_EMA= (alpha * H) + (1.0 - alpha) * H_EMA;
 
 
