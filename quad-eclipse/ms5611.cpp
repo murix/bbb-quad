@@ -141,8 +141,8 @@ void ms5611::init(){
 
 void ms5611::update(){
 	//Read digital pressure and temperature data
-	D2=cmd_adc(CMD_ADC_D2+CMD_ADC_256); // read D2
-	D1=cmd_adc(CMD_ADC_D1+CMD_ADC_256); // read D1
+	D2=cmd_adc(CMD_ADC_D2+CMD_ADC_4096); // read D2
+	D1=cmd_adc(CMD_ADC_D1+CMD_ADC_4096); // read D1
 	//Calculate temperature
 	dT=D2-C[5]*pow(2,8);
 	T=(2000+(dT*C[6])/pow(2,23));
