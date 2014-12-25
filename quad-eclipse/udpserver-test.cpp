@@ -70,6 +70,7 @@ SOFTWARE.
 #include "ms5611.h"
 #include "bbb-adc.h"
 #include "pruPWM.h"
+#include "timestamps.h"
 
 
 
@@ -304,11 +305,11 @@ void *task_imu(void *arg){
 	ms5611 baro(i2c.fd);
 	//
 	while(1){
-		usleep((1000*1000)/500);
+		//usleep(1000);
 
 		mpu.update();
 		mag.update();
-		baro.update();
+		//baro.update();
 
 		////////////////////////////////////////////////
 
