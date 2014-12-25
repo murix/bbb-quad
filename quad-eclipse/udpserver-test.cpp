@@ -114,6 +114,10 @@ typedef struct {
 	float baro_h;
         float baro_hema;
 
+        float pilot_offset_pitch;
+        float pilot_offset_roll;
+	float pilot_pitch;
+        float pilot_roll;
 
 	//
 	float vbat;
@@ -362,6 +366,10 @@ void *task_pilot(void *arg)
 {
 	drone_t* drone=(drone_t*) arg;
 
+
+        drone->pilot_offset_pitch=0;
+        drone->pilot_offset_roll=0;
+
 	//---------
 	double t_back=get_timestamp_in_seconds();;
 	double t_now=get_timestamp_in_seconds();;
@@ -391,6 +399,14 @@ void *task_pilot(void *arg)
 		if(drone->joy_a){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_ARM;
 		}
+                if(drone->joy_b){
+                    drone->pilot_offset_pitch=drone->fusion_pitch;
+                    drone->pilot_offset_roll=drone->fusion_roll;
+                }
+
+                drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
+                drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
+
 
 		if(drone->joy_left_x>0){
 			drone->motor_dutyns_target[MOTOR_FR] = PWM_FLY_ARM + drone->joy_left_x        * (PWM_FLY_MAX-PWM_FLY_ARM);
@@ -510,11 +526,16 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 		//
 		telemetric_json["vbat"]=drone->vbat;
 
+		telemetric_json["pilot_pitch"]=drone->pilot_pitch;
+		telemetric_json["pilot_roll"]=drone->pilot_roll;
+
 		//
 		telemetric_json["motor_fl"]=drone->motor_dutyns_now[MOTOR_FL];
 		telemetric_json["motor_fr"]=drone->motor_dutyns_now[MOTOR_FR];
 		telemetric_json["motor_rl"]=drone->motor_dutyns_now[MOTOR_RL];
 		telemetric_json["motor_rr"]=drone->motor_dutyns_now[MOTOR_RR];
+
+
 
 		//
 		std::string txt = telemetric_json.toStyledString();

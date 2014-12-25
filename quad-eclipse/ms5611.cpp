@@ -241,7 +241,9 @@ void ms5611::update(){
 		if(P0==0){
 			P0=P;
 		}
-                if(P<P0){
+
+                //
+                if(P>P0){
                    P0=P;
                 }
 
@@ -249,7 +251,7 @@ void ms5611::update(){
 
 
 		//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
-		double alpha=0.10;
+		double alpha=0.01;
 		H_EMA= (alpha * H) + (1.0 - alpha) * H_EMA;
 
 
