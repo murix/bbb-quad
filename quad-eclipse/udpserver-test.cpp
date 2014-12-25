@@ -112,12 +112,12 @@ typedef struct {
 	float baro_p;
 	float baro_t;
 	float baro_h;
-        float baro_hema;
+	float baro_hema;
 
-        float pilot_offset_pitch;
-        float pilot_offset_roll;
+	float pilot_offset_pitch;
+	float pilot_offset_roll;
 	float pilot_pitch;
-        float pilot_roll;
+	float pilot_roll;
 
 	//
 	float vbat;
@@ -139,8 +139,10 @@ typedef struct {
 	bool joy_dpad_right;
 	bool joy_dpad_left;
 
-	float joy_left_x;
-	float joy_right_x;
+	float joy_stick_left_x;
+	float joy_stick_left_y;
+	float joy_stick_right_x;
+	float joy_stick_right_y;
 
 } drone_t;
 
@@ -291,7 +293,7 @@ void *task_motors(void *arg){
 
 		// wait pwm complete duty
 		//usleep(PWM_CYCLE_IN_US);
-                 usleep(5000);
+		usleep(5000);
 	}
 
 }
@@ -351,7 +353,7 @@ void *task_imu(void *arg){
 		drone->baro_p=baro.P;
 		drone->baro_t=baro.T;
 		drone->baro_h=baro.H;
-                drone->baro_hema=baro.H_EMA;
+		drone->baro_hema=baro.H_EMA;
 
 		//////////////////////////////////////////////////
 	}
@@ -367,8 +369,8 @@ void *task_pilot(void *arg)
 	drone_t* drone=(drone_t*) arg;
 
 
-        drone->pilot_offset_pitch=0;
-        drone->pilot_offset_roll=0;
+	drone->pilot_offset_pitch=0;
+	drone->pilot_offset_roll=0;
 
 	//---------
 	double t_back=get_timestamp_in_seconds();;
@@ -399,28 +401,27 @@ void *task_pilot(void *arg)
 		if(drone->joy_a){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_ARM;
 		}
-                if(drone->joy_b){
-                    drone->pilot_offset_pitch=drone->fusion_pitch;
-                    drone->pilot_offset_roll=drone->fusion_roll;
-                }
 
-                drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
-                drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
+		///////////////////////////////////////////////////////////////////////////
+		if(drone->joy_b){
+			drone->pilot_offset_pitch=drone->fusion_pitch;
+			drone->pilot_offset_roll=drone->fusion_roll;
+		}
+		drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
+		drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
+		////////////////////////////////////////////////////////////////////////////
 
+		float throttle,pitch,roll,yaw;
 
-		if(drone->joy_left_x>0){
-			drone->motor_dutyns_target[MOTOR_FR] = PWM_FLY_ARM + drone->joy_left_x        * (PWM_FLY_MAX-PWM_FLY_ARM);
-		}
-		if(drone->joy_left_x<0){
-			drone->motor_dutyns_target[MOTOR_FL] = PWM_FLY_ARM + fabs(drone->joy_left_x)  * (PWM_FLY_MAX-PWM_FLY_ARM);
-		}
-		if(drone->joy_right_x>0){
-			drone->motor_dutyns_target[MOTOR_RR] = PWM_FLY_ARM + drone->joy_right_x       * (PWM_FLY_MAX-PWM_FLY_ARM);
-		}
-		if(drone->joy_right_x<0){
-			drone->motor_dutyns_target[MOTOR_RL] = PWM_FLY_ARM + fabs(drone->joy_right_x) * (PWM_FLY_MAX-PWM_FLY_ARM);
-		}
+		yaw      = drone->joy_stick_left_x  * PWM_FLY_MAX;
+		throttle = drone->joy_stick_left_y  * PWM_FLY_MAX;
+		pitch    = drone->joy_stick_right_y * PWM_FLY_MAX;
+		roll     = drone->joy_stick_right_x * PWM_FLY_MAX;
 
+		drone->motor_dutyns_target[MOTOR_FL] = throttle - pitch - roll + yaw;
+		drone->motor_dutyns_target[MOTOR_RL] = throttle + pitch - roll - yaw;
+		drone->motor_dutyns_target[MOTOR_FR] = throttle - pitch + roll - yaw;
+		drone->motor_dutyns_target[MOTOR_RR] = throttle + pitch + roll + yaw;
 	}
 }
 
@@ -472,8 +473,10 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 			drone->joy_dpad_right = root.get("joy_dpad_right",false).asBool();
 			drone->joy_dpad_left  = root.get("joy_dpad_left",false).asBool();
 
-			drone->joy_left_x= root.get("joy_left_x",0).asDouble();
-			drone->joy_right_x= root.get("joy_right_x",0).asDouble();
+			drone->joy_stick_left_x= root.get("joy_left_x",0).asDouble();
+			drone->joy_stick_left_y= root.get("joy_left_y",0).asDouble();
+			drone->joy_stick_right_x= root.get("joy_right_x",0).asDouble();
+			drone->joy_stick_right_y= root.get("joy_right_y",0).asDouble();
 		}
 		else {
 			rxerror++;

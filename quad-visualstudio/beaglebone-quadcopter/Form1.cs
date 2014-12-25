@@ -24,70 +24,45 @@ namespace beaglebone_quadcopter
         {
             InitializeComponent();
         }
-            
 
-        double motor_fl = 0.0;
-        double motor_fr = 0.0;
-        double motor_rl = 0.0;
-        double motor_rr = 0.0;
-        double vbat = 0.0;
-        double rtt = 0.0;
-        double baro_p = 0.0;
-        double baro_h = 0.0;
-        double baro_hema = 0.0;
-        double baro_t = 0.0;
 
-        murix_series serie_vbat = new murix_series("vbat");
-        murix_series serie_rtt = new murix_series("rtt_ms");
-        murix_series serie_motor_fl = new murix_series("motor_fl");
-        murix_series serie_motor_fr = new murix_series("motor_fr");
-        murix_series serie_motor_rl = new murix_series("motor_rl");
-        murix_series serie_motor_rr = new murix_series("motor_rr");
-        murix_series serie_baro_p = new murix_series("baro_p");
-        murix_series serie_baro_h = new murix_series("baro_h");
-        murix_series serie_baro_hema = new murix_series("baro_hema");
-        murix_series serie_baro_t = new murix_series("baro_t");
 
-        double i2c_hz = 0;
-        double pru_hz = 0;
-        double adc_hz = 0;
-        double pilot_hz = 0;
-        murix_series serie_i2c_hz = new murix_series("i2c_hz");
-        murix_series serie_pru_hz = new murix_series("pru_hz");
-        murix_series serie_adc_hz = new murix_series("adc_hz");
-        murix_series serie_pilot_hz = new murix_series("pilot_hz");
-
+        drone_data drone = new drone_data();
 
         private void Form1_Load(object sender, EventArgs e)
         {
             chart_rtt.Series.Clear();
-            chart_rtt.Series.Add(serie_rtt);
+            chart_rtt.Series.Add(drone.serie_rtt);
 
             chart_vbat.Series.Clear();
-            chart_vbat.Series.Add(serie_vbat);
+            chart_vbat.Series.Add(drone.serie_vbat);
 
             chart_motor.Series.Clear();
-            chart_motor.Series.Add(serie_motor_fl);
-            chart_motor.Series.Add(serie_motor_fr);
-            chart_motor.Series.Add(serie_motor_rl);
-            chart_motor.Series.Add(serie_motor_rr);
+            chart_motor.Series.Add(drone.serie_motor_fl);
+            chart_motor.Series.Add(drone.serie_motor_fr);
+            chart_motor.Series.Add(drone.serie_motor_rl);
+            chart_motor.Series.Add(drone.serie_motor_rr);
 
             chart_baro_h.Series.Clear();
-            chart_baro_h.Series.Add(serie_baro_h);
-            chart_baro_h.Series.Add(serie_baro_hema);
+            chart_baro_h.Series.Add(drone.serie_baro_h);
+            chart_baro_h.Series.Add(drone.serie_baro_hema);
 
             chart_baro_p.Series.Clear();
-            chart_baro_p.Series.Add(serie_baro_p);
+            chart_baro_p.Series.Add(drone.serie_baro_p);
 
             chart_baro_t.Series.Clear();
-            chart_baro_t.Series.Add(serie_baro_t);
+            chart_baro_t.Series.Add(drone.serie_baro_t);
 
             chart_hz.Series.Clear();
-            chart_hz.Series.Add(serie_i2c_hz);
-            chart_hz.Series.Add(serie_adc_hz);
-            chart_hz.Series.Add(serie_pru_hz);
-            chart_hz.Series.Add(serie_pilot_hz);
+            chart_hz.Series.Add(drone.serie_i2c_hz);
+            chart_hz.Series.Add(drone.serie_adc_hz);
+            chart_hz.Series.Add(drone.serie_pru_hz);
+            chart_hz.Series.Add(drone.serie_pilot_hz);
 
+            chart_speed.Series.Clear();
+            chart_speed.Series.Add(drone.serie_gyrox);
+            chart_speed.Series.Add(drone.serie_gyroy);
+            chart_speed.Series.Add(drone.serie_gyroz);
 
             backgroundWorker_joystick.RunWorkerAsync();
 
@@ -129,12 +104,13 @@ namespace beaglebone_quadcopter
                 Console.WriteLine(ex.StackTrace);
               
             }
-            rtt = DateTime.Now.Subtract(start).TotalMilliseconds;
+            drone.rtt = DateTime.Now.Subtract(start).TotalMilliseconds;
             return returnData;
         }
 
 
         bool controle_conectado = false;
+
 
         int rxcount = 0;
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -193,33 +169,44 @@ namespace beaglebone_quadcopter
 
                         JObject json = JObject.Parse(fromdrone);
 
-                        vbat = (double)json["vbat"];
+                        drone.vbat = (double)json["vbat"];
 
-                        motor_fl = (double)json["motor_fl"];
-                        motor_fr = (double)json["motor_fr"];
-                        motor_rl = (double)json["motor_rl"];
-                        motor_rr = (double)json["motor_rr"];
+                        drone.motor_fl = (double)json["motor_fl"];
+                        drone.motor_fr = (double)json["motor_fr"];
+                        drone.motor_rl = (double)json["motor_rl"];
+                        drone.motor_rr = (double)json["motor_rr"];
 
 
-                        pitch_gyro = (float)json["pitch_gyro"];
-                        roll_gyro = (float)json["roll_gyro"];
-                        yaw_gyro = (float)json["yaw_gyro"];
+                        drone.pitch_gyro = (float)json["pitch_gyro"];
+                        drone.roll_gyro = (float)json["roll_gyro"];
+                        drone.yaw_gyro = (float)json["yaw_gyro"];
 
-                        fusion_pitch = (float)json["fusion_pitch"];
-                        fusion_roll = (float)json["fusion_roll"];
+                        drone.fusion_pitch = (float)json["fusion_pitch"];
+                        drone.fusion_roll = (float)json["fusion_roll"];
 
-                        pitch_acc = (float)json["pitch_acc"];
-                        roll_acc = (float)json["roll_acc"];
+                        drone.pitch_acc = (float)json["pitch_acc"];
+                        drone.roll_acc = (float)json["roll_acc"];
 
-                        baro_hema = (float)json["baro_hema"];
-                        baro_h = (float)json["baro_h"];
-                        baro_t = (float)json["baro_t"];
-                        baro_p = (float)json["baro_p"];
+                        drone.baro_hema = (float)json["baro_hema"];
+                        drone.baro_h = (float)json["baro_h"];
+                        drone.baro_t = (float)json["baro_t"];
+                        drone.baro_p = (float)json["baro_p"];
 
-                        i2c_hz = (float)json["i2c_hz"];
-                        adc_hz = (float)json["adc_hz"];
-                        pru_hz = (float)json["pru_hz"];
-                        pilot_hz = (float)json["pilot_hz"];
+                        drone.i2c_hz = (float)json["i2c_hz"];
+                        drone.adc_hz = (float)json["adc_hz"];
+                        drone.pru_hz = (float)json["pru_hz"];
+                        drone.pilot_hz = (float)json["pilot_hz"];
+
+                        drone.gyrox = (float)json["gyro_x"];
+                        drone.gyroy = (float)json["gyro_y"];
+                        drone.gyroz = (float)json["gyro_z"];
+
+                        drone.accx = (float)json["acc_x"];
+                        drone.accy = (float)json["acc_y"];
+                        drone.accz = (float)json["acc_z"];
+
+                        drone.pilot_pitch = (float)json["pilot_pitch"];
+                        drone.pilot_roll = (float)json["pilot_roll"];
 
                         //Console.WriteLine(fusion_pitch);
                        // Console.WriteLine(fusion_roll);
@@ -243,16 +230,7 @@ namespace beaglebone_quadcopter
             }
         }
 
-        //
-        float pitch_gyro = 0;
-        float roll_gyro = 0;
-        float yaw_gyro = 0;
-        //
-        float fusion_pitch = 0;
-        float fusion_roll = 0;
-        //
-        float pitch_acc = 0;
-        float roll_acc = 0;
+    
 
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -269,24 +247,27 @@ namespace beaglebone_quadcopter
 
                 int items = 300;
 
-                serie_vbat.circular_append_y(vbat, items);
-                serie_rtt.circular_append_y(rtt, items);
+                drone.serie_vbat.circular_append_y(drone.vbat, items);
+                drone.serie_rtt.circular_append_y(drone.rtt, items);
 
-                serie_motor_fl.circular_append_y(motor_fl / 1000.0, items);
-                serie_motor_fr.circular_append_y(motor_fr / 1000.0, items);
-                serie_motor_rl.circular_append_y(motor_rl / 1000.0, items);
-                serie_motor_rr.circular_append_y(motor_rr / 1000.0, items);
+                drone.serie_motor_fl.circular_append_y(drone.motor_fl / 1000.0, items);
+                drone.serie_motor_fr.circular_append_y(drone.motor_fr / 1000.0, items);
+                drone.serie_motor_rl.circular_append_y(drone.motor_rl / 1000.0, items);
+                drone.serie_motor_rr.circular_append_y(drone.motor_rr / 1000.0, items);
 
-                serie_baro_p.circular_append_y(baro_p, items);
-                serie_baro_t.circular_append_y(baro_t, items);
-                serie_baro_h.circular_append_y(baro_h, items);
-                serie_baro_hema.circular_append_y(baro_hema, items);
+                drone.serie_baro_p.circular_append_y(drone.baro_p, items);
+                drone.serie_baro_t.circular_append_y(drone.baro_t, items);
+                drone.serie_baro_h.circular_append_y(drone.baro_h, items);
+                drone.serie_baro_hema.circular_append_y(drone.baro_hema, items);
 
-                serie_adc_hz.circular_append_y(adc_hz, items);
-                serie_pru_hz.circular_append_y(pru_hz, items);
-                serie_i2c_hz.circular_append_y(i2c_hz, items);
-                serie_pilot_hz.circular_append_y(pilot_hz, items);
+                drone.serie_adc_hz.circular_append_y(drone.adc_hz, items);
+                drone.serie_pru_hz.circular_append_y(drone.pru_hz, items);
+                drone.serie_i2c_hz.circular_append_y(drone.i2c_hz, items);
+                drone.serie_pilot_hz.circular_append_y(drone.pilot_hz, items);
 
+                drone.serie_gyrox.circular_append_y(drone.gyrox, items);
+                drone.serie_gyroy.circular_append_y(drone.gyroy, items);
+                drone.serie_gyroz.circular_append_y(drone.gyroz, items);
 
                 chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_rtt.ChartAreas[0].RecalculateAxesScale();
@@ -310,6 +291,8 @@ namespace beaglebone_quadcopter
                 chart_hz.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_hz.ChartAreas[0].RecalculateAxesScale();
 
+                chart_speed.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_speed.ChartAreas[0].RecalculateAxesScale();
 
                 if (controle_conectado)
                 {
@@ -445,36 +428,45 @@ namespace beaglebone_quadcopter
 
         private void Render()
         {
-            Matrix4 lookat2 = Matrix4.LookAt(new Vector3(0,5,30), Vector3.Zero, Vector3.UnitY);
+            Matrix4 lookat2 = Matrix4.LookAt(new Vector3(-12,4,0), Vector3.Zero, Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref lookat2);
 
-            GL.Rotate((float)(fusion_pitch * 180.0/Math.PI), Vector3.UnitX);
-            GL.Rotate((float)(fusion_roll * 180.0 / Math.PI), Vector3.UnitZ);
+            GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitX);
+            GL.Rotate((float)(-drone.pilot_roll * 180.0 / Math.PI), Vector3.UnitZ);
             //GL.Rotate((float)(yaw_gyro * 180.0 / Math.PI), Vector3.UnitY);
             
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 
+            int glen = 5;
+
+            GL.LineWidth(5.0f);
+
             GL.Begin(BeginMode.Lines);
             GL.Color3(Color.Red);
             GL.Vertex3(0, 0, 0);
-            GL.Vertex3(10, 0, 0);
+            GL.Vertex3(-glen * drone.accx, 0, 0); /////// X
             GL.End();
 
             GL.Begin(BeginMode.Lines);
             GL.Color3(Color.Green);
             GL.Vertex3(0, 0, 0);
-            GL.Vertex3(0, 10, 0);
+            GL.Vertex3(0, -glen * drone.accz, 0); /////////// Y
             GL.End();
 
             GL.Begin(BeginMode.Lines);
             GL.Color3(Color.Blue);
             GL.Vertex3(0, 0, 0);
-            GL.Vertex3(0, 0, 10);
+            GL.Vertex3(0, 0, glen*drone.accy); ///////////// z
             GL.End();
 
+            GL.Begin(BeginMode.Lines);
+            GL.Color3(Color.White);
+            GL.Vertex3(0, 0, 0);
+            GL.Vertex3(-glen * drone.accx, -glen * drone.accz, glen * drone.accy); ///////////// z
+            GL.End();
             
 
             DrawCube();

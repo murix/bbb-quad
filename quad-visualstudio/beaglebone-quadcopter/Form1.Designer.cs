@@ -50,6 +50,9 @@
             System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea7 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.Windows.Forms.DataVisualization.Charting.Legend legend7 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea8 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend8 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.backgroundWorker_joystick = new System.ComponentModel.BackgroundWorker();
             this.chart_rtt = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_motor = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -64,6 +67,7 @@
             this.chart_baro_t = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_baro_p = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_hz = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.chart_speed = new System.Windows.Forms.DataVisualization.Charting.Chart();
             ((System.ComponentModel.ISupportInitialize)(this.chart_rtt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_motor)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -72,6 +76,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart_baro_t)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_baro_p)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_hz)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_speed)).BeginInit();
             this.SuspendLayout();
             // 
             // backgroundWorker_joystick
@@ -249,11 +254,28 @@
             this.chart_hz.TabIndex = 11;
             this.chart_hz.Text = "chart3";
             // 
+            // chart_speed
+            // 
+            chartArea8.Name = "ChartArea1";
+            this.chart_speed.ChartAreas.Add(chartArea8);
+            legend8.Name = "Legend1";
+            this.chart_speed.Legends.Add(legend8);
+            this.chart_speed.Location = new System.Drawing.Point(12, 531);
+            this.chart_speed.Name = "chart_speed";
+            series8.ChartArea = "ChartArea1";
+            series8.Legend = "Legend1";
+            series8.Name = "Series1";
+            this.chart_speed.Series.Add(series8);
+            this.chart_speed.Size = new System.Drawing.Size(535, 128);
+            this.chart_speed.TabIndex = 12;
+            this.chart_speed.Text = "chart3";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1518, 701);
+            this.Controls.Add(this.chart_speed);
             this.Controls.Add(this.chart_hz);
             this.Controls.Add(this.chart_baro_p);
             this.Controls.Add(this.chart_baro_t);
@@ -277,6 +299,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart_baro_t)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_baro_p)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_hz)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_speed)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -297,6 +320,7 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_baro_t;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_baro_p;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_hz;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart_speed;
     }
 }
 
