@@ -241,6 +241,9 @@ void ms5611::update(){
 		if(P0==0){
 			P0=P;
 		}
+                if(P<P0){
+                   P0=P;
+                }
 
 		H=altimeter(P0,P,T);
 
