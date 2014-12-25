@@ -82,7 +82,7 @@ void *motorserver(void *arg){
        printf("enable PRU overlay\r\n");
        system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
        printf("wait PRU overlay to be ready...\r\n");
-       usleep(1000000);
+       usleep(1000*1000);
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);

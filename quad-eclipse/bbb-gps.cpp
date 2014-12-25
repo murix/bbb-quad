@@ -16,7 +16,7 @@ int main(int argc,char** argv){
 	printf("enable ttyO4 overlay\r\n");
 	system("echo BB-UART4 > /sys/devices/bone_capemgr.9/slots");
 	printf("wait ttyO4 overlay to be ready\r\n");
-	usleep(1000000);
+	usleep(1000*1000);
 	//
 	system("gpsdctl add /dev/ttyO4");
 

@@ -180,7 +180,7 @@ namespace beaglebone_quadcopter
                     string fromdrone = sendrecv(ip,jsonjoy.ToString(), 200);
                     if (fromdrone.Length > 0)
                     {
-                       // Console.WriteLine(fromdrone);
+                        Console.WriteLine(fromdrone);
 
                         JObject json = JObject.Parse(fromdrone);
 

@@ -46,20 +46,24 @@ void ms5611::i2c_start(){
 		perror("i2c slave hmc5883 Failed");
 	}
 }
+
 void ms5611::i2c_send(char cmd)
 {
 	i2c_start();
 	write(fd,&cmd,1);
 }
+
 void ms5611::i2c_recv(unsigned char* buffer,int buffer_len){
 	i2c_start();
 	read(fd,buffer,buffer_len);
 }
+
 void ms5611::cmd_reset(void)
 {
 	i2c_send(CMD_RESET); // send reset sequence
 	usleep(3 * 1000); // wait for the reset sequence timing
 }
+
 unsigned long ms5611::cmd_adc(char cmd)
 {
 	unsigned long temp=0;
@@ -137,8 +141,8 @@ void ms5611::init(){
 
 void ms5611::update(){
 	//Read digital pressure and temperature data
-	D2=cmd_adc(CMD_ADC_D2+CMD_ADC_4096); // read D2
-	D1=cmd_adc(CMD_ADC_D1+CMD_ADC_4096); // read D1
+	D2=cmd_adc(CMD_ADC_D2+CMD_ADC_256); // read D2
+	D1=cmd_adc(CMD_ADC_D1+CMD_ADC_256); // read D1
 	//Calculate temperature
 	dT=D2-C[5]*pow(2,8);
 	T=(2000+(dT*C[6])/pow(2,23));

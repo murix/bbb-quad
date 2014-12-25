@@ -36,7 +36,7 @@ static int openspi(void){
   
         system("echo ADAFRUIT-SPI0 > /sys/devices/bone_capemgr.9/slots");
         //system("echo BB-SPIDEV0 > /sys/devices/bone_capemgr.9/slots");
-	usleep(500);
+	usleep(1000*1000);
 	
         const char *device = "/dev/spidev1.0";
         uint8_t bits = 8;

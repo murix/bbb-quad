@@ -157,15 +157,15 @@ void *task_adc(void *arg){
 	while(1){
 
 		//-------------
-			t_back=t_now;
-			t_now=get_timestamp_in_seconds();
-			t_diff=t_now-t_back;
+		t_back=t_now;
+		t_now=get_timestamp_in_seconds();
+		t_diff=t_now-t_back;
 
-			///////////////////////////////////
+		///////////////////////////////////
 
-			drone->adc_hz = 1.0 / t_diff;
+		drone->adc_hz = 1.0 / t_diff;
 
-			////////////////////////////////////
+		////////////////////////////////////
 
 
 		adc.update();
@@ -199,7 +199,7 @@ void *task_motors(void *arg){
 	printf("enable PRU overlay\r\n");
 	system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
 	printf("wait PRU overlay to be ready...\r\n");
-	usleep(1000000);
+	usleep(1000*1000);
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
@@ -309,7 +309,7 @@ void *task_imu(void *arg){
 
 		mpu.update();
 		mag.update();
-		//baro.update();
+		baro.update();
 
 		////////////////////////////////////////////////
 
@@ -378,7 +378,7 @@ void *task_pilot(void *arg)
 
 		///////////////////////////////////
 
-		usleep((1000*1000)/100);
+		usleep(2000);
 
 		if(drone->joy_y){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_MAX;
