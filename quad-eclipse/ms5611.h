@@ -51,6 +51,7 @@ public:
 	double SENS; // sensitivity at actual temperature
 	double P0;
 	double H;
+	double H_EMA;
 };
 
 

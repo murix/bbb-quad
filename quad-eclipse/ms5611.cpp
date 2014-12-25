@@ -248,6 +248,11 @@ void ms5611::update(){
 		H=altimeter(P0,P,T);
 
 
+		//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
+		double alpha=0.01;
+		H_EMA= (alpha * H) + (1.0 - alpha) * H_EMA;
+
+
 		this->state=START_D2;
 	}
 
