@@ -418,10 +418,10 @@ void *task_pilot(void *arg)
 		pitch    = drone->joy_stick_right_y * PWM_FLY_MAX;
 		roll     = drone->joy_stick_right_x * PWM_FLY_MAX;
 
-		drone->motor_dutyns_target[MOTOR_FL] = throttle - pitch - roll + yaw;
-		drone->motor_dutyns_target[MOTOR_RL] = throttle + pitch - roll - yaw;
-		drone->motor_dutyns_target[MOTOR_FR] = throttle - pitch + roll - yaw;
-		drone->motor_dutyns_target[MOTOR_RR] = throttle + pitch + roll + yaw;
+		drone->motor_dutyns_target[MOTOR_FL] = throttle - pitch + roll + yaw;
+		drone->motor_dutyns_target[MOTOR_RL] = throttle + pitch + roll - yaw;
+		drone->motor_dutyns_target[MOTOR_FR] = throttle - pitch - roll - yaw;
+		drone->motor_dutyns_target[MOTOR_RR] = throttle + pitch - roll + yaw;
 	}
 }
 
