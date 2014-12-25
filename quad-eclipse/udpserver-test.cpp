@@ -378,7 +378,7 @@ void *task_pilot(void *arg)
 
 		///////////////////////////////////
 
-		usleep(2000);
+		usleep(3000);
 
 		if(drone->joy_y){
 			for(int i=0;i<8;i++) drone->motor_dutyns_target[i]=PWM_FLY_MAX;

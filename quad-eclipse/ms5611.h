@@ -8,8 +8,23 @@
 #ifndef MS5611_H_
 #define MS5611_H_
 
+enum ms5611_states {
+	START_D1,
+	WAIT_D1,
+	READ_D1,
+
+	START_D2,
+	WAIT_D2,
+	READ_D2,
+
+	COMPUTE_ALL
+};
+
 class ms5611 {
 public:
+	double read_started;
+	ms5611_states state;
+
 	int fd;
 	ms5611(int fd);
 	void i2c_start();
@@ -21,6 +36,8 @@ public:
 	unsigned char crc4(unsigned int n_prom[]);
 	void init();
 	void update();
+	void update_start();
+
 	double altimeter(double p0,double p,double t);
 
 	unsigned int C[8]; // calibration coefficients

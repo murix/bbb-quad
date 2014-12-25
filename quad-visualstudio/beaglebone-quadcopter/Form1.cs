@@ -79,6 +79,12 @@ namespace beaglebone_quadcopter
             chart_baro_t.Series.Clear();
             chart_baro_t.Series.Add(serie_baro_t);
 
+            chart_hz.Series.Clear();
+            chart_hz.Series.Add(serie_i2c_hz);
+            chart_hz.Series.Add(serie_adc_hz);
+            chart_hz.Series.Add(serie_pru_hz);
+            chart_hz.Series.Add(serie_pilot_hz);
+
 
             backgroundWorker_joystick.RunWorkerAsync();
 
@@ -206,6 +212,11 @@ namespace beaglebone_quadcopter
                         baro_t = (float)json["baro_t"];
                         baro_p = (float)json["baro_p"];
 
+                        i2c_hz = (float)json["i2c_hz"];
+                        adc_hz = (float)json["adc_hz"];
+                        pru_hz = (float)json["pru_hz"];
+                        pilot_hz = (float)json["pilot_hz"];
+
                         //Console.WriteLine(fusion_pitch);
                        // Console.WriteLine(fusion_roll);
 
@@ -254,13 +265,21 @@ namespace beaglebone_quadcopter
 
                 serie_vbat.circular_append_y(vbat, 1000);
                 serie_rtt.circular_append_y(rtt, 1000);
+
                 serie_motor_fl.circular_append_y(motor_fl / 1000.0, 1000);
                 serie_motor_fr.circular_append_y(motor_fr / 1000.0, 1000);
                 serie_motor_rl.circular_append_y(motor_rl / 1000.0, 1000);
                 serie_motor_rr.circular_append_y(motor_rr / 1000.0, 1000);
+
                 serie_baro_p.circular_append_y(baro_p, 1000);
                 serie_baro_t.circular_append_y(baro_t, 1000);
                 serie_baro_h.circular_append_y(baro_h, 1000);
+
+                serie_adc_hz.circular_append_y(adc_hz, 1000);
+                serie_pru_hz.circular_append_y(pru_hz, 1000);
+                serie_i2c_hz.circular_append_y(i2c_hz, 1000);
+                serie_pilot_hz.circular_append_y(pilot_hz, 1000);
+
 
                 chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_rtt.ChartAreas[0].RecalculateAxesScale();
@@ -279,6 +298,11 @@ namespace beaglebone_quadcopter
 
                 chart_baro_p.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_baro_p.ChartAreas[0].RecalculateAxesScale();
+
+
+                chart_hz.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_hz.ChartAreas[0].RecalculateAxesScale();
+
 
                 if (controle_conectado)
                 {

@@ -17,6 +17,8 @@
 //pow,sqrt
 #include <math.h>
 
+#include "timestamps.h"
+
 #include "ms5611.h"
 
 #define ADDR_MS5611  0x77
@@ -64,25 +66,6 @@ void ms5611::cmd_reset(void)
 	usleep(3 * 1000); // wait for the reset sequence timing
 }
 
-unsigned long ms5611::cmd_adc(char cmd)
-{
-	unsigned long temp=0;
-	i2c_send(CMD_ADC_CONV+cmd); // send conversion command
-	switch (cmd & 0x0f) // wait necessary conversion time
-	{
-	case CMD_ADC_256 : usleep(900); break;
-	case CMD_ADC_512 : usleep(3 * 1000); break;
-	case CMD_ADC_1024: usleep(4 * 1000); break;
-	case CMD_ADC_2048: usleep(6 * 1000); break;
-	case CMD_ADC_4096: usleep(10 * 1000); break;
-	}
-	i2c_send(CMD_ADC_READ);
-	unsigned char b[3];
-	i2c_recv(b,3);
-
-	temp=65536*b[0]+256*b[1]+b[2];
-	return temp;
-}
 
 unsigned int ms5611::cmd_prom(char coef_num)
 {
@@ -137,54 +120,134 @@ void ms5611::init(){
 	} // read coefficients
 	n_crc=crc4(C); // calculate the CRC
 	printf("calculated crc=%08x\r\n",n_crc);
+
+	this->state=START_D2;
 }
 
+
+unsigned long ms5611::cmd_adc(char cmd)
+{
+	unsigned long temp=0;
+	i2c_send(CMD_ADC_CONV+cmd); // send conversion command
+	switch (cmd & 0x0f) // wait necessary conversion time
+	{
+	case CMD_ADC_256 : usleep(900); break;
+	case CMD_ADC_512 : usleep(3 * 1000); break;
+	case CMD_ADC_1024: usleep(4 * 1000); break;
+	case CMD_ADC_2048: usleep(6 * 1000); break;
+	case CMD_ADC_4096: usleep(10 * 1000); break;
+	}
+	i2c_send(CMD_ADC_READ);
+	unsigned char b[3];
+	i2c_recv(b,3);
+
+	temp=65536*b[0]+256*b[1]+b[2];
+	return temp;
+}
+
+
+
+
 void ms5611::update(){
-	//Read digital pressure and temperature data
-	D2=cmd_adc(CMD_ADC_D2+CMD_ADC_4096); // read D2
-	D1=cmd_adc(CMD_ADC_D1+CMD_ADC_4096); // read D1
-	//Calculate temperature
-	dT=D2-C[5]*pow(2,8);
-	T=(2000+(dT*C[6])/pow(2,23));
-	//Calculate temperature compensated pressure
-	OFF=C[2]*pow(2,16)+dT*C[4]/pow(2,7);
-	SENS=C[1]*pow(2,15)+dT*C[3]/pow(2,8);
-	//
 
-	///////////////////////////////////////////////////
-	//second order
-	double t2,off2,sens2;
-	if(T<2000){
-		t2=pow(dT,2)/pow(2,31);
-		off2=5*pow(T-2000,2)/pow(2,1);
-		sens2=5*pow(T-2000,2)/pow(2,2);
-		if(T<-1500){
-			off2=off2+7*pow(T+1500,2);
-			sens2=sens2+11*pow(T+1500,2)/pow(2,1);
+	unsigned char b[3];
+
+	if(this->state==START_D2){
+		i2c_send(CMD_ADC_CONV+CMD_ADC_D2+CMD_ADC_4096);
+		this->read_started=get_timestamp_in_seconds();
+		this->state=WAIT_D2;
+		return;
+	}
+	if(this->state==WAIT_D2){
+		//wait 10ms without block
+		if(get_timestamp_in_seconds()-this->read_started<0.01){
+			this->state=WAIT_D2;
 		}
-	} else {
-		t2=0;
-		off2=0;
-		sens2=0;
+		else {
+			this->state=READ_D2;
+		}
+		return;
 	}
-	T-=t2;
-	OFF-=off2;
-	SENS-=sens2;
-///////////////////////////////////////////////////
-
-
-	P=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));
-
-	///////////////////////////////////////////////////
-
-	T/=100.0;
-	P/=100.0;
-
-	if(P0!=0){
-		H=altimeter(P0,P,T);
-	} else {
-		H=0;
+	if(this->state==READ_D2){
+		i2c_send(CMD_ADC_READ);
+		i2c_recv(b,3);
+		D2 = 65536*b[0]+256*b[1]+b[2];
+		this->state=START_D1;
+		return;
 	}
+	if(this->state==START_D1){
+		i2c_send(CMD_ADC_CONV+CMD_ADC_D1+CMD_ADC_4096);
+		this->read_started=get_timestamp_in_seconds();
+		this->state=WAIT_D1;
+		return;
+	}
+	if(this->state==WAIT_D1){
+		//wait 10ms without block
+		if(get_timestamp_in_seconds()-this->read_started<0.01){
+			this->state=WAIT_D1;
+		}
+		else {
+			this->state=READ_D1;
+		}
+		return;
+	}
+	if(this->state==READ_D1){
+		i2c_send(CMD_ADC_READ);
+		i2c_recv(b,3);
+		D1 = 65536*b[0]+256*b[1]+b[2];
+		this->state=COMPUTE_ALL;
+		return;
+	}
+
+	if(this->state==COMPUTE_ALL){
+
+		//Calculate temperature
+		dT=D2-C[5]*pow(2,8);
+		T=(2000+(dT*C[6])/pow(2,23));
+		//Calculate temperature compensated pressure
+		OFF=C[2]*pow(2,16)+dT*C[4]/pow(2,7);
+		SENS=C[1]*pow(2,15)+dT*C[3]/pow(2,8);
+		//
+
+		///////////////////////////////////////////////////
+		//second order
+		double t2,off2,sens2;
+		if(T<2000){
+			t2=pow(dT,2)/pow(2,31);
+			off2=5*pow(T-2000,2)/pow(2,1);
+			sens2=5*pow(T-2000,2)/pow(2,2);
+			if(T<-1500){
+				off2=off2+7*pow(T+1500,2);
+				sens2=sens2+11*pow(T+1500,2)/pow(2,1);
+			}
+		} else {
+			t2=0;
+			off2=0;
+			sens2=0;
+		}
+		T-=t2;
+		OFF-=off2;
+		SENS-=sens2;
+		///////////////////////////////////////////////////
+
+
+		P=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));
+
+		///////////////////////////////////////////////////
+
+		T/=100.0;
+		P/=100.0;
+
+		if(P0!=0){
+			H=altimeter(P0,P,T);
+		} else {
+			H=0;
+		}
+
+
+		this->state=START_D2;
+	}
+
 }
 
 
