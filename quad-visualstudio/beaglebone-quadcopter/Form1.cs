@@ -34,6 +34,7 @@ namespace beaglebone_quadcopter
         double rtt = 0.0;
         double baro_p = 0.0;
         double baro_h = 0.0;
+        double baro_hema = 0.0;
         double baro_t = 0.0;
 
         murix_series serie_vbat = new murix_series("vbat");
@@ -44,6 +45,7 @@ namespace beaglebone_quadcopter
         murix_series serie_motor_rr = new murix_series("motor_rr");
         murix_series serie_baro_p = new murix_series("baro_p");
         murix_series serie_baro_h = new murix_series("baro_h");
+        murix_series serie_baro_hema = new murix_series("baro_hema");
         murix_series serie_baro_t = new murix_series("baro_t");
 
         double i2c_hz = 0;
@@ -72,6 +74,7 @@ namespace beaglebone_quadcopter
 
             chart_baro_h.Series.Clear();
             chart_baro_h.Series.Add(serie_baro_h);
+            chart_baro_h.Series.Add(serie_baro_hema);
 
             chart_baro_p.Series.Clear();
             chart_baro_p.Series.Add(serie_baro_p);
@@ -208,6 +211,7 @@ namespace beaglebone_quadcopter
                         pitch_acc = (float)json["pitch_acc"];
                         roll_acc = (float)json["roll_acc"];
 
+                        baro_hema = (float)json["baro_hema"];
                         baro_h = (float)json["baro_h"];
                         baro_t = (float)json["baro_t"];
                         baro_p = (float)json["baro_p"];
@@ -276,6 +280,7 @@ namespace beaglebone_quadcopter
                 serie_baro_p.circular_append_y(baro_p, items);
                 serie_baro_t.circular_append_y(baro_t, items);
                 serie_baro_h.circular_append_y(baro_h, items);
+                serie_baro_hema.circular_append_y(baro_hema, items);
 
                 serie_adc_hz.circular_append_y(adc_hz, items);
                 serie_pru_hz.circular_append_y(pru_hz, items);
