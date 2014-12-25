@@ -186,7 +186,7 @@ namespace beaglebone_quadcopter
                     string fromdrone = sendrecv(ip,jsonjoy.ToString(), 200);
                     if (fromdrone.Length > 0)
                     {
-                        Console.WriteLine(fromdrone);
+                        //Console.WriteLine(fromdrone);
 
                         JObject json = JObject.Parse(fromdrone);
 
@@ -263,22 +263,24 @@ namespace beaglebone_quadcopter
             {
                 if (rxcount == 0) return;
 
-                serie_vbat.circular_append_y(vbat, 1000);
-                serie_rtt.circular_append_y(rtt, 1000);
+                int items = 300;
 
-                serie_motor_fl.circular_append_y(motor_fl / 1000.0, 1000);
-                serie_motor_fr.circular_append_y(motor_fr / 1000.0, 1000);
-                serie_motor_rl.circular_append_y(motor_rl / 1000.0, 1000);
-                serie_motor_rr.circular_append_y(motor_rr / 1000.0, 1000);
+                serie_vbat.circular_append_y(vbat, items);
+                serie_rtt.circular_append_y(rtt, items);
 
-                serie_baro_p.circular_append_y(baro_p, 1000);
-                serie_baro_t.circular_append_y(baro_t, 1000);
-                serie_baro_h.circular_append_y(baro_h, 1000);
+                serie_motor_fl.circular_append_y(motor_fl / 1000.0, items);
+                serie_motor_fr.circular_append_y(motor_fr / 1000.0, items);
+                serie_motor_rl.circular_append_y(motor_rl / 1000.0, items);
+                serie_motor_rr.circular_append_y(motor_rr / 1000.0, items);
 
-                serie_adc_hz.circular_append_y(adc_hz, 1000);
-                serie_pru_hz.circular_append_y(pru_hz, 1000);
-                serie_i2c_hz.circular_append_y(i2c_hz, 1000);
-                serie_pilot_hz.circular_append_y(pilot_hz, 1000);
+                serie_baro_p.circular_append_y(baro_p, items);
+                serie_baro_t.circular_append_y(baro_t, items);
+                serie_baro_h.circular_append_y(baro_h, items);
+
+                serie_adc_hz.circular_append_y(adc_hz, items);
+                serie_pru_hz.circular_append_y(pru_hz, items);
+                serie_i2c_hz.circular_append_y(i2c_hz, items);
+                serie_pilot_hz.circular_append_y(pilot_hz, items);
 
 
                 chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;

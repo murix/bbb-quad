@@ -245,7 +245,7 @@
             series7.Legend = "Legend1";
             series7.Name = "Series1";
             this.chart_hz.Series.Add(series7);
-            this.chart_hz.Size = new System.Drawing.Size(535, 98);
+            this.chart_hz.Size = new System.Drawing.Size(535, 128);
             this.chart_hz.TabIndex = 11;
             this.chart_hz.Text = "chart3";
             // 
