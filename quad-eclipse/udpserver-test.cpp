@@ -191,7 +191,7 @@ void *task_adc(void *arg){
 #define PWM_FLY_MIN         1070000
 #define PWM_FLY_MAX         1900000
 #define PWM_CALIB_MAX       1950000
-#define PWM_STEP_PER_CYCLE     1000
+#define PWM_STEP_PER_CYCLE    10000
 #define PWM_NS_PER_SEC     (1000*1000*1000)
 #define PWM_CYCLE_IN_NS    (PWM_NS_PER_SEC/PWM_HZ)
 #define PWM_CYCLE_IN_US    (PWM_CYCLE_IN_NS/1000)
