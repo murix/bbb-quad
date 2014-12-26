@@ -178,7 +178,7 @@ void *task_adc(void *arg){
 		adc.update();
 		drone->vbat=adc.vbat;
 
-		usleep(4000);
+		usleep(1500);
 
 	}
 }
@@ -292,8 +292,8 @@ void *task_motors(void *arg){
 		}
 
 		// wait pwm complete duty
-		//usleep(PWM_CYCLE_IN_US);
-		usleep(5000);
+		usleep(PWM_CYCLE_IN_US);
+		//usleep(5000);
 	}
 
 }
@@ -397,7 +397,7 @@ void *task_pilot(void *arg)
 
 		///////////////////////////////////
 
-		usleep(5000);
+		usleep(2500);
 
 
 		/////////////////////////////////////////////////////////////////////////////
