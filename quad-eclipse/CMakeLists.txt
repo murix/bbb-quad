@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 2.6)
 project (bbb-multicopter)
 
 # cc1101 spi tap
-add_executable(test-spi-cc1101-tap cc1101-tap.cpp)
+add_executable(test-spi-cc1101-tap cc1101_linux.cpp)
 
 # vbat
 add_executable(test-adc-vbat bbb-adc.cpp bbb-adc-test.cpp)
