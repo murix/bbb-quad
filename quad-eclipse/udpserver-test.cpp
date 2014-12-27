@@ -585,9 +585,22 @@ void* task_bluetooth_ps3(void* arg){
 			uint8_t number;    /* axis/button number */
 		};
 
-	int fd= open("/dev/input/js0", O_RDONLY);
+	int fd=-1; 
 	for (;;)
 	{
+               if(fd==-1){
+                  printf("ps3 try connect...\r\n");
+                  fd=open("/dev/input/js0", O_RDONLY);
+                  if(fd==-1){
+                    printf("ps3 joy not connected\r\n");
+                    usleep(1000*1000);
+                    continue;
+                  }
+                  else {
+                    printf("ps3 joy connected ok\r\n");
+                  }
+               }
+
 		struct js_event e;
 		read (fd, &e, sizeof(e));
 
@@ -597,7 +610,7 @@ void* task_bluetooth_ps3(void* arg){
                 if(e.number==26) continue;
 
                  if( e.type == JS_EVENT_AXIS){
-                    printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
+                    //printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
                  }
                  if( e.type == JS_EVENT_BUTTON){
                     printf("botao type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
