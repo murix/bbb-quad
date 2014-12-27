@@ -618,14 +618,14 @@ int main(int argc,char** argv){
 	pthread_create(&id_gps                          , 0, task_gps                          , &drone_data);
 	pthread_create(&id_spi                          , 0, task_spi_cc1101                   , &drone_data);
 
-	pthread_setname_np(id_adc,"th adc");
-	pthread_setname_np(id_imu,"th imu");
-	pthread_setname_np(id_motors,"th motors");
-	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"th joy");
-	pthread_setname_np(id_pilot,"th pilot");
-	pthread_setname_np(id_ps3,"th ps3");
-	pthread_setname_np(id_gps,"th gps");
-	pthread_setname_np(id_spi,"th spi");
+	pthread_setname_np(id_adc,"1234567890123");
+	pthread_setname_np(id_imu,"123456789012");
+	pthread_setname_np(id_motors,"th pru-pwm-motors");
+	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"th net-joy-telemetric");
+	pthread_setname_np(id_pilot,"th pilot-pid");
+	pthread_setname_np(id_ps3,"th bluetooth-ps3");
+	pthread_setname_np(id_gps,"th usart-gps");
+	pthread_setname_np(id_spi,"th spi-cc1101-tap");
 
 	//
 	pthread_join(id_adc,NULL);
