@@ -565,6 +565,27 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 	return NULL;
 }
 
+void* task_spi_cc1101(void* arg){
+	for (;;)
+	{
+		usleep(10000);
+	}
+}
+
+void* task_bluetooth_ps3(void* arg){
+	for (;;)
+	{
+		usleep(10000);
+	}
+}
+
+void* task_gps(void *arg){
+	for (;;)
+	{
+		usleep(10000);
+	}
+}
+
 
 int main(int argc,char** argv){
 
@@ -585,7 +606,7 @@ int main(int argc,char** argv){
 	memset (&drone_data,0,sizeof(drone_data));
 
 	//
-	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot;
+	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
 
 	//
 	pthread_create(&id_adc                          , 0, task_adc                          , &drone_data);
@@ -593,12 +614,18 @@ int main(int argc,char** argv){
 	pthread_create(&id_motors                       , 0, task_motors                       , &drone_data);
 	pthread_create(&id_rx_joystick_and_tx_telemetric, 0, task_rx_joystick_and_tx_telemetric, &drone_data);
 	pthread_create(&id_pilot                        , 0, task_pilot                        , &drone_data);
+	pthread_create(&id_ps3                          , 0, task_bluetooth_ps3                , &drone_data);
+	pthread_create(&id_gps                          , 0, task_gps                          , &drone_data);
+	pthread_create(&id_spi                          , 0, task_spi_cc1101                   , &drone_data);
 
 	pthread_setname_np(id_adc,"th adc");
 	pthread_setname_np(id_imu,"th imu");
 	pthread_setname_np(id_motors,"th motors");
 	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"th joy");
 	pthread_setname_np(id_pilot,"th pilot");
+	pthread_setname_np(id_ps3,"th ps3");
+	pthread_setname_np(id_gps,"th gps");
+	pthread_setname_np(id_spi,"th spi");
 
 	//
 	pthread_join(id_adc,NULL);
@@ -606,6 +633,9 @@ int main(int argc,char** argv){
 	pthread_join(id_motors,NULL);
 	pthread_join(id_rx_joystick_and_tx_telemetric,NULL);
 	pthread_join(id_pilot,NULL);
+	pthread_join(id_ps3,NULL);
+	pthread_join(id_gps,NULL);
+	pthread_join(id_spi,NULL);
 
 
 	return 0;
