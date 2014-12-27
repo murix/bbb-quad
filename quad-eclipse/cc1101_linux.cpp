@@ -496,12 +496,12 @@ void spidev_abort(const char *s)
 
 void spidev_init(context_spi_t* data){
 
+#if 0
 	//
 	system("echo ADAFRUIT-SPI0 > /sys/devices/bone_capemgr.9/slots");
 	//system("echo BB-SPIDEV0 > /sys/devices/bone_capemgr.9/slots");
+#endif
 
-
-	usleep(500);
 
 	//
 	data->device = "/dev/spidev1.0";

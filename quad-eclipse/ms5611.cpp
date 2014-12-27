@@ -63,7 +63,7 @@ void ms5611::i2c_recv(unsigned char* buffer,int buffer_len){
 void ms5611::cmd_reset(void)
 {
 	i2c_send(CMD_RESET); // send reset sequence
-	usleep(3 * 1000); // wait for the reset sequence timing
+	usleep(3 * 1000); // wait for the reset sequence timing - 3ms
 }
 
 

@@ -640,8 +640,8 @@ int main(int argc,char** argv){
 	}
 
 	//
+	system("/etc/init.d/gpsd restart");
 	system("gpsdctl add /dev/ttyO4");
-	usleep(1000*1000);
 
 
 	//
