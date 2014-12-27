@@ -186,6 +186,7 @@ void *task_adc(void *arg){
 
 //
 #define PWM_HZ                  400
+#define PWM_FAILSAFE         500000
 #define PWM_FLY_ARM          900000
 #define PWM_CALIB_MIN       1000000
 #define PWM_FLY_MIN         1070000
@@ -218,7 +219,7 @@ void *task_motors(void *arg){
 		drone->motor_dutyns_target[ch]=PWM_FLY_ARM;
 		drone->motor_dutyns_now[ch]=PWM_FLY_ARM;
 		myPWM->setChannelValue(ch,PWM_FLY_ARM);
-		myPWM->setFailsafeValue(ch,PWM_FLY_ARM);
+		myPWM->setFailsafeValue(ch,PWM_FAILSAFE);
 	}
 	myPWM->setFailsafeTimeout(2000);
 
