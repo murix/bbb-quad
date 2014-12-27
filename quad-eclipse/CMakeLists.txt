@@ -5,6 +5,8 @@ cmake_minimum_required (VERSION 2.6)
 
 project (bbb-multicopter)
 
+set(CMAKE_CXX_FLAGS "-std=c++0x")
+
 # cc1101 spi tap
 add_executable(test-spi-cc1101-tap cc1101_linux.cpp)
 
