@@ -18,7 +18,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "pruPWM.h"
+#include "pru-pwm-cpp.h"
 #include <stdint.h>
 
 #include <stdio.h>
