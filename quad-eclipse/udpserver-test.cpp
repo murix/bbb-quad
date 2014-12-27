@@ -218,7 +218,9 @@ void *task_motors(void *arg){
 		drone->motor_dutyns_target[ch]=PWM_FLY_ARM;
 		drone->motor_dutyns_now[ch]=PWM_FLY_ARM;
 		myPWM->setChannelValue(ch,PWM_FLY_ARM);
+		myPWM->setFailsafeValue(ch,PWM_FLY_ARM);
 	}
+	myPWM->setFailsafeTimeout(2000);
 
 	//---------
 	double t_back=get_timestamp_in_seconds();;
