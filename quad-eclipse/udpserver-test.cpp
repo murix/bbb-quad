@@ -573,9 +573,25 @@ void* task_spi_cc1101(void* arg){
 }
 
 void* task_bluetooth_ps3(void* arg){
+
+//#define JS_EVENT_BUTTON         0x01    /* button pressed/released */
+//#define JS_EVENT_AXIS           0x02    /* joystick moved */
+//#define JS_EVENT_INIT           0x80    /* initial state of device */
+
+	struct js_event {
+			uint32_t time;     /* event timestamp in milliseconds */
+			int16_t value;    /* value */
+			uint8_t type;      /* event type */
+			uint8_t number;    /* axis/button number */
+		};
+
+	int fd= open("/dev/input/js0", O_RDONLY);
 	for (;;)
 	{
-		usleep(10000);
+		struct js_event e;
+		read (fd, &e, sizeof(e));
+
+        printf("time=%u value=%d type=%02x number=%d\r\n",e.time,e.value,e.type,e.number);
 	}
 }
 
