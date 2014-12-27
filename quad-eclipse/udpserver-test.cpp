@@ -609,6 +609,7 @@ int main(int argc,char** argv){
 
 	//load spi
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep ADAFRUIT-SPI0")){
+		printf("load SPI\r\n");
 		system("echo ADAFRUIT-SPI0 > /sys/devices/bone_capemgr.9/slots");
 		//system("echo BB-SPIDEV0 > /sys/devices/bone_capemgr.9/slots");
 		usleep(1000*1000);
@@ -616,18 +617,21 @@ int main(int argc,char** argv){
 
 	//load pru
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep bone_pru0_out")){
+		printf("load PRU\r\n");
 		system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
 		usleep(1000*1000);
 	}
 
 	//load adc
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep cape-bone-iio")){
+		printf("load ADC\r\n");
 		system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
 		usleep(1000*1000);
 	}
 
 	//load usart4
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep BB-UART4")){
+		printf("load UART4\r\n");
 		system("echo BB-UART4 > /sys/devices/bone_capemgr.9/slots");
 		usleep(1000*1000);
 	}
