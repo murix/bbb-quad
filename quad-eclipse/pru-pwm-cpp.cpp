@@ -25,8 +25,8 @@ PRUPWM::PRUPWM(unsigned int frequency) : PRU(0) {
 	this->setFrequency(frequency);
 	this->setFailsafeTimeout(0);
 	for (int i = 0; i < 8; i++) {
-		this->setChannelValue(i , 900000);
-		this->setFailsafeValue(i, 900000);
+		this->setChannelValue(i , 500*1000);
+		this->setFailsafeValue(i, 500*1000);
 	}
 }
 
