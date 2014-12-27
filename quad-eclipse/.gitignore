@@ -12,3 +12,4 @@ Makefile
 # test binaries
 test-*
 sixpair
+*.bin
