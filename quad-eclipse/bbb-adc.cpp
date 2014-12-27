@@ -8,8 +8,6 @@
 #include "bbb-adc.h"
 
 void adc_monitor::init(void){
-        system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
-        //system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
 }
 
 void adc_monitor::update(void){

@@ -78,11 +78,13 @@ typedef struct {
 void *motorserver(void *arg){
      motor_t* pdata=(motor_t*) arg;
 
+#if 0
        //
        printf("enable PRU overlay\r\n");
        system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
        printf("wait PRU overlay to be ready...\r\n");
        usleep(1000*1000);
+#endif
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);

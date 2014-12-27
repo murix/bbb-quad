@@ -202,11 +202,8 @@ void *task_adc(void *arg){
 void *task_motors(void *arg){
 	drone_t* drone=(drone_t*) arg;
 
-	//
-	printf("enable PRU overlay\r\n");
-	system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
-	printf("wait PRU overlay to be ready...\r\n");
-	usleep(1000*1000);
+
+
 
 	// Initialise PRU PWM
 	PRUPWM *myPWM = new PRUPWM(PWM_HZ);
@@ -601,6 +598,45 @@ int main(int argc,char** argv){
 	// reboot automatico em 2 segundos apos um kernel panic
 	system("sysctl -w kernel.panic=2");
 
+#if 0
+	//
+	if(system("cat /sys/devices/bone_capemgr.9/slots | grep BB-I2C1")){
+		system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
+		usleep(1000*1000);
+	}
+#endif
+
+
+	//load spi
+	if(system("cat /sys/devices/bone_capemgr.9/slots | grep ADAFRUIT-SPI0")){
+		system("echo ADAFRUIT-SPI0 > /sys/devices/bone_capemgr.9/slots");
+		//system("echo BB-SPIDEV0 > /sys/devices/bone_capemgr.9/slots");
+		usleep(1000*1000);
+	}
+
+	//load pru
+	if(system("cat /sys/devices/bone_capemgr.9/slots | grep bone_pru0_out")){
+		system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
+		usleep(1000*1000);
+	}
+
+	//load adc
+	if(system("cat /sys/devices/bone_capemgr.9/slots | grep cape-bone-iio")){
+		system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
+		usleep(1000*1000);
+	}
+
+	//load usart4
+	if(system("cat /sys/devices/bone_capemgr.9/slots | grep BB-UART4")){
+		system("echo BB-UART4 > /sys/devices/bone_capemgr.9/slots");
+		usleep(1000*1000);
+	}
+
+	//
+	system("gpsdctl add /dev/ttyO4");
+	usleep(1000*1000);
+
+
 	//
 	drone_t drone_data;
 	memset (&drone_data,0,sizeof(drone_data));
@@ -618,7 +654,7 @@ int main(int argc,char** argv){
 	pthread_create(&id_gps                          , 0, task_gps                          , &drone_data);
 	pthread_create(&id_spi                          , 0, task_spi_cc1101                   , &drone_data);
 
-        /////////////////////////////////////////////////////123456789012345
+	/////////////////////////////////////////////////////123456789012345
 	pthread_setname_np(id_adc                          ,"adc-vbat       ");
 	pthread_setname_np(id_imu                          ,"i2c-sensors    ");
 	pthread_setname_np(id_motors                       ,"pru-pwm-motors ");
