@@ -574,9 +574,9 @@ void* task_spi_cc1101(void* arg){
 
 void* task_bluetooth_ps3(void* arg){
 
-//#define JS_EVENT_BUTTON         0x01    /* button pressed/released */
-//#define JS_EVENT_AXIS           0x02    /* joystick moved */
-//#define JS_EVENT_INIT           0x80    /* initial state of device */
+#define JS_EVENT_BUTTON         0x01    /* button pressed/released */
+#define JS_EVENT_AXIS           0x02    /* joystick moved */
+#define JS_EVENT_INIT           0x80    /* initial state of device */
 
 	struct js_event {
 			uint32_t time;     /* event timestamp in milliseconds */
@@ -591,7 +591,17 @@ void* task_bluetooth_ps3(void* arg){
 		struct js_event e;
 		read (fd, &e, sizeof(e));
 
-        printf("time=%u value=%d type=%02x number=%d\r\n",e.time,e.value,e.type,e.number);
+                if(e.number==23) continue;
+                if(e.number==24) continue;
+                if(e.number==25) continue;
+                if(e.number==26) continue;
+
+                 if( e.type == JS_EVENT_AXIS){
+                    printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
+                 }
+                 if( e.type == JS_EVENT_BUTTON){
+                    printf("botao type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
+                 }
 	}
 }
 
