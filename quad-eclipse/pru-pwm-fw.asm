@@ -19,7 +19,7 @@
 
 .origin 0
 .entrypoint START
-#include "pasm-pwm.hp"
+#include "pru-pwm-fw.h"
 
 START:
 // Preamble to set up OCP and shared RAM

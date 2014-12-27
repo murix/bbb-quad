@@ -69,7 +69,7 @@ SOFTWARE.
 #include "hmc5883.h"
 #include "ms5611.h"
 #include "bbb-adc.h"
-#include "pruPWM.h"
+#include "pru-pwm-cpp.h"
 #include "timestamps.h"
 
 

@@ -27,7 +27,7 @@
  
  class PRUPWM : private PRU {
  public:
-	PRUPWM(unsigned int frequency = 50);
+	PRUPWM(unsigned int frequency = 400);
 	void start();
 	using PRU::stop;
 	
