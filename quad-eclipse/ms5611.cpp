@@ -116,10 +116,10 @@ void ms5611::init(){
 	cmd_reset(); // reset IC
 	for (i=0;i<8;i++){
 		C[i]=cmd_prom(i);
-		printf("prom[%d]=%08x (%d)\r\n",i,C[i],C[i]);
+		printf("ms5611 prom[%d]=%08x (%d)\r\n",i,C[i],C[i]);
 	} // read coefficients
 	n_crc=crc4(C); // calculate the CRC
-	printf("calculated crc=%08x\r\n",n_crc);
+	printf("ms5611 calculated crc=%08x\r\n",n_crc);
 
 	this->state=START_D2;
 }

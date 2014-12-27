@@ -211,7 +211,7 @@ void *task_motors(void *arg){
 
 	// Start the PRU
 	myPWM->start();
-	printf("PRU initialized\r\n");
+
 
 	// initialize task variables
 	drone->motor_cmd=MOTOR_CMD_NORMAL;
@@ -671,6 +671,7 @@ int main(int argc,char** argv){
 	pthread_setname_np(id_gps                          ,"usart-gps      ");
 	pthread_setname_np(id_spi                          ,"spi-cc1101-tap ");
 
+	printf("Wait for all threads\r\n");
 	//
 	pthread_join(id_adc,NULL);
 	pthread_join(id_imu,NULL);
