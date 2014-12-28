@@ -77,23 +77,37 @@ SOFTWARE.
 
 typedef struct {
 	// ARM: float and uint32_t are thread safe
-	//
+
+
+	//gravity
 	float acc_x;
 	float acc_y;
 	float acc_z;
-	float acc_n;
-	float acc_pitch;
-	float acc_roll;
-
+	//angular speed
 	float gyro_x;
 	float gyro_y;
 	float gyro_z;
+
+	//temperature
+	float mpu6050_temp;
+
+	//accel normalized
+	float acc_n;
+
+	//accel angles
+	float acc_pitch;
+	float acc_roll;
+
+    //gyro integrate angles
 	float gyro_pitch;
 	float gyro_roll;
 	float gyro_yaw;
 
+    //fusion angles
 	float fusion_pitch;
 	float fusion_roll;
+
+
 
 	float mag_x;
 	float mag_y;
@@ -367,6 +381,8 @@ void *task_imu(void *arg){
 		drone->fusion_pitch=mpu.fusion_pitch;
 		drone->fusion_roll=mpu.fusion_roll;
 
+		drone->mpu6050_temp=mpu.tc;
+
 		///////////////////////////////////////////////
 
 		drone->mag_x=mag.mag[0];
@@ -573,25 +589,38 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 		//
 		Json::Value telemetric_json;
 
-		//
+
+		//gravity
 		telemetric_json["acc_x"]=drone->acc_x;
 		telemetric_json["acc_y"]=drone->acc_y;
 		telemetric_json["acc_z"]=drone->acc_z;
-		telemetric_json["acc_n"]=drone->acc_n;
-		telemetric_json["pitch_acc"]=drone->acc_pitch;
-		telemetric_json["roll_acc"]=drone->acc_roll;
 
-		//
+		//angular speed
 		telemetric_json["gyro_x"]=drone->gyro_x;
 		telemetric_json["gyro_y"]=drone->gyro_y;
 		telemetric_json["gyro_z"]=drone->gyro_z;
+
+		//accel normalized
+		telemetric_json["acc_n"]=drone->acc_n;
+
+		telemetric_json["mpu6050_temp"]=drone->mpu6050_temp;
+
+		//angles accel
+		telemetric_json["pitch_acc"]=drone->acc_pitch;
+		telemetric_json["roll_acc"]=drone->acc_roll;
+
+		//angles gyro
 		telemetric_json["pitch_gyro"]=drone->gyro_pitch;
 		telemetric_json["roll_gyro"]=drone->gyro_roll;
 		telemetric_json["yaw_gyro"]=drone->gyro_yaw;
 
-		//
+		//angles fusion
 		telemetric_json["fusion_pitch"]=drone->fusion_pitch;
 		telemetric_json["fusion_roll"]=drone->fusion_roll;
+
+
+
+
 
 		//
 		telemetric_json["mag_x"]=drone->mag_x;

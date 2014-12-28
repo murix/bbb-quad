@@ -24,6 +24,9 @@ namespace beaglebone_quadcopter
         public double accx = 0.0;
         public double accy = 0.0;
         public double accz = 0.0;
+        public murix_series serie_accx = new murix_series("accx (g-force)");
+        public murix_series serie_accy = new murix_series("accy (g-force)");
+        public murix_series serie_accz = new murix_series("accz (g-force)");
 
 
         public double gyrox = 0.0;

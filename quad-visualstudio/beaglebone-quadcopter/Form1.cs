@@ -64,6 +64,12 @@ namespace beaglebone_quadcopter
             chart_speed.Series.Add(drone.serie_gyroy);
             chart_speed.Series.Add(drone.serie_gyroz);
 
+            chart_accel.Series.Clear();
+            chart_accel.Series.Add(drone.serie_accx);
+            chart_accel.Series.Add(drone.serie_accy);
+            chart_accel.Series.Add(drone.serie_accz);
+
+
             backgroundWorker_joystick.RunWorkerAsync();
 
             timer_charts.Interval = (int)( 1000.0 / 60.0);
@@ -269,6 +275,11 @@ namespace beaglebone_quadcopter
                 drone.serie_gyroy.circular_append_y(drone.gyroy, items);
                 drone.serie_gyroz.circular_append_y(drone.gyroz, items);
 
+                drone.serie_accx.circular_append_y(drone.accx, items);
+                drone.serie_accy.circular_append_y(drone.accy, items);
+                drone.serie_accz.circular_append_y(drone.accz, items);
+
+
                 chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_rtt.ChartAreas[0].RecalculateAxesScale();
 
@@ -293,6 +304,9 @@ namespace beaglebone_quadcopter
 
                 chart_speed.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_speed.ChartAreas[0].RecalculateAxesScale();
+
+                chart_accel.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_accel.ChartAreas[0].RecalculateAxesScale();
 
                 if (controle_conectado)
                 {

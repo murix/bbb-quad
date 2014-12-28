@@ -53,6 +53,18 @@
             System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea8 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.Windows.Forms.DataVisualization.Charting.Legend legend8 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea9 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend9 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea10 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend10 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea11 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend11 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea12 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend12 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.backgroundWorker_joystick = new System.ComponentModel.BackgroundWorker();
             this.chart_rtt = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_motor = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -68,6 +80,10 @@
             this.chart_baro_p = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_hz = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_speed = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.chart_accel = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.chart_angles = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.chart_mag = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.chart_gps = new System.Windows.Forms.DataVisualization.Charting.Chart();
             ((System.ComponentModel.ISupportInitialize)(this.chart_rtt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_motor)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -77,6 +93,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart_baro_p)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_hz)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_speed)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_accel)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_angles)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_mag)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_gps)).BeginInit();
             this.SuspendLayout();
             // 
             // backgroundWorker_joystick
@@ -202,7 +222,7 @@
             series4.Legend = "Legend1";
             series4.Name = "Series1";
             this.chart_baro_h.Series.Add(series4);
-            this.chart_baro_h.Size = new System.Drawing.Size(498, 145);
+            this.chart_baro_h.Size = new System.Drawing.Size(498, 111);
             this.chart_baro_h.TabIndex = 8;
             this.chart_baro_h.Text = "chart3";
             // 
@@ -212,13 +232,13 @@
             this.chart_baro_t.ChartAreas.Add(chartArea5);
             legend5.Name = "Legend1";
             this.chart_baro_t.Legends.Add(legend5);
-            this.chart_baro_t.Location = new System.Drawing.Point(1008, 167);
+            this.chart_baro_t.Location = new System.Drawing.Point(1008, 133);
             this.chart_baro_t.Name = "chart_baro_t";
             series5.ChartArea = "ChartArea1";
             series5.Legend = "Legend1";
             series5.Name = "Series1";
             this.chart_baro_t.Series.Add(series5);
-            this.chart_baro_t.Size = new System.Drawing.Size(498, 149);
+            this.chart_baro_t.Size = new System.Drawing.Size(498, 116);
             this.chart_baro_t.TabIndex = 9;
             this.chart_baro_t.Text = "chart3";
             // 
@@ -228,13 +248,13 @@
             this.chart_baro_p.ChartAreas.Add(chartArea6);
             legend6.Name = "Legend1";
             this.chart_baro_p.Legends.Add(legend6);
-            this.chart_baro_p.Location = new System.Drawing.Point(1008, 322);
+            this.chart_baro_p.Location = new System.Drawing.Point(1008, 255);
             this.chart_baro_p.Name = "chart_baro_p";
             series6.ChartArea = "ChartArea1";
             series6.Legend = "Legend1";
             series6.Name = "Series1";
             this.chart_baro_p.Series.Add(series6);
-            this.chart_baro_p.Size = new System.Drawing.Size(498, 158);
+            this.chart_baro_p.Size = new System.Drawing.Size(498, 136);
             this.chart_baro_p.TabIndex = 10;
             this.chart_baro_p.Text = "chart3";
             // 
@@ -270,11 +290,79 @@
             this.chart_speed.TabIndex = 12;
             this.chart_speed.Text = "chart3";
             // 
+            // chart_accel
+            // 
+            chartArea9.Name = "ChartArea1";
+            this.chart_accel.ChartAreas.Add(chartArea9);
+            legend9.Name = "Legend1";
+            this.chart_accel.Legends.Add(legend9);
+            this.chart_accel.Location = new System.Drawing.Point(553, 531);
+            this.chart_accel.Name = "chart_accel";
+            series9.ChartArea = "ChartArea1";
+            series9.Legend = "Legend1";
+            series9.Name = "Series1";
+            this.chart_accel.Series.Add(series9);
+            this.chart_accel.Size = new System.Drawing.Size(449, 128);
+            this.chart_accel.TabIndex = 13;
+            this.chart_accel.Text = "chart3";
+            // 
+            // chart_angles
+            // 
+            chartArea10.Name = "ChartArea1";
+            this.chart_angles.ChartAreas.Add(chartArea10);
+            legend10.Name = "Legend1";
+            this.chart_angles.Legends.Add(legend10);
+            this.chart_angles.Location = new System.Drawing.Point(553, 397);
+            this.chart_angles.Name = "chart_angles";
+            series10.ChartArea = "ChartArea1";
+            series10.Legend = "Legend1";
+            series10.Name = "Series1";
+            this.chart_angles.Series.Add(series10);
+            this.chart_angles.Size = new System.Drawing.Size(449, 128);
+            this.chart_angles.TabIndex = 14;
+            this.chart_angles.Text = "chart3";
+            // 
+            // chart_mag
+            // 
+            chartArea11.Name = "ChartArea1";
+            this.chart_mag.ChartAreas.Add(chartArea11);
+            legend11.Name = "Legend1";
+            this.chart_mag.Legends.Add(legend11);
+            this.chart_mag.Location = new System.Drawing.Point(1008, 531);
+            this.chart_mag.Name = "chart_mag";
+            series11.ChartArea = "ChartArea1";
+            series11.Legend = "Legend1";
+            series11.Name = "Series1";
+            this.chart_mag.Series.Add(series11);
+            this.chart_mag.Size = new System.Drawing.Size(498, 128);
+            this.chart_mag.TabIndex = 15;
+            this.chart_mag.Text = "chart3";
+            // 
+            // chart_gps
+            // 
+            chartArea12.Name = "ChartArea1";
+            this.chart_gps.ChartAreas.Add(chartArea12);
+            legend12.Name = "Legend1";
+            this.chart_gps.Legends.Add(legend12);
+            this.chart_gps.Location = new System.Drawing.Point(1008, 397);
+            this.chart_gps.Name = "chart_gps";
+            series12.ChartArea = "ChartArea1";
+            series12.Legend = "Legend1";
+            series12.Name = "Series1";
+            this.chart_gps.Series.Add(series12);
+            this.chart_gps.Size = new System.Drawing.Size(498, 128);
+            this.chart_gps.TabIndex = 16;
+            this.chart_gps.Text = "chart3";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1518, 701);
+            this.Controls.Add(this.chart_gps);
+            this.Controls.Add(this.chart_mag);
+            this.Controls.Add(this.chart_angles);
+            this.Controls.Add(this.chart_accel);
             this.Controls.Add(this.chart_speed);
             this.Controls.Add(this.chart_hz);
             this.Controls.Add(this.chart_baro_p);
@@ -300,6 +388,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart_baro_p)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_hz)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_speed)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_accel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_angles)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_mag)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_gps)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -321,6 +413,10 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_baro_p;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_hz;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_speed;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart_accel;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart_angles;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart_mag;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart_gps;
     }
 }
 
