@@ -246,7 +246,9 @@ void *task_motors(void *arg){
 		myPWM->setChannelValue(ch,PWM_FLY_ARM);
 		myPWM->setFailsafeValue(ch,PWM_FAILSAFE);
 	}
-	myPWM->setFailsafeTimeout(2000);
+        //
+	myPWM->setFailsafeTimeout(0);
+	//myPWM->setFailsafeTimeout(2000);
 
 	//---------
 	double t_back=get_timestamp_in_seconds();;
@@ -468,7 +470,7 @@ void *task_pilot(void *arg)
                                         printf("ps3 takeoff\r\n");
 					takeoff=true;
 				}
-				if(drone->ps3_start){
+				if(drone->ps3_select){
                                         printf("ps3 landing\r\n");
 					takeoff=false;
 				}
@@ -746,10 +748,10 @@ void* task_bluetooth_ps3(void* arg){
 		if(e.number==16 && e.type==1) drone->ps3_power=e.value;
 		if(e.number==3  && e.type==1) drone->ps3_start=e.value;
 		//sticks
-		if(e.number==0  && e.type==2) drone->ps3_lstick_x=(float)e.value/32768.0;
-		if(e.number==1  && e.type==2) drone->ps3_lstick_y=(float)e.value/32768.0;
-		if(e.number==2  && e.type==2) drone->ps3_rstick_x=(float)e.value/32768.0;
-		if(e.number==3  && e.type==2) drone->ps3_rstick_y=(float)e.value/32768.0;
+		if(e.number==0  && e.type==2) drone->ps3_lstick_x=(float)e.value/-32768.0;
+		if(e.number==1  && e.type==2) drone->ps3_lstick_y=(float)e.value/-32768.0;
+		if(e.number==2  && e.type==2) drone->ps3_rstick_x=(float)e.value/-32768.0;
+		if(e.number==3  && e.type==2) drone->ps3_rstick_y=(float)e.value/-32768.0;
 
                 if(e.type==2) continue;
 
