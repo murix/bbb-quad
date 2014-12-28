@@ -694,12 +694,12 @@ void* task_bluetooth_ps3(void* arg){
 		if(e.number==16 && e.type==1) drone->ps3_power=e.value;
 		if(e.number==3  && e.type==1) drone->ps3_start=e.value;
 		//
-		if(e.number==0  && e.type==2) drone->ps3_lstick_x=e.value;
-		if(e.number==1  && e.type==2) drone->ps3_lstick_y=e.value;
-		if(e.number==2  && e.type==2) drone->ps3_rstick_x=e.value;
-		if(e.number==3  && e.type==2) drone->ps3_rstick_y=e.value;
+		if(e.number==0  && e.type==2) drone->ps3_lstick_x=(float)e.value/32768.0;
+		if(e.number==1  && e.type==2) drone->ps3_lstick_y=(float)e.value/32768.0;
+		if(e.number==2  && e.type==2) drone->ps3_rstick_x=(float)e.value/32768.0;
+		if(e.number==3  && e.type==2) drone->ps3_rstick_y=(float)e.value/32768.0;
 
-	         //printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
+	         printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
 
 
 
