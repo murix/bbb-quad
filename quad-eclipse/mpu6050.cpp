@@ -84,12 +84,116 @@ void mpu6050::init(){
 		perror("i2c slave mpu6050 Failed");
 		exit(1);
 	}
-	//master enable
-	i2c_smbus_write_byte_data(fd,0x6a,0x00);
-	//i2c bypass
-	i2c_smbus_write_byte_data(fd,0x37,0x02);
-	//wake up from sleep
-	i2c_smbus_write_byte_data(fd,0x6b,0x00);
+
+	//4.1 Registers 13 to 16 – Self Test Registers
+
+
+	//4.2 Register 25 – Sample Rate Divider
+
+	//4.3 Register 26 – Configuration
+
+	// MPU6050_REG_CONFIG = FSYNC DISABLE, configure DLPF
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_260HZ_DELAY_0_US_GYRO_256HZ_DELAY_980US_FS_8KHZ);
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_184HZ_DELAY_2000_US_GYRO_188HZ_DELAY_1900US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_94HZ_DELAY_3000_US_GYRO_98HZ_DELAY_2800US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_44HZ_DELAY_4900_US_GYRO_42HZ_DELAY_4800US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_21HZ_DELAY_8500_US_GYRO_20HZ_DELAY_8300US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_10HZ_DELAY_13800_US_GYRO_10HZ_DELAY_13400US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_5HZ_DELAY_19000_US_GYRO_5HZ_DELAY_18600US_FS_1KHZ);
+
+
+	//4.4 Register 27 – Gyroscope Configuration
+
+
+
+	//4.5 Register 28 – Accelerometer Configuration
+
+
+
+
+	//4.6 Register 35 – FIFO Enable
+
+	//4.7 Register 36 – I2C Master Control
+
+	//4.8 Registers 37 to 39 – I2C Slave 0 Control
+
+	//4.9 Registers 40 to 42 – I2C Slave 1 Control
+
+	//4.10 Registers 43 to 45 – I2C Slave 2 Control
+
+	//4.11 Registers 46 to 48 – I2C Slave 3 Control
+
+	//4.12 Registers 49 to 53 – I2C Slave 4 Control
+
+	//4.13 Register 54 – I2C Master Status
+
+	//4.14 Register 55 – INT Pin / Bypass Enable Configuration
+
+	//INT_PIN_CFG = int_level zero, int_open zero, latch_int_en zero,
+	// int_rd_clear zero, fsync_int_level zero, fsync_en zero, i2c_by_pass_en enabled
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_INT_PIN_CFG,0x02);
+
+
+	//4.15 Register 56 – Interrupt Enable
+
+	//4.16 Register 58 – Interrupt Status
+
+	//4.17 Registers 59 to 64 – Accelerometer Measurements
+	//AFS_SEL Full Scale Range LSB Sensitivity
+	//0 +-2g 16384 LSB/g
+	//1 +-4g 8192 LSB/g
+	//2 +-8g 4096 LSB/g
+	//3 +-16g 2048 LSB/g
+
+	//4.18 Registers 65 and 66 – Temperature Measurement
+	//Temperature in degrees C = (TEMP_OUT Register Value as a signed quantity)/340 + 36.53
+
+
+	//4.19 Registers 67 to 72 – Gyroscope Measurements
+	//FS_SEL Full Scale Range LSB Sensitivity
+	//0 +- 250 °/s 131 LSB/°/s
+	//1 +- 500 °/s 65.5 LSB/°/s
+	//2 +- 1000 °/s 32.8 LSB/°/s
+	//3 +- 2000 °/s 16.4 LSB/°/s
+
+	//4.20 Registers 73 to 96 – External Sensor Data
+
+	//4.21 Register 99 – I2C Slave 0 Data Out
+
+	//4.22 Register 100 – I2C Slave 1 Data Out
+
+	//4.23 Register 101 – I2C Slave 2 Data Out
+
+	//4.24 Register 102 – I2C Slave 3 Data Out
+
+	//4.25 Register 103 – I2C Master Delay Control
+
+	//4.26 Register 104 – Signal Path Reset
+
+	//4.27 Register 106 – User Control
+
+	//MPU6050_REG_USER_CTRL = fifo disabled, i2c master disabled (enabled i2c pass throught),
+	//i2c primary enable, not fifo reset, not i2c mst reset, not reset signal path
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_USER_CTRL,0x00);
+
+	//4.28 Register 107 – Power Management 1
+
+	//MPU6050_REG_PWR_MGMT_1 = disable sleep, cycle not used, temp enabled, clk=internal 8mhz
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_PWR_MGMT_1,0x00);
+
+	//4.29 Register 108 – Power Management 2
+
+	//4.30 Register 114 and 115 – FIFO Count Registers
+
+	//4.31 Register 116 – FIFO Read Write
+
+	//4.32 Register 117 – Who Am I
+
+	while( i2c_smbus_read_byte_data(MPU6050_REG_WHO_AM_I) != MPU6050_REG_WHO_AMI_I_REPLY ){
+         printf("mpu6050 who am i error\r\n");
+	}
+
+
 }
 
 void mpu6050::update(){
@@ -114,7 +218,10 @@ void mpu6050::update(){
 	acc[0] =vs[0]/16384.0;
 	acc[1] =vs[1]/16384.0;
 	acc[2] =vs[2]/16384.0;
-	tc     =vs[3]/340.0 + 36.53;
+
+	//tc     =vs[3]/340.0 + 36.53;
+	tc     =(vs[3]-521.0)/340.0;
+
 	gyro_raw[0]=(vs[4]/131.0);
 	gyro_raw[1]=(vs[5]/131.0);
 	gyro_raw[2]=(vs[6]/131.0);
