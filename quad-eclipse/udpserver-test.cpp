@@ -144,6 +144,29 @@ typedef struct {
 	float joy_stick_right_x;
 	float joy_stick_right_y;
 
+
+        bool ps3_dpad_left;
+        bool ps3_dpad_right;
+        bool ps3_dpad_up;
+        bool ps3_dpad_down;
+        bool ps3_r3;
+        bool ps3_r2;
+        bool ps3_r1;
+        bool ps3_select;
+        bool ps3_power;
+        bool ps3_start;
+        bool ps3_l3;
+        bool ps3_l2;
+        bool ps3_l1;
+        bool ps3_triangle;
+        bool ps3_square;
+        bool ps3_x;
+        bool ps3_ball;
+        int  ps3_lstick_x;
+        int  ps3_lstick_y;
+        int  ps3_rstick_x;
+        int  ps3_rstick_y;
+
 } drone_t;
 
 
@@ -574,6 +597,8 @@ void* task_spi_cc1101(void* arg){
 
 void* task_bluetooth_ps3(void* arg){
 
+	drone_t* drone=(drone_t*) arg;
+
 #define JS_EVENT_BUTTON         0x01    /* button pressed/released */
 #define JS_EVENT_AXIS           0x02    /* joystick moved */
 #define JS_EVENT_INIT           0x80    /* initial state of device */
@@ -588,6 +613,8 @@ void* task_bluetooth_ps3(void* arg){
 	int fd=-1; 
 	for (;;)
 	{
+
+               ///////////////////////////////////////
                if(fd==-1){
                   printf("ps3 try connect...\r\n");
                   fd=open("/dev/input/js0", O_RDONLY);
@@ -601,13 +628,22 @@ void* task_bluetooth_ps3(void* arg){
                   }
                }
 
+                /////////////////////////////////////////
 		struct js_event e;
 		read (fd, &e, sizeof(e));
 
+                /////////////////////////////////////////
+                // ps3 accelerometer quaternion
                 if(e.number==23) continue;
                 if(e.number==24) continue;
                 if(e.number==25) continue;
                 if(e.number==26) continue;
+
+                //
+                if(e.number==15 && e.type==1) drone->ps3_square=e.value;
+                if(e.number==12 && e.type==1) drone->ps3_triangle=e.value;
+                if(e.number==14 && e.type==1) drone->ps3_x=e.value;
+                if(e.number==13 && e.type==1) drone->ps3_ball=e.value;
 
                  if( e.type == JS_EVENT_AXIS){
                     //printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
