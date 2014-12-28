@@ -465,13 +465,16 @@ void *task_pilot(void *arg)
 		} else {
 			/////////////////////////////////////////////////////////////////////////////
 				if(drone->ps3_start){
+                                        printf("ps3 takeoff\r\n");
 					takeoff=true;
 				}
 				if(drone->ps3_start){
+                                        printf("ps3 landing\r\n");
 					takeoff=false;
 				}
 				///////////////////////////////////////////////////////////////////////////
 				if(drone->ps3_triangle){
+                                        printf("ps3 trim\r\n");
 					drone->pilot_offset_pitch=drone->fusion_pitch;
 					drone->pilot_offset_roll=drone->fusion_roll;
 				}
