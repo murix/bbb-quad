@@ -660,18 +660,23 @@ void* task_bluetooth_ps3(void* arg){
                 if(e.number==0  && e.type==1) drone->ps3_select=e.value;
                 if(e.number==16 && e.type==1) drone->ps3_power=e.value;
                 if(e.number==3  && e.type==1) drone->ps3_start=e.value;
-                
+                //
+                if(e.number==0  && e.type==2) drone->ps3_lstick_x=e.value;
+                if(e.number==1  && e.type==2) drone->ps3_lstick_y=e.value;
+                if(e.number==2  && e.type==2) drone->ps3_rstick_x=e.value;
+                if(e.number==3  && e.type==2) drone->ps3_rstick_y=e.value;
 
-
-
-
-
+#if 0
                  if( e.type == JS_EVENT_AXIS){
-                    //printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
+                    printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
                  }
                  if( e.type == JS_EVENT_BUTTON){
                     printf("botao type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
                  }
+#endif
+
+
+
 	}
 }
 
