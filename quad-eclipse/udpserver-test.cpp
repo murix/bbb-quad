@@ -638,12 +638,33 @@ void* task_bluetooth_ps3(void* arg){
                 if(e.number==24) continue;
                 if(e.number==25) continue;
                 if(e.number==26) continue;
-
-                //
+                //buttons
                 if(e.number==15 && e.type==1) drone->ps3_square=e.value;
                 if(e.number==12 && e.type==1) drone->ps3_triangle=e.value;
                 if(e.number==14 && e.type==1) drone->ps3_x=e.value;
                 if(e.number==13 && e.type==1) drone->ps3_ball=e.value;
+                //dpad
+                if(e.number==4 && e.type==1) drone->ps3_dpad_up=e.value;
+                if(e.number==6 && e.type==1) drone->ps3_dpad_down=e.value;
+                if(e.number==5 && e.type==1) drone->ps3_dpad_right=e.value;
+                if(e.number==7 && e.type==1) drone->ps3_dpad_left=e.value;
+                //left
+                if(e.number==10 && e.type==1) drone->ps3_l1=e.value;
+                if(e.number==8  && e.type==1) drone->ps3_l2=e.value;
+                if(e.number==1  && e.type==1) drone->ps3_l3=e.value;
+                //right
+                if(e.number==11 && e.type==1) drone->ps3_r1=e.value;
+                if(e.number==9  && e.type==1) drone->ps3_r2=e.value;
+                if(e.number==2  && e.type==1) drone->ps3_r3=e.value;
+                //
+                if(e.number==0  && e.type==1) drone->ps3_select=e.value;
+                if(e.number==16 && e.type==1) drone->ps3_power=e.value;
+                if(e.number==3  && e.type==1) drone->ps3_start=e.value;
+                
+
+
+
+
 
                  if( e.type == JS_EVENT_AXIS){
                     //printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
