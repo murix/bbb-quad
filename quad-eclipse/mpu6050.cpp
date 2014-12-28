@@ -39,7 +39,7 @@ mpu6050::mpu6050(int fd){
 	//
 	init();
 	//pre calibration
-	gyro_calibration(10);
+	gyro_calibration(200);
 
 	gyro_integrate_reset();
 	this->t_back=get_timestamp_in_seconds();
@@ -189,7 +189,7 @@ void mpu6050::init(){
 
 	//4.32 Register 117 – Who Am I
 
-	while( i2c_smbus_read_byte_data(MPU6050_REG_WHO_AM_I) != MPU6050_REG_WHO_AMI_I_REPLY ){
+	while( i2c_smbus_read_byte_data(fd,MPU6050_REG_WHO_AM_I) != MPU6050_REG_WHO_AMI_I_REPLY ){
          printf("mpu6050 who am i error\r\n");
 	}
 
