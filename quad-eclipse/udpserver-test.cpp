@@ -163,10 +163,11 @@ typedef struct {
 	bool ps3_square;
 	bool ps3_x;
 	bool ps3_ball;
-	int  ps3_lstick_x;
-	int  ps3_lstick_y;
-	int  ps3_rstick_x;
-	int  ps3_rstick_y;
+	float  ps3_lstick_x;
+	float  ps3_lstick_y;
+	float  ps3_rstick_x;
+	float  ps3_rstick_y;
+        int    ps3_accel[4];
 
 } drone_t;
 
@@ -666,10 +667,10 @@ void* task_bluetooth_ps3(void* arg){
 
 		/////////////////////////////////////////
 		// ps3 accelerometer quaternion
-		if(e.number==23) continue;
-		if(e.number==24) continue;
-		if(e.number==25) continue;
-		if(e.number==26) continue;
+		if(e.number==23) drone->ps3_accel[0]=e.value;
+		if(e.number==24) drone->ps3_accel[1]=e.value;
+		if(e.number==25) drone->ps3_accel[2]=e.value;
+		if(e.number==26) drone->ps3_accel[3]=e.value;
 		//buttons
 		if(e.number==15 && e.type==1) drone->ps3_square=e.value;
 		if(e.number==12 && e.type==1) drone->ps3_triangle=e.value;
@@ -698,14 +699,7 @@ void* task_bluetooth_ps3(void* arg){
 		if(e.number==2  && e.type==2) drone->ps3_rstick_x=e.value;
 		if(e.number==3  && e.type==2) drone->ps3_rstick_y=e.value;
 
-#if 0
-if( e.type == JS_EVENT_AXIS){
-	printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
-}
-if( e.type == JS_EVENT_BUTTON){
-	printf("botao type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
-}
-#endif
+	         //printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
 
 
 
