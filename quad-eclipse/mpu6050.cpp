@@ -39,7 +39,9 @@ mpu6050::mpu6050(int fd){
 	//
 	init();
 	//pre calibration
-	gyro_calibration(200);
+	gyro_calibration(330); 
+        // sample frequency is about 330hz
+        // 330 samples is about 1 second
 
 	gyro_integrate_reset();
 	this->t_back=get_timestamp_in_seconds();
@@ -94,12 +96,12 @@ void mpu6050::init(){
 
 	// MPU6050_REG_CONFIG = FSYNC DISABLE, configure DLPF
 	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_260HZ_DELAY_0_US_GYRO_256HZ_DELAY_980US_FS_8KHZ);
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_184HZ_DELAY_2000_US_GYRO_188HZ_DELAY_1900US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_184HZ_DELAY_2000_US_GYRO_188HZ_DELAY_1900US_FS_1KHZ);
 	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_94HZ_DELAY_3000_US_GYRO_98HZ_DELAY_2800US_FS_1KHZ);
 	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_44HZ_DELAY_4900_US_GYRO_42HZ_DELAY_4800US_FS_1KHZ);
 	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_21HZ_DELAY_8500_US_GYRO_20HZ_DELAY_8300US_FS_1KHZ);
 	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_10HZ_DELAY_13800_US_GYRO_10HZ_DELAY_13400US_FS_1KHZ);
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_5HZ_DELAY_19000_US_GYRO_5HZ_DELAY_18600US_FS_1KHZ);
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_5HZ_DELAY_19000_US_GYRO_5HZ_DELAY_18600US_FS_1KHZ);
 
 
 	//4.4 Register 27 – Gyroscope Configuration
