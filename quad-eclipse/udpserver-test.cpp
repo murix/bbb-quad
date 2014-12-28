@@ -145,27 +145,28 @@ typedef struct {
 	float joy_stick_right_y;
 
 
-        bool ps3_dpad_left;
-        bool ps3_dpad_right;
-        bool ps3_dpad_up;
-        bool ps3_dpad_down;
-        bool ps3_r3;
-        bool ps3_r2;
-        bool ps3_r1;
-        bool ps3_select;
-        bool ps3_power;
-        bool ps3_start;
-        bool ps3_l3;
-        bool ps3_l2;
-        bool ps3_l1;
-        bool ps3_triangle;
-        bool ps3_square;
-        bool ps3_x;
-        bool ps3_ball;
-        int  ps3_lstick_x;
-        int  ps3_lstick_y;
-        int  ps3_rstick_x;
-        int  ps3_rstick_y;
+	bool ps3_init_ok;
+	bool ps3_dpad_left;
+	bool ps3_dpad_right;
+	bool ps3_dpad_up;
+	bool ps3_dpad_down;
+	bool ps3_r3;
+	bool ps3_r2;
+	bool ps3_r1;
+	bool ps3_select;
+	bool ps3_power;
+	bool ps3_start;
+	bool ps3_l3;
+	bool ps3_l2;
+	bool ps3_l1;
+	bool ps3_triangle;
+	bool ps3_square;
+	bool ps3_x;
+	bool ps3_ball;
+	int  ps3_lstick_x;
+	int  ps3_lstick_y;
+	int  ps3_rstick_x;
+	int  ps3_rstick_y;
 
 } drone_t;
 
@@ -599,80 +600,111 @@ void* task_bluetooth_ps3(void* arg){
 
 	drone_t* drone=(drone_t*) arg;
 
+	drone->ps3_init_ok=false;
+	drone->ps3_dpad_left=false;
+	drone->ps3_dpad_right=false;
+	drone->ps3_dpad_up=false;
+	drone->ps3_dpad_down=false;
+	drone->ps3_r3=false;
+	drone->ps3_r2=false;
+	drone->ps3_r1=false;
+	drone->ps3_select=false;
+	drone->ps3_power=false;
+	drone->ps3_start=false;
+	drone->ps3_l3=false;
+	drone->ps3_l2=false;
+	drone->ps3_l1=false;
+	drone->ps3_triangle=false;
+	drone->ps3_square=false;
+	drone->ps3_x=false;
+	drone->ps3_ball=false;
+	drone->ps3_lstick_x=0;
+	drone->ps3_lstick_y=0;
+	drone->ps3_rstick_x=0;
+	drone->ps3_rstick_y=0;
+
+
 #define JS_EVENT_BUTTON         0x01    /* button pressed/released */
 #define JS_EVENT_AXIS           0x02    /* joystick moved */
 #define JS_EVENT_INIT           0x80    /* initial state of device */
 
 	struct js_event {
-			uint32_t time;     /* event timestamp in milliseconds */
-			int16_t value;    /* value */
-			uint8_t type;      /* event type */
-			uint8_t number;    /* axis/button number */
-		};
+		uint32_t time;     /* event timestamp in milliseconds */
+		int16_t value;    /* value */
+		uint8_t type;      /* event type */
+		uint8_t number;    /* axis/button number */
+	};
+
+
 
 	int fd=-1; 
 	for (;;)
 	{
 
-               ///////////////////////////////////////
-               if(fd==-1){
-                  printf("ps3 try connect...\r\n");
-                  fd=open("/dev/input/js0", O_RDONLY);
-                  if(fd==-1){
-                    printf("ps3 joy not connected\r\n");
-                    usleep(1000*1000);
-                    continue;
-                  }
-                  else {
-                    printf("ps3 joy connected ok\r\n");
-                  }
-               }
+		///////////////////////////////////////
+		if(fd==-1){
+			drone->ps3_init_ok=false;
+			printf("ps3 try connect...\r\n");
+			fd=open("/dev/input/js0", O_RDONLY);
+			if(fd==-1){
+				printf("ps3 joy not connected\r\n");
+				drone->ps3_init_ok=false;
+				usleep(1000*1000);
+				continue;
+			}
+			else {
+				printf("ps3 joy connected ok\r\n");
+				drone->ps3_init_ok=true;
+			}
+		}
 
-                /////////////////////////////////////////
+		drone->ps3_init_ok=true;
+
+		/////////////////////////////////////////
 		struct js_event e;
 		read (fd, &e, sizeof(e));
 
-                /////////////////////////////////////////
-                // ps3 accelerometer quaternion
-                if(e.number==23) continue;
-                if(e.number==24) continue;
-                if(e.number==25) continue;
-                if(e.number==26) continue;
-                //buttons
-                if(e.number==15 && e.type==1) drone->ps3_square=e.value;
-                if(e.number==12 && e.type==1) drone->ps3_triangle=e.value;
-                if(e.number==14 && e.type==1) drone->ps3_x=e.value;
-                if(e.number==13 && e.type==1) drone->ps3_ball=e.value;
-                //dpad
-                if(e.number==4 && e.type==1) drone->ps3_dpad_up=e.value;
-                if(e.number==6 && e.type==1) drone->ps3_dpad_down=e.value;
-                if(e.number==5 && e.type==1) drone->ps3_dpad_right=e.value;
-                if(e.number==7 && e.type==1) drone->ps3_dpad_left=e.value;
-                //left
-                if(e.number==10 && e.type==1) drone->ps3_l1=e.value;
-                if(e.number==8  && e.type==1) drone->ps3_l2=e.value;
-                if(e.number==1  && e.type==1) drone->ps3_l3=e.value;
-                //right
-                if(e.number==11 && e.type==1) drone->ps3_r1=e.value;
-                if(e.number==9  && e.type==1) drone->ps3_r2=e.value;
-                if(e.number==2  && e.type==1) drone->ps3_r3=e.value;
-                //
-                if(e.number==0  && e.type==1) drone->ps3_select=e.value;
-                if(e.number==16 && e.type==1) drone->ps3_power=e.value;
-                if(e.number==3  && e.type==1) drone->ps3_start=e.value;
-                //
-                if(e.number==0  && e.type==2) drone->ps3_lstick_x=e.value;
-                if(e.number==1  && e.type==2) drone->ps3_lstick_y=e.value;
-                if(e.number==2  && e.type==2) drone->ps3_rstick_x=e.value;
-                if(e.number==3  && e.type==2) drone->ps3_rstick_y=e.value;
+		/////////////////////////////////////////
+		// ps3 accelerometer quaternion
+		if(e.number==23) continue;
+		if(e.number==24) continue;
+		if(e.number==25) continue;
+		if(e.number==26) continue;
+		//buttons
+		if(e.number==15 && e.type==1) drone->ps3_square=e.value;
+		if(e.number==12 && e.type==1) drone->ps3_triangle=e.value;
+		if(e.number==14 && e.type==1) drone->ps3_x=e.value;
+		if(e.number==13 && e.type==1) drone->ps3_ball=e.value;
+		//dpad
+		if(e.number==4 && e.type==1) drone->ps3_dpad_up=e.value;
+		if(e.number==6 && e.type==1) drone->ps3_dpad_down=e.value;
+		if(e.number==5 && e.type==1) drone->ps3_dpad_right=e.value;
+		if(e.number==7 && e.type==1) drone->ps3_dpad_left=e.value;
+		//left
+		if(e.number==10 && e.type==1) drone->ps3_l1=e.value;
+		if(e.number==8  && e.type==1) drone->ps3_l2=e.value;
+		if(e.number==1  && e.type==1) drone->ps3_l3=e.value;
+		//right
+		if(e.number==11 && e.type==1) drone->ps3_r1=e.value;
+		if(e.number==9  && e.type==1) drone->ps3_r2=e.value;
+		if(e.number==2  && e.type==1) drone->ps3_r3=e.value;
+		//
+		if(e.number==0  && e.type==1) drone->ps3_select=e.value;
+		if(e.number==16 && e.type==1) drone->ps3_power=e.value;
+		if(e.number==3  && e.type==1) drone->ps3_start=e.value;
+		//
+		if(e.number==0  && e.type==2) drone->ps3_lstick_x=e.value;
+		if(e.number==1  && e.type==2) drone->ps3_lstick_y=e.value;
+		if(e.number==2  && e.type==2) drone->ps3_rstick_x=e.value;
+		if(e.number==3  && e.type==2) drone->ps3_rstick_y=e.value;
 
 #if 0
-                 if( e.type == JS_EVENT_AXIS){
-                    printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
-                 }
-                 if( e.type == JS_EVENT_BUTTON){
-                    printf("botao type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
-                 }
+if( e.type == JS_EVENT_AXIS){
+	printf("eixo type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
+}
+if( e.type == JS_EVENT_BUTTON){
+	printf("botao type=%d number=%d value=%d time=%u \r\n",e.type,e.number,e.value,e.time);
+}
 #endif
 
 
