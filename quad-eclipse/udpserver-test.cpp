@@ -710,10 +710,16 @@ void* task_bluetooth_ps3(void* arg){
 
 		/////////////////////////////////////////
 		// ps3 accelerometer quaternion
-		if(e.number==23) drone->ps3_accel[0]=e.value;
-		if(e.number==24) drone->ps3_accel[1]=e.value;
-		if(e.number==25) drone->ps3_accel[2]=e.value;
-		if(e.number==26) drone->ps3_accel[3]=e.value;
+		if(e.number==23 && e.type==2) drone->ps3_accel[0]=e.value;
+		if(e.number==24 && e.type==2) drone->ps3_accel[1]=e.value;
+		if(e.number==25 && e.type==2) drone->ps3_accel[2]=e.value;
+		if(e.number==26 && e.type==2) drone->ps3_accel[3]=e.value;
+
+		if(e.number==23 && e.type==2) continue; //drone->ps3_accel[0]=e.value;
+		if(e.number==24 && e.type==2) continue; //drone->ps3_accel[1]=e.value;
+		if(e.number==25 && e.type==2) continue; //drone->ps3_accel[2]=e.value;
+		if(e.number==26 && e.type==2) continue; //drone->ps3_accel[3]=e.value;
+
 		//buttons
 		if(e.number==15 && e.type==1) drone->ps3_square=e.value;
 		if(e.number==12 && e.type==1) drone->ps3_triangle=e.value;
@@ -742,6 +748,7 @@ void* task_bluetooth_ps3(void* arg){
 		if(e.number==2  && e.type==2) drone->ps3_rstick_x=(float)e.value/32768.0;
 		if(e.number==3  && e.type==2) drone->ps3_rstick_y=(float)e.value/32768.0;
 
+                
 		printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
 
 
