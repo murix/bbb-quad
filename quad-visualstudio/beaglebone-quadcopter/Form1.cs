@@ -52,6 +52,8 @@ namespace beaglebone_quadcopter
 
             chart_baro_t.Series.Clear();
             chart_baro_t.Series.Add(drone.serie_baro_t);
+            chart_baro_t.Series.Add(drone.serie_mpu6050_temp);
+            
 
             chart_hz.Series.Clear();
             chart_hz.Series.Add(drone.serie_i2c_hz);
@@ -68,6 +70,25 @@ namespace beaglebone_quadcopter
             chart_accel.Series.Add(drone.serie_accx);
             chart_accel.Series.Add(drone.serie_accy);
             chart_accel.Series.Add(drone.serie_accz);
+
+            chart_gps.Series.Clear();
+            chart_gps.Series.Add(drone.serie_gps_lat);
+            chart_gps.Series.Add(drone.serie_gps_long);
+
+            chart_mag.Series.Clear();
+            chart_mag.Series.Add(drone.serie_magx);
+            chart_mag.Series.Add(drone.serie_magy);
+            chart_mag.Series.Add(drone.serie_magz);
+
+            chart_angles.Series.Clear();
+            chart_angles.Series.Add(drone.serie_gyro_pitch);
+            chart_angles.Series.Add(drone.serie_gyro_roll);
+            chart_angles.Series.Add(drone.serie_gyro_yaw);
+            chart_angles.Series.Add(drone.serie_acc_pitch);
+            chart_angles.Series.Add(drone.serie_acc_roll);
+            chart_angles.Series.Add(drone.serie_fusion_pitch);
+            chart_angles.Series.Add(drone.serie_fusion_roll);
+            chart_angles.Series.Add(drone.serie_mag_head);
 
 
             backgroundWorker_joystick.RunWorkerAsync();
@@ -211,8 +232,17 @@ namespace beaglebone_quadcopter
                         drone.accy = (float)json["acc_y"];
                         drone.accz = (float)json["acc_z"];
 
+                        drone.magx = (float)json["mag_x"];
+                        drone.magy = (float)json["mag_y"];
+                        drone.magz = (float)json["mag_z"];
+
+                        drone.mag_head = (float)json["mag_head"];
+
+
                         drone.pilot_pitch = (float)json["pilot_pitch"];
                         drone.pilot_roll = (float)json["pilot_roll"];
+
+                        drone.mpu6050_temp = (float)json["mpu6050_temp"];
 
                         //Console.WriteLine(fusion_pitch);
                        // Console.WriteLine(fusion_roll);
@@ -241,7 +271,19 @@ namespace beaglebone_quadcopter
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Environment.Exit(0);
+            try
+            {
+                timer_animacao.Stop();
+                timer_charts.Stop();
+                backgroundWorker_joystick.CancelAsync();
+
+                Thread.Sleep(100);
+
+                Environment.Exit(0);
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
         }
 
 
@@ -279,6 +321,26 @@ namespace beaglebone_quadcopter
                 drone.serie_accy.circular_append_y(drone.accy, items);
                 drone.serie_accz.circular_append_y(drone.accz, items);
 
+                drone.serie_gps_lat.circular_append_y(drone.gps_lat, items);
+                drone.serie_gps_long.circular_append_y(drone.gps_long, items);
+
+                drone.serie_magx.circular_append_y(drone.magx, items);
+                drone.serie_magy.circular_append_y(drone.magy, items);
+                drone.serie_magz.circular_append_y(drone.magz, items);
+
+                drone.serie_mpu6050_temp.circular_append_y(drone.mpu6050_temp, items);
+
+                drone.serie_mag_head.circular_append_y(drone.mag_head, items);
+
+                drone.serie_gyro_pitch.circular_append_y(drone.pitch_gyro, items);
+                drone.serie_gyro_roll.circular_append_y(drone.roll_gyro, items);
+                drone.serie_gyro_yaw.circular_append_y(drone.yaw_gyro, items);
+
+                drone.serie_fusion_pitch.circular_append_y(drone.fusion_pitch, items);
+                drone.serie_fusion_roll.circular_append_y(drone.fusion_roll, items);
+
+                drone.serie_acc_pitch.circular_append_y(drone.pitch_acc, items);
+                drone.serie_acc_roll.circular_append_y(drone.roll_acc, items);
 
                 chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_rtt.ChartAreas[0].RecalculateAxesScale();
@@ -298,6 +360,14 @@ namespace beaglebone_quadcopter
                 chart_baro_p.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_baro_p.ChartAreas[0].RecalculateAxesScale();
 
+                chart_mag.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_mag.ChartAreas[0].RecalculateAxesScale();
+
+                chart_gps.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_gps.ChartAreas[0].RecalculateAxesScale();
+
+                chart_angles.ChartAreas[0].AxisY.IsStartedFromZero = false;
+                chart_angles.ChartAreas[0].RecalculateAxesScale();
 
                 chart_hz.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_hz.ChartAreas[0].RecalculateAxesScale();

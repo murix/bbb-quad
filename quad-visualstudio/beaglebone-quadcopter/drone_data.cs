@@ -11,15 +11,46 @@ namespace beaglebone_quadcopter
         public float pitch_gyro = 0;
         public float roll_gyro = 0;
         public float yaw_gyro = 0;
+        public murix_series serie_gyro_pitch = new murix_series("gyro_pitch");
+        public murix_series serie_gyro_roll = new murix_series("gyro_roll");
+        public murix_series serie_gyro_yaw = new murix_series("gyro_yaw");
+
         //
         public float fusion_pitch = 0;
         public float fusion_roll = 0;
+        public murix_series serie_fusion_pitch = new murix_series("fusion_pitch");
+        public murix_series serie_fusion_roll = new murix_series("fusion_roll");
+
         //
         public float pitch_acc = 0;
         public float roll_acc = 0;
+        public murix_series serie_acc_pitch = new murix_series("acc_pitch");
+        public murix_series serie_acc_roll = new murix_series("acc_roll");
+
+
         //
         public double pilot_pitch = 0;
         public double pilot_roll = 0;
+
+
+        public double gps_lat = 0;
+        public double gps_long = 0;
+        public murix_series serie_gps_lat = new murix_series("gps_lat");
+        public murix_series serie_gps_long = new murix_series("gps_long");
+
+
+        public double mpu6050_temp = 0.0;
+        public murix_series serie_mpu6050_temp = new murix_series("mpu6050 (celcius)");
+
+        public double magx = 0.0;
+        public double magy = 0.0;
+        public double magz = 0.0;
+        public double mag_head = 0;
+        public murix_series serie_magx = new murix_series("magx (gauss)");
+        public murix_series serie_magy = new murix_series("magy (gauss)");
+        public murix_series serie_magz = new murix_series("magz (gauss)");
+        public murix_series serie_mag_head = new murix_series("mag_head");
+
 
         public double accx = 0.0;
         public double accy = 0.0;
