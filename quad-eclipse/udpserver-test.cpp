@@ -114,12 +114,6 @@ typedef struct {
 	float mag_z;
 	float mag_n;
 	float mag_heading;
-	//
-	//
-	float i2c_hz;
-	float pru_hz;
-	float adc_hz;
-	float pilot_hz;
 
 	//
 	float baro_p0;
@@ -128,6 +122,21 @@ typedef struct {
 	float baro_h;
 	float baro_hema;
 
+
+	//
+	float gps_lat;
+	float gps_long;
+
+
+	//
+	//
+	float i2c_hz;
+	float pru_hz;
+	float adc_hz;
+	float pilot_hz;
+
+
+	//
 	float pilot_offset_pitch;
 	float pilot_offset_roll;
 	float pilot_pitch;
@@ -644,6 +653,10 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 
 		//
 		telemetric_json["vbat"]=drone->vbat;
+
+		telemetric_json["gps_lat"]=drone->gps_lat;
+		telemetric_json["gps_long"]=drone->gps_long;
+
 
 		telemetric_json["pilot_pitch"]=drone->pilot_pitch;
 		telemetric_json["pilot_roll"]=drone->pilot_roll;
