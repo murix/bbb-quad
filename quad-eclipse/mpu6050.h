@@ -123,6 +123,29 @@
 #define MPU6050_DLPF_CFG_ACCEL_5HZ_DELAY_19000_US_GYRO_5HZ_DELAY_18600US_FS_1KHZ 6
 #define MPU6050_DLPF_RESERVED                                                  7
 
+
+#define MPU6050_AFS_SEL_2G         0
+#define MPU6050_AFS_SEL_4G         1
+#define MPU6050_AFS_SEL_8G         2
+#define MPU6050_AFS_SEL_16G        3
+
+#define MPU6050_AFS_DIV_2G   16384.0
+#define MPU6050_AFS_DIV_4G    8192.0
+#define MPU6050_AFS_DIV_8G    4096.0
+#define MPU6050_AFS_DIV_16G   2048.0
+
+#define MPU6050_GFS_SEL_250        0
+#define MPU6050_GFS_SEL_500        1
+#define MPU6050_GFS_SEL_100        2
+#define MPU6050_GFS_SEL_2000       3
+
+#define MPU6050_GFS_DIV_250    131.0
+#define MPU6050_GFS_DIV_500     65.5
+#define MPU6050_GFS_DIV_100     32.8
+#define MPU6050_GFS_DIV_2000    16.4
+
+
+
 class mpu6050 {
 public:
 	int fd;

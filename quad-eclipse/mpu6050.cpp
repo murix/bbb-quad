@@ -106,11 +106,12 @@ void mpu6050::init(){
 
 	//4.4 Register 27 – Gyroscope Configuration
 
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_GYRO_CONFIG, MPU6050_GFS_SEL_2000 << 3);
 
 
 	//4.5 Register 28 – Accelerometer Configuration
 
-
+	i2c_smbus_write_byte_data(fd,MPU6050_REG_ACCEL_CONFIG, MPU6050_AFS_SEL_16G << 3);
 
 
 	//4.6 Register 35 – FIFO Enable
@@ -147,6 +148,7 @@ void mpu6050::init(){
 	//2 +-8g 4096 LSB/g
 	//3 +-16g 2048 LSB/g
 
+
 	//4.18 Registers 65 and 66 – Temperature Measurement
 	//Temperature in degrees C = (TEMP_OUT Register Value as a signed quantity)/340 + 36.53
 
@@ -157,6 +159,7 @@ void mpu6050::init(){
 	//1 +- 500 °/s 65.5 LSB/°/s
 	//2 +- 1000 °/s 32.8 LSB/°/s
 	//3 +- 2000 °/s 16.4 LSB/°/s
+
 
 	//4.20 Registers 73 to 96 – External Sensor Data
 
@@ -212,29 +215,34 @@ void mpu6050::update(){
 	//read all
 	uint16_t vu[7];
 	int16_t vs[7];
-	i2c_smbus_read_i2c_block_data(fd,0x3b,14,(uint8_t*)vu);
+
+	//read all - accel, temp, gyro
+	i2c_smbus_read_i2c_block_data(fd,MPU6050_REG_ACCEL_XOUT_H,14,(uint8_t*)vu);
+
 	for(int i=0;i<7;i++){
 		vs[i]=(int16_t) __bswap_16(vu[i]);
 	}
 	//
-	acc[0] =vs[0]/16384.0;
-	acc[1] =vs[1]/16384.0;
-	acc[2] =vs[2]/16384.0;
+	acc[0] =vs[0]/MPU6050_AFS_DIV_16G;
+	acc[1] =vs[1]/MPU6050_AFS_DIV_16G;
+	acc[2] =vs[2]/MPU6050_AFS_DIV_16G;
 
-	//tc     =vs[3]/340.0 + 36.53;
-	tc     =(vs[3]-521.0)/340.0;
+	tc     =vs[3]/340.0 + 36.53;
 
-	gyro_raw[0]=(vs[4]/131.0);
-	gyro_raw[1]=(vs[5]/131.0);
-	gyro_raw[2]=(vs[6]/131.0);
+	gyro_raw[0]=vs[4]/MPU6050_GFS_DIV_2000;
+	gyro_raw[1]=vs[5]/MPU6050_GFS_DIV_2000;
+	gyro_raw[2]=vs[6]/MPU6050_GFS_DIV_2000;
+
+
 	gyro[0]=gyro_raw[0]-gyro_off[0];
 	gyro[1]=gyro_raw[1]-gyro_off[1];
 	gyro[2]=gyro_raw[2]-gyro_off[2];
 
 	//radian = speed * time
-	gyro_step[0]=-to_radian(gyro[0])*t_diff;
+	gyro_step[0]=to_radian(gyro[0])*t_diff;
 	gyro_step[1]=to_radian(gyro[1])*t_diff;
 	gyro_step[2]=to_radian(gyro[2])*t_diff;
+
 	//radian
 	gyro_integrate[0] += gyro_step[0];
 	gyro_integrate[1] += gyro_step[1];
