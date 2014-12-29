@@ -330,17 +330,21 @@ namespace beaglebone_quadcopter
 
                 drone.serie_mpu6050_temp.circular_append_y(drone.mpu6050_temp, items);
 
-                drone.serie_mag_head.circular_append_y(drone.mag_head, items);
 
-                drone.serie_gyro_pitch.circular_append_y(drone.pitch_gyro, items);
-                drone.serie_gyro_roll.circular_append_y(drone.roll_gyro, items);
-                drone.serie_gyro_yaw.circular_append_y(drone.yaw_gyro, items);
+                ///////////////////////////////////////////////////////////////////
+                drone.serie_mag_head.circular_append_y(drone.mag_head * 180.0/Math.PI, items);
 
-                drone.serie_fusion_pitch.circular_append_y(drone.fusion_pitch, items);
-                drone.serie_fusion_roll.circular_append_y(drone.fusion_roll, items);
+                drone.serie_gyro_pitch.circular_append_y(drone.pitch_gyro * 180.0 / Math.PI, items);
+                drone.serie_gyro_roll.circular_append_y(drone.roll_gyro * 180.0 / Math.PI, items);
+                drone.serie_gyro_yaw.circular_append_y(drone.yaw_gyro * 180.0 / Math.PI, items);
 
-                drone.serie_acc_pitch.circular_append_y(drone.pitch_acc, items);
-                drone.serie_acc_roll.circular_append_y(drone.roll_acc, items);
+                drone.serie_fusion_pitch.circular_append_y(drone.fusion_pitch * 180.0 / Math.PI, items);
+                drone.serie_fusion_roll.circular_append_y(drone.fusion_roll * 180.0 / Math.PI, items);
+
+                drone.serie_acc_pitch.circular_append_y(drone.pitch_acc * 180.0 / Math.PI, items);
+                drone.serie_acc_roll.circular_append_y(drone.roll_acc * 180.0 / Math.PI, items);
+                ////////////////////////////////////////////////////////////////////////////////
+
 
                 chart_rtt.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_rtt.ChartAreas[0].RecalculateAxesScale();
