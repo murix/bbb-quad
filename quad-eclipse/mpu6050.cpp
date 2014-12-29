@@ -263,14 +263,16 @@ void mpu6050::update(){
 
 
 	//
-	acc_pitch=atan2(-acc[1],sqrt(pow(acc[0],2)+pow(acc[2],2)));
-	acc_roll =atan2(-acc[0],sqrt(pow(acc[1],2)+pow(acc[2],2)));
+	acc_pitch=atan2(-acc[0],sqrt(pow(acc[1],2)+pow(acc[2],2)));
+	acc_roll =atan2(-acc[1],sqrt(pow(acc[0],2)+pow(acc[2],2)));
 
 	//
 	double alpha=0.98;
-	if(acc[2]<0) alpha=1;
-	fusion_pitch = alpha*(fusion_pitch + gyro_step[0] ) + (1-alpha)*acc_pitch;
-	fusion_roll  = alpha*(fusion_roll  + gyro_step[1] ) + (1-alpha)*acc_roll;
+	alpha=fabs(acc[2]); //alpha em funcao da gravidade no eixo z
+	if(alpha>0.98) alpha=0.98;
+
+	fusion_pitch = alpha*(fusion_pitch + gyro_step[1] ) + (1-alpha)*acc_pitch;
+	fusion_roll  = alpha*(fusion_roll  + gyro_step[0] ) + (1-alpha)*acc_roll;
 
 
 }
