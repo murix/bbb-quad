@@ -537,8 +537,8 @@ namespace beaglebone_quadcopter
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref lookat2);
 
-            GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitX);
-            GL.Rotate((float)(-drone.pilot_roll * 180.0 / Math.PI), Vector3.UnitZ);
+            GL.Rotate((float)(-drone.pilot_roll  * 180.0 / Math.PI), Vector3.UnitX);
+            GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitZ);
             //GL.Rotate((float)(yaw_gyro * 180.0 / Math.PI), Vector3.UnitY);
             
 

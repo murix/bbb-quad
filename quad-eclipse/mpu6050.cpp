@@ -245,7 +245,7 @@ void mpu6050::update(){
 
 	//radian
 	gyro_integrate[0] -= gyro_step[0]; //
-	gyro_integrate[1] += gyro_step[1];
+	gyro_integrate[1] -= gyro_step[1]; //
 	gyro_integrate[2] += gyro_step[2];
 
 
@@ -264,7 +264,7 @@ void mpu6050::update(){
 
 	//
 	acc_pitch=atan2(-acc[0],sqrt(pow(acc[1],2)+pow(acc[2],2)));
-	acc_roll =atan2(-acc[1],sqrt(pow(acc[0],2)+pow(acc[2],2)));
+	acc_roll =atan2(acc[1],sqrt(pow(acc[0],2)+pow(acc[2],2)));
 
 	//
 	double alpha=0.98;
