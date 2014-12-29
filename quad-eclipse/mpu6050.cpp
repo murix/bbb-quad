@@ -40,8 +40,8 @@ mpu6050::mpu6050(int fd){
 	init();
 	//pre calibration
 	gyro_calibration(330); 
-        // sample frequency is about 330hz
-        // 330 samples is about 1 second
+	// sample frequency is about 330hz
+	// 330 samples is about 1 second
 
 	gyro_integrate_reset();
 	this->t_back=get_timestamp_in_seconds();
@@ -195,7 +195,7 @@ void mpu6050::init(){
 	//4.32 Register 117 – Who Am I
 
 	while( i2c_smbus_read_byte_data(fd,MPU6050_REG_WHO_AM_I) != MPU6050_REG_WHO_AMI_I_REPLY ){
-         printf("mpu6050 who am i error\r\n");
+		printf("mpu6050 who am i error\r\n");
 	}
 
 
@@ -247,6 +247,15 @@ void mpu6050::update(){
 	gyro_integrate[0] -= gyro_step[0]; //
 	gyro_integrate[1] += gyro_step[1];
 	gyro_integrate[2] += gyro_step[2];
+
+
+	//
+	for(int i=0;i<3;i++){
+		//integral max
+		if(gyro_integrate[i] >  2*M_PI) gyro_integrate[i]= 2*M_PI;
+		//integral min
+		if(gyro_integrate[i] < -2*M_PI) gyro_integrate[i]= -2*M_PI;
+	}
 
 
 	//accelerometer

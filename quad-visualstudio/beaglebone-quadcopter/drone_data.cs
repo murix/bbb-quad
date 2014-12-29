@@ -8,9 +8,9 @@ namespace beaglebone_quadcopter
     public class drone_data
     {
         //
-        public float pitch_gyro = 0;
-        public float roll_gyro = 0;
-        public float yaw_gyro = 0;
+        public float gyro_pitch = 0;
+        public float gyro_roll = 0;
+        public float gyro_yaw = 0;
         public murix_series serie_gyro_pitch = new murix_series("gyro_pitch");
         public murix_series serie_gyro_roll = new murix_series("gyro_roll");
         public murix_series serie_gyro_yaw = new murix_series("gyro_yaw");
@@ -22,8 +22,8 @@ namespace beaglebone_quadcopter
         public murix_series serie_fusion_roll = new murix_series("fusion_roll");
 
         //
-        public float pitch_acc = 0;
-        public float roll_acc = 0;
+        public float acc_pitch = 0;
+        public float acc_roll = 0;
         public murix_series serie_acc_pitch = new murix_series("acc_pitch");
         public murix_series serie_acc_roll = new murix_series("acc_roll");
 
