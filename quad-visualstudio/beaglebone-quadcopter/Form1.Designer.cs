@@ -226,7 +226,7 @@
             this.chart_baro_h.ChartAreas.Add(chartArea4);
             legend4.Name = "Legend1";
             this.chart_baro_h.Legends.Add(legend4);
-            this.chart_baro_h.Location = new System.Drawing.Point(1008, 16);
+            this.chart_baro_h.Location = new System.Drawing.Point(1008, 23);
             this.chart_baro_h.Name = "chart_baro_h";
             series4.ChartArea = "ChartArea1";
             series4.Legend = "Legend1";
@@ -242,7 +242,7 @@
             this.chart_baro_t.ChartAreas.Add(chartArea5);
             legend5.Name = "Legend1";
             this.chart_baro_t.Legends.Add(legend5);
-            this.chart_baro_t.Location = new System.Drawing.Point(1008, 108);
+            this.chart_baro_t.Location = new System.Drawing.Point(1008, 115);
             this.chart_baro_t.Name = "chart_baro_t";
             series5.ChartArea = "ChartArea1";
             series5.Legend = "Legend1";
@@ -258,7 +258,7 @@
             this.chart_baro_p.ChartAreas.Add(chartArea6);
             legend6.Name = "Legend1";
             this.chart_baro_p.Legends.Add(legend6);
-            this.chart_baro_p.Location = new System.Drawing.Point(1008, 230);
+            this.chart_baro_p.Location = new System.Drawing.Point(1008, 237);
             this.chart_baro_p.Name = "chart_baro_p";
             series6.ChartArea = "ChartArea1";
             series6.Legend = "Legend1";
@@ -290,13 +290,13 @@
             this.chart_speed.ChartAreas.Add(chartArea8);
             legend8.Name = "Legend1";
             this.chart_speed.Legends.Add(legend8);
-            this.chart_speed.Location = new System.Drawing.Point(12, 531);
+            this.chart_speed.Location = new System.Drawing.Point(1008, 341);
             this.chart_speed.Name = "chart_speed";
             series8.ChartArea = "ChartArea1";
             series8.Legend = "Legend1";
             series8.Name = "Series1";
             this.chart_speed.Series.Add(series8);
-            this.chart_speed.Size = new System.Drawing.Size(535, 128);
+            this.chart_speed.Size = new System.Drawing.Size(498, 119);
             this.chart_speed.TabIndex = 12;
             this.chart_speed.Text = "chart3";
             // 
@@ -306,7 +306,7 @@
             this.chart_accel.ChartAreas.Add(chartArea9);
             legend9.Name = "Legend1";
             this.chart_accel.Legends.Add(legend9);
-            this.chart_accel.Location = new System.Drawing.Point(1008, 553);
+            this.chart_accel.Location = new System.Drawing.Point(1008, 466);
             this.chart_accel.Name = "chart_accel";
             series9.ChartArea = "ChartArea1";
             series9.Legend = "Legend1";
@@ -338,7 +338,7 @@
             this.chart_mag.ChartAreas.Add(chartArea11);
             legend11.Name = "Legend1";
             this.chart_mag.Legends.Add(legend11);
-            this.chart_mag.Location = new System.Drawing.Point(1008, 445);
+            this.chart_mag.Location = new System.Drawing.Point(1008, 588);
             this.chart_mag.Name = "chart_mag";
             series11.ChartArea = "ChartArea1";
             series11.Legend = "Legend1";
@@ -354,13 +354,13 @@
             this.chart_gps.ChartAreas.Add(chartArea12);
             legend12.Name = "Legend1";
             this.chart_gps.Legends.Add(legend12);
-            this.chart_gps.Location = new System.Drawing.Point(1008, 338);
+            this.chart_gps.Location = new System.Drawing.Point(18, 531);
             this.chart_gps.Name = "chart_gps";
             series12.ChartArea = "ChartArea1";
             series12.Legend = "Legend1";
             series12.Name = "Series1";
             this.chart_gps.Series.Add(series12);
-            this.chart_gps.Size = new System.Drawing.Size(498, 100);
+            this.chart_gps.Size = new System.Drawing.Size(529, 138);
             this.chart_gps.TabIndex = 16;
             this.chart_gps.Text = "chart3";
             // 

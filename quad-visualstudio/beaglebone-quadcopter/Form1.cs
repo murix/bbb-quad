@@ -479,50 +479,9 @@ namespace beaglebone_quadcopter
             GL.LoadMatrix(ref perpective);
         }
 
-        private void DrawCube()
-        {
-            GL.Begin(BeginMode.Quads);
-
-            //
-            GL.Color3(Color.Cyan);
-            GL.Vertex3(-1.0f, -1.0f, -1.0f);
-            GL.Vertex3(-1.0f, 1.0f, -1.0f);
-            GL.Vertex3(1.0f, 1.0f, -1.0f);
-            GL.Vertex3(1.0f, -1.0f, -1.0f);
-
-            GL.Color3(Color.Honeydew);
-            GL.Vertex3(-1.0f, -1.0f, -1.0f);
-            GL.Vertex3(1.0f, -1.0f, -1.0f);
-            GL.Vertex3(1.0f, -1.0f, 1.0f);
-            GL.Vertex3(-1.0f, -1.0f, 1.0f);
-
-            GL.Color3(Color.Moccasin);
-
-            GL.Vertex3(-1.0f, -1.0f, -1.0f);
-            GL.Vertex3(-1.0f, -1.0f, 1.0f);
-            GL.Vertex3(-1.0f, 1.0f, 1.0f);
-            GL.Vertex3(-1.0f, 1.0f, -1.0f);
-
-            GL.Color3(Color.Red);
-            GL.Vertex3(-1.0f, -1.0f, 1.0f);
-            GL.Vertex3(1.0f, -1.0f, 1.0f);
-            GL.Vertex3(1.0f, 1.0f, 1.0f);
-            GL.Vertex3(-1.0f, 1.0f, 1.0f);
-
-            GL.Color3(Color.PaleVioletRed);
-            GL.Vertex3(-1.0f, 1.0f, -1.0f);
-            GL.Vertex3(-1.0f, 1.0f, 1.0f);
-            GL.Vertex3(1.0f, 1.0f, 1.0f);
-            GL.Vertex3(1.0f, 1.0f, -1.0f);
-
-            GL.Color3(Color.ForestGreen);
-            GL.Vertex3(1.0f, -1.0f, -1.0f);
-            GL.Vertex3(1.0f, 1.0f, -1.0f);
-            GL.Vertex3(1.0f, 1.0f, 1.0f);
-            GL.Vertex3(1.0f, -1.0f, 1.0f);
-
-            GL.End();
-        }
+      
+     
+        
 
 
         TextRenderer renderer;
@@ -533,13 +492,13 @@ namespace beaglebone_quadcopter
 
         private void Render()
         {
-            Matrix4 lookat2 = Matrix4.LookAt(new Vector3(-12,4,0), Vector3.Zero, Vector3.UnitY);
+            Matrix4 lookat2 = Matrix4.LookAt(new Vector3(-12,0,0), Vector3.Zero, Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref lookat2);
 
-            GL.Rotate((float)(-drone.pilot_roll  * 180.0 / Math.PI), Vector3.UnitX);
+            GL.Rotate((float)(drone.pilot_roll  * 180.0 / Math.PI), Vector3.UnitX);
             GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitZ);
-            //GL.Rotate((float)(yaw_gyro * 180.0 / Math.PI), Vector3.UnitY);
+           // GL.Rotate((float)(drone.gyro_yaw * 180.0 / Math.PI), Vector3.UnitY);
             
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -572,9 +531,48 @@ namespace beaglebone_quadcopter
             GL.Vertex3(0, 0, 0);
             GL.Vertex3(-glen * drone.accx, -glen * drone.accz, glen * drone.accy); ///////////// z
             GL.End();
-            
 
-            DrawCube();
+
+
+            GL.Begin(BeginMode.Quads);
+            //left
+            GL.Color3(Color.Yellow);
+            GL.Vertex3(-1.0f, -1.0f, -1.0f);
+            GL.Vertex3(-1.0f, 1.0f, -1.0f);
+            GL.Vertex3(1.0f, 1.0f, -1.0f);
+            GL.Vertex3(1.0f, -1.0f, -1.0f);
+            //bottom
+            GL.Color3(Color.Black);
+            GL.Vertex3(-1.0f, -1.0f, -1.0f);
+            GL.Vertex3(1.0f, -1.0f, -1.0f);
+            GL.Vertex3(1.0f, -1.0f, 1.0f);
+            GL.Vertex3(-1.0f, -1.0f, 1.0f);
+            //back
+            GL.Color3(Color.Blue);
+            GL.Vertex3(-1.0f, -1.0f, -1.0f);
+            GL.Vertex3(-1.0f, -1.0f, 1.0f);
+            GL.Vertex3(-1.0f, 1.0f, 1.0f);
+            GL.Vertex3(-1.0f, 1.0f, -1.0f);
+            //right
+            GL.Color3(Color.Green);
+            GL.Vertex3(-1.0f, -1.0f, 1.0f);
+            GL.Vertex3(1.0f, -1.0f, 1.0f);
+            GL.Vertex3(1.0f, 1.0f, 1.0f);
+            GL.Vertex3(-1.0f, 1.0f, 1.0f);
+            //top
+            GL.Color3(Color.Red);
+            GL.Vertex3(-1.0f, 1.0f, -1.0f);
+            GL.Vertex3(-1.0f, 1.0f, 1.0f);
+            GL.Vertex3(1.0f, 1.0f, 1.0f);
+            GL.Vertex3(1.0f, 1.0f, -1.0f);
+            //front
+            GL.Color3(Color.White);
+            GL.Vertex3(1.0f, -1.0f, -1.0f);
+            GL.Vertex3(1.0f, 1.0f, -1.0f);
+            GL.Vertex3(1.0f, 1.0f, 1.0f);
+            GL.Vertex3(1.0f, -1.0f, 1.0f);
+            //
+            GL.End();
 
             glControl1.SwapBuffers();
         }
