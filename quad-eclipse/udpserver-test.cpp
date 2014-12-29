@@ -383,8 +383,10 @@ void *task_imu(void *arg){
 		drone->gyro_x=mpu.gyro[0];
 		drone->gyro_y=mpu.gyro[1];
 		drone->gyro_z=mpu.gyro[2];
-		drone->gyro_pitch=mpu.gyro_integrate[0];
-		drone->gyro_roll=mpu.gyro_integrate[1];
+
+		drone->gyro_pitch=mpu.gyro_integrate[1];
+		drone->gyro_roll=mpu.gyro_integrate[0];
+
 		drone->gyro_yaw=mpu.gyro_integrate[2];
 
 		drone->fusion_pitch=mpu.fusion_pitch;

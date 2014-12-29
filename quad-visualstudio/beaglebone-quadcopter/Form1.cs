@@ -219,6 +219,8 @@ namespace beaglebone_quadcopter
                         drone.acc_pitch = (float)json["pitch_acc"];
                         drone.acc_roll = (float)json["roll_acc"];
 
+
+
                         drone.baro_hema = (float)json["baro_hema"];
                         drone.baro_h = (float)json["baro_h"];
                         drone.baro_t = (float)json["baro_t"];
