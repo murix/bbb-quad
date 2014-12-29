@@ -244,8 +244,8 @@ void mpu6050::update(){
 	gyro_step[2]=to_radian(gyro[2])*t_diff;
 
 	//radian
-	gyro_integrate[0] -= gyro_step[0]; //
-	gyro_integrate[1] -= gyro_step[1]; //
+	gyro_integrate[0] += gyro_step[0]; //
+	gyro_integrate[1] += gyro_step[1]; //
 	gyro_integrate[2] += gyro_step[2];
 
 
