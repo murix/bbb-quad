@@ -264,7 +264,7 @@
             series6.Legend = "Legend1";
             series6.Name = "Series1";
             this.chart_baro_p.Series.Add(series6);
-            this.chart_baro_p.Size = new System.Drawing.Size(498, 98);
+            this.chart_baro_p.Size = new System.Drawing.Size(498, 110);
             this.chart_baro_p.TabIndex = 10;
             this.chart_baro_p.Text = "chart3";
             // 
@@ -290,7 +290,7 @@
             this.chart_speed.ChartAreas.Add(chartArea8);
             legend8.Name = "Legend1";
             this.chart_speed.Legends.Add(legend8);
-            this.chart_speed.Location = new System.Drawing.Point(1008, 341);
+            this.chart_speed.Location = new System.Drawing.Point(1008, 353);
             this.chart_speed.Name = "chart_speed";
             series8.ChartArea = "ChartArea1";
             series8.Legend = "Legend1";
@@ -306,7 +306,7 @@
             this.chart_accel.ChartAreas.Add(chartArea9);
             legend9.Name = "Legend1";
             this.chart_accel.Legends.Add(legend9);
-            this.chart_accel.Location = new System.Drawing.Point(1008, 466);
+            this.chart_accel.Location = new System.Drawing.Point(1008, 478);
             this.chart_accel.Name = "chart_accel";
             series9.ChartArea = "ChartArea1";
             series9.Legend = "Legend1";
@@ -338,13 +338,13 @@
             this.chart_mag.ChartAreas.Add(chartArea11);
             legend11.Name = "Legend1";
             this.chart_mag.Legends.Add(legend11);
-            this.chart_mag.Location = new System.Drawing.Point(1008, 588);
+            this.chart_mag.Location = new System.Drawing.Point(1008, 600);
             this.chart_mag.Name = "chart_mag";
             series11.ChartArea = "ChartArea1";
             series11.Legend = "Legend1";
             series11.Name = "Series1";
             this.chart_mag.Series.Add(series11);
-            this.chart_mag.Size = new System.Drawing.Size(498, 101);
+            this.chart_mag.Size = new System.Drawing.Size(498, 121);
             this.chart_mag.TabIndex = 15;
             this.chart_mag.Text = "chart3";
             // 
@@ -400,7 +400,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1518, 701);
+            this.ClientSize = new System.Drawing.Size(1518, 733);
             this.Controls.Add(this.chart_yaw);
             this.Controls.Add(this.chart_roll);
             this.Controls.Add(this.chart_gps);

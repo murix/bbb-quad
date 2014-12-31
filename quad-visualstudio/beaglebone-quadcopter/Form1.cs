@@ -92,8 +92,7 @@ namespace beaglebone_quadcopter
 
             chart_yaw.Series.Clear();
             chart_yaw.Series.Add(drone.serie_gyro_yaw);
-
-           // chart_angles.Series.Add(drone.serie_mag_head);
+            chart_yaw.Series.Add(drone.serie_mag_head);
 
 
             backgroundWorker_joystick.RunWorkerAsync();
