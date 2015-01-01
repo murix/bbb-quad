@@ -438,6 +438,7 @@ void *task_pilot(void *arg)
 
 	bool takeoff=false;
 
+
 	while(1){
 
 		//-------------
@@ -452,62 +453,9 @@ void *task_pilot(void *arg)
 		///////////////////////////////////
 
 		usleep(2500);
-		float kx=1;
-
-		if(drone->ps3_init_ok==false){
-
-			/////////////////////////////////////////////////////////////////////////////
-			if(drone->joy_a){
-				takeoff=true;
-			}
-			if(drone->joy_b){
-				takeoff=false;
-			}
-			///////////////////////////////////////////////////////////////////////////
-			if(drone->joy_y){
-				drone->pilot_offset_pitch=drone->fusion_pitch;
-				drone->pilot_offset_roll=drone->fusion_roll;
-			}
-			drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
-			drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
-			////////////////////////////////////////////////////////////////////////////
-
-			float throttle,pitch,roll,yaw;
-
-			//manual
+		
 
 
-			throttle = 0;
-			if(drone->joy_stick_left_y>0){
-				throttle = drone->joy_stick_left_y  * PWM_FLY_MAX;
-			}
-
-			pitch    = 0;//(drone->joy_stick_right_y * PWM_FLY_MAX);
-			roll     = 0;//(drone->joy_stick_right_x * PWM_FLY_MAX);
-
-			float target_x = 0;
-			float error_x = target_x - drone->gyro_x;
-			roll = error_x* kx;
-
-			yaw      = 0;//drone->joy_stick_left_x  * PWM_FLY_MAX;
-
-
-
-			//mix table
-			if(takeoff){
-				drone->motor_dutyns_target[MOTOR_FL] = motor_clamp(throttle - pitch + roll + yaw,PWM_FLY_MIN);
-				drone->motor_dutyns_target[MOTOR_RL] = motor_clamp(throttle + pitch + roll - yaw,PWM_FLY_MIN);
-				drone->motor_dutyns_target[MOTOR_FR] = motor_clamp(throttle - pitch - roll - yaw,PWM_FLY_MIN);
-				drone->motor_dutyns_target[MOTOR_RR] = motor_clamp(throttle + pitch - roll + yaw,PWM_FLY_MIN);
-			} else {
-				drone->motor_dutyns_target[MOTOR_FL] = 0;
-				drone->motor_dutyns_target[MOTOR_RL] = 0;
-				drone->motor_dutyns_target[MOTOR_FR] = 0;
-				drone->motor_dutyns_target[MOTOR_RR] = 0;
-			}
-
-
-		} else {
 			/////////////////////////////////////////////////////////////////////////////
 				if(drone->ps3_start){
                                         printf("ps3 takeoff\r\n");
@@ -527,13 +475,19 @@ void *task_pilot(void *arg)
 				drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
 				////////////////////////////////////////////////////////////////////////////
 
-				float throttle,pitch,roll,yaw;
+				float throttle=PWM_FLY_MIN;
+				float pitch=0;
+				float roll=0;
+				float yaw=0;
 
-				//
-				yaw      = drone->ps3_lstick_x * PWM_FLY_MAX;
-				throttle = drone->ps3_lstick_y * PWM_FLY_MAX;
-				pitch    = drone->ps3_rstick_y * PWM_FLY_MAX;
-				roll     = drone->ps3_rstick_x * PWM_FLY_MAX;
+			        //throttle =  (drone->ps3_lstick_y  * PWM_FLY_MAX);
+			        pitch    =  (drone->ps3_rstick_y * PWM_FLY_MAX);
+			        roll     =  (drone->ps3_rstick_x * PWM_FLY_MAX);
+			        yaw      =  (drone->ps3_lstick_x  * PWM_FLY_MAX);
+                               
+                                float pid_rate_roll = drone->gyro_x * 1500;
+                                roll -= pid_rate_roll;
+
 
 				//mix table
 				if(takeoff){
@@ -547,8 +501,13 @@ void *task_pilot(void *arg)
 					drone->motor_dutyns_target[MOTOR_FR] = 0;
 					drone->motor_dutyns_target[MOTOR_RR] = 0;
 				}
-		}
 
+                                printf("x=%f  roll=%f pid_rate_roll=%f m=%d|%d|%d|%d\r\n",drone->gyro_x,roll,pid_rate_roll,
+					drone->motor_dutyns_target[MOTOR_FL],
+					drone->motor_dutyns_target[MOTOR_RL],
+					drone->motor_dutyns_target[MOTOR_FR],
+					drone->motor_dutyns_target[MOTOR_RR]
+                                    );
 
 
 
@@ -813,7 +772,7 @@ void* task_bluetooth_ps3(void* arg){
 		if(e.number==2  && e.type==2) drone->ps3_rstick_x=(float)e.value/32768.0;
 		if(e.number==3  && e.type==2) drone->ps3_rstick_y=(float)e.value/-32768.0;
 
-                if(e.type==2) continue;
+                //if(e.type==2) continue;
 
 		printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
 
