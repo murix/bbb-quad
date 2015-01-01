@@ -11,21 +11,21 @@ namespace beaglebone_quadcopter
         public float gyro_pitch = 0;
         public float gyro_roll = 0;
         public float gyro_yaw = 0;
-        public murix_series serie_gyro_pitch = new murix_series("gyro_pitch");
-        public murix_series serie_gyro_roll = new murix_series("gyro_roll");
-        public murix_series serie_gyro_yaw = new murix_series("gyro_yaw");
+        public murix_series serie_gyro_pitch = new murix_series("gyro_pitch (degree)");
+        public murix_series serie_gyro_roll = new murix_series("gyro_roll (degree)");
+        public murix_series serie_gyro_yaw = new murix_series("gyro_yaw (degree)");
 
         //
         public float fusion_pitch = 0;
         public float fusion_roll = 0;
-        public murix_series serie_fusion_pitch = new murix_series("fusion_pitch");
-        public murix_series serie_fusion_roll = new murix_series("fusion_roll");
+        public murix_series serie_fusion_pitch = new murix_series("fusion_pitch (degree)");
+        public murix_series serie_fusion_roll = new murix_series("fusion_roll (degree)");
 
         //
         public float acc_pitch = 0;
         public float acc_roll = 0;
-        public murix_series serie_acc_pitch = new murix_series("acc_pitch");
-        public murix_series serie_acc_roll = new murix_series("acc_roll");
+        public murix_series serie_acc_pitch = new murix_series("acc_pitch (degree)");
+        public murix_series serie_acc_roll = new murix_series("acc_roll (degree)");
 
 
         //
@@ -49,7 +49,7 @@ namespace beaglebone_quadcopter
         public murix_series serie_magx = new murix_series("magx (gauss)");
         public murix_series serie_magy = new murix_series("magy (gauss)");
         public murix_series serie_magz = new murix_series("magz (gauss)");
-        public murix_series serie_mag_head = new murix_series("mag_head");
+        public murix_series serie_mag_head = new murix_series("mag_head (degree)");
 
 
         public double accx = 0.0;
@@ -63,16 +63,16 @@ namespace beaglebone_quadcopter
         public double gyrox = 0.0;
         public double gyroy = 0.0;
         public double gyroz = 0.0;
-        public murix_series serie_gyrox = new murix_series("gyrox (rad/s) - roll");
-        public murix_series serie_gyroy = new murix_series("gyroy (rad/s) - pitch");
-        public murix_series serie_gyroz = new murix_series("gyroz (rad/s) - yaw");
+        public murix_series serie_gyrox = new murix_series("gyrox (degree/s) - roll");
+        public murix_series serie_gyroy = new murix_series("gyroy (degree/s) - pitch");
+        public murix_series serie_gyroz = new murix_series("gyroz (degree/s) - yaw");
 
 
         public double vbat = 0.0;
         public murix_series serie_vbat = new murix_series("battery (volt)");
 
         public double rtt = 0.0;
-        public murix_series serie_rtt = new murix_series("rtt (ms)");
+        public murix_series serie_rtt = new murix_series("net rtt (ms)");
 
 
         public double motor_fl = 0.0;

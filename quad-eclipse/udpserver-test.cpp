@@ -452,6 +452,7 @@ void *task_pilot(void *arg)
 		///////////////////////////////////
 
 		usleep(2500);
+		float kx=1;
 
 		if(drone->ps3_init_ok==false){
 
@@ -473,11 +474,24 @@ void *task_pilot(void *arg)
 
 			float throttle,pitch,roll,yaw;
 
-			//
-			yaw      = drone->joy_stick_left_x  * PWM_FLY_MAX;
-			throttle = drone->joy_stick_left_y  * PWM_FLY_MAX;
-			pitch    = drone->joy_stick_right_y * PWM_FLY_MAX;
-			roll     = drone->joy_stick_right_x * PWM_FLY_MAX;
+			//manual
+
+
+			throttle = 0;
+			if(drone->joy_stick_left_y>0){
+				throttle = drone->joy_stick_left_y  * PWM_FLY_MAX;
+			}
+
+			pitch    = 0;//(drone->joy_stick_right_y * PWM_FLY_MAX);
+			roll     = 0;//(drone->joy_stick_right_x * PWM_FLY_MAX);
+
+			float target_x = 0;
+			float error_x = target_x - drone->gyro_x;
+			roll = error_x* kx;
+
+			yaw      = 0;//drone->joy_stick_left_x  * PWM_FLY_MAX;
+
+
 
 			//mix table
 			if(takeoff){
@@ -491,6 +505,8 @@ void *task_pilot(void *arg)
 				drone->motor_dutyns_target[MOTOR_FR] = 0;
 				drone->motor_dutyns_target[MOTOR_RR] = 0;
 			}
+
+
 		} else {
 			/////////////////////////////////////////////////////////////////////////////
 				if(drone->ps3_start){

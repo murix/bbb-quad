@@ -29,8 +29,41 @@ namespace beaglebone_quadcopter
 
         drone_data drone = new drone_data();
 
+        private void textBox_ip_TextChanged(object sender, EventArgs e)
+        {
+            //atualizar configuracoes
+            Properties.Settings.Default.ip = textBox_ip.Text;
+        }
+
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            try
+            {
+              
+                //salvar configuracoes
+                Properties.Settings.Default.Save();
+
+                timer_animacao.Stop();
+                timer_charts.Stop();
+                backgroundWorker_joystick.CancelAsync();
+
+                // Thread.Sleep(100);
+
+                //Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
+           //carregar configuracoes
+            textBox_ip.Text = (string) Properties.Settings.Default["ip"];
+
+
             chart_rtt.Series.Clear();
             chart_rtt.Series.Add(drone.serie_rtt);
 
@@ -188,10 +221,8 @@ namespace beaglebone_quadcopter
 
 
 
-                    string ip="192.168.9.50";
-                    if (radioButton_ether.Checked) {
-                        ip = "192.168.9.51";
-                    }
+                    string ip = Properties.Settings.Default.ip;
+                  
 
                     string fromdrone = sendrecv(ip,jsonjoy.ToString(), 200);
                     if (fromdrone.Length > 0)
@@ -230,9 +261,9 @@ namespace beaglebone_quadcopter
                         drone.pru_hz = (float)json["pru_hz"];
                         drone.pilot_hz = (float)json["pilot_hz"];
 
-                        drone.gyrox = (float)json["gyro_x"];
-                        drone.gyroy = (float)json["gyro_y"];
-                        drone.gyroz = (float)json["gyro_z"];
+                        drone.gyrox = (float)json["gyro_x"] ;
+                        drone.gyroy = (float)json["gyro_y"] ;
+                        drone.gyroz = (float)json["gyro_z"] ;
 
                         drone.accx = (float)json["acc_x"];
                         drone.accy = (float)json["acc_y"];
@@ -248,7 +279,7 @@ namespace beaglebone_quadcopter
                         drone.pilot_pitch = (float)json["pilot_pitch"];
                         drone.pilot_roll = (float)json["pilot_roll"];
 
-                        drone.mpu6050_temp = (float)json["mpu6050_temp"];
+                        drone.mpu6050_temp = (float)json["mpu6050_temp"]-1.2;
 
                         //Console.WriteLine(fusion_pitch);
                        // Console.WriteLine(fusion_roll);
@@ -275,22 +306,6 @@ namespace beaglebone_quadcopter
     
 
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            try
-            {
-                timer_animacao.Stop();
-                timer_charts.Stop();
-                backgroundWorker_joystick.CancelAsync();
-
-                Thread.Sleep(100);
-
-                Environment.Exit(0);
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex.Message);
-            }
-        }
 
 
         private void timer_charts_Tick(object sender, EventArgs e)
@@ -579,6 +594,8 @@ namespace beaglebone_quadcopter
 
 
         #endregion
+
+  
 
 
     }

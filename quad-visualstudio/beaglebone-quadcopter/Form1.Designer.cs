@@ -75,8 +75,6 @@
             this.chart_rtt = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_motor = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.radioButton_ether = new System.Windows.Forms.RadioButton();
-            this.radioButton_wifi = new System.Windows.Forms.RadioButton();
             this.chart_vbat = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.timer_charts = new System.Windows.Forms.Timer(this.components);
             this.button_controle = new System.Windows.Forms.Button();
@@ -92,6 +90,7 @@
             this.chart_gps = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_roll = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_yaw = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.textBox_ip = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.chart_rtt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_motor)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -147,36 +146,13 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.radioButton_ether);
-            this.groupBox1.Controls.Add(this.radioButton_wifi);
+            this.groupBox1.Controls.Add(this.textBox_ip);
             this.groupBox1.Location = new System.Drawing.Point(12, 7);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(270, 38);
+            this.groupBox1.Size = new System.Drawing.Size(112, 38);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Conexão";
-            // 
-            // radioButton_ether
-            // 
-            this.radioButton_ether.AutoSize = true;
-            this.radioButton_ether.Checked = true;
-            this.radioButton_ether.Location = new System.Drawing.Point(127, 15);
-            this.radioButton_ether.Name = "radioButton_ether";
-            this.radioButton_ether.Size = new System.Drawing.Size(137, 17);
-            this.radioButton_ether.TabIndex = 1;
-            this.radioButton_ether.TabStop = true;
-            this.radioButton_ether.Text = "Ethernet (192.168.9.51)";
-            this.radioButton_ether.UseVisualStyleBackColor = true;
-            // 
-            // radioButton_wifi
-            // 
-            this.radioButton_wifi.AutoSize = true;
-            this.radioButton_wifi.Location = new System.Drawing.Point(6, 15);
-            this.radioButton_wifi.Name = "radioButton_wifi";
-            this.radioButton_wifi.Size = new System.Drawing.Size(115, 17);
-            this.radioButton_wifi.TabIndex = 0;
-            this.radioButton_wifi.Text = "Wifi (192.168.9.50)";
-            this.radioButton_wifi.UseVisualStyleBackColor = true;
+            this.groupBox1.Text = "IP";
             // 
             // chart_vbat
             // 
@@ -201,9 +177,9 @@
             // button_controle
             // 
             this.button_controle.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.button_controle.Location = new System.Drawing.Point(297, 16);
+            this.button_controle.Location = new System.Drawing.Point(395, 19);
             this.button_controle.Name = "button_controle";
-            this.button_controle.Size = new System.Drawing.Size(164, 23);
+            this.button_controle.Size = new System.Drawing.Size(152, 23);
             this.button_controle.TabIndex = 6;
             this.button_controle.Text = "Controle Xbox (conectado)";
             this.button_controle.UseVisualStyleBackColor = true;
@@ -396,6 +372,14 @@
             this.chart_yaw.TabIndex = 18;
             this.chart_yaw.Text = "chart3";
             // 
+            // textBox_ip
+            // 
+            this.textBox_ip.Location = new System.Drawing.Point(6, 14);
+            this.textBox_ip.Name = "textBox_ip";
+            this.textBox_ip.Size = new System.Drawing.Size(100, 20);
+            this.textBox_ip.TabIndex = 19;
+            this.textBox_ip.TextChanged += new System.EventHandler(this.textBox_ip_TextChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -448,8 +432,6 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_rtt;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_motor;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.RadioButton radioButton_ether;
-        private System.Windows.Forms.RadioButton radioButton_wifi;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_vbat;
         private System.Windows.Forms.Timer timer_charts;
         private System.Windows.Forms.Button button_controle;
@@ -465,6 +447,7 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_gps;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_roll;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_yaw;
+        private System.Windows.Forms.TextBox textBox_ip;
     }
 }
 
