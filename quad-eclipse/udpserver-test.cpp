@@ -98,12 +98,12 @@ typedef struct {
 	float acc_pitch;
 	float acc_roll;
 
-    //gyro integrate angles
+	//gyro integrate angles
 	float gyro_pitch;
 	float gyro_roll;
 	float gyro_yaw;
 
-    //fusion angles
+	//fusion angles
 	float fusion_pitch;
 	float fusion_roll;
 
@@ -239,6 +239,7 @@ void *task_adc(void *arg){
 #define PWM_CALIB_MIN       1000000
 #define PWM_FLY_MIN         1070000
 #define PWM_FLY_MAX         1900000
+#define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
 #define PWM_CALIB_MAX       1950000
 #define PWM_STEP_PER_CYCLE    10000
 #define PWM_NS_PER_SEC     (1000*1000*1000)
@@ -269,7 +270,7 @@ void *task_motors(void *arg){
 		myPWM->setChannelValue(ch,PWM_FLY_ARM);
 		myPWM->setFailsafeValue(ch,PWM_FAILSAFE);
 	}
-        //
+	//
 	myPWM->setFailsafeTimeout(0);
 	//myPWM->setFailsafeTimeout(2000);
 
@@ -419,8 +420,12 @@ void *task_imu(void *arg){
 #define MOTOR_RL 7
 
 float motor_clamp(float a,float b){
-	if (a > b) return a;
-	else return b;
+	if (a > b){
+		return a;
+	}
+	else {
+		return b;
+	}
 }
 
 void *task_pilot(void *arg)
@@ -453,61 +458,61 @@ void *task_pilot(void *arg)
 		///////////////////////////////////
 
 		usleep(2500);
-		
 
 
-			/////////////////////////////////////////////////////////////////////////////
-				if(drone->ps3_start){
-                                        printf("ps3 takeoff\r\n");
-					takeoff=true;
-				}
-				if(drone->ps3_select){
-                                        printf("ps3 landing\r\n");
-					takeoff=false;
-				}
-				///////////////////////////////////////////////////////////////////////////
-				if(drone->ps3_triangle){
-                                        printf("ps3 trim\r\n");
-					drone->pilot_offset_pitch=drone->fusion_pitch;
-					drone->pilot_offset_roll=drone->fusion_roll;
-				}
-				drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
-				drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
-				////////////////////////////////////////////////////////////////////////////
 
-				float throttle=PWM_FLY_MIN;
-				float pitch=0;
-				float roll=0;
-				float yaw=0;
+		/////////////////////////////////////////////////////////////////////////////
+		if(drone->ps3_start){
+			printf("ps3 takeoff\r\n");
+			takeoff=true;
+		}
+		if(drone->ps3_select){
+			printf("ps3 landing\r\n");
+			takeoff=false;
+		}
+		///////////////////////////////////////////////////////////////////////////
+		if(drone->ps3_triangle){
+			printf("ps3 trim\r\n");
+			drone->pilot_offset_pitch=drone->fusion_pitch;
+			drone->pilot_offset_roll=drone->fusion_roll;
+		}
+		drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
+		drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
+		////////////////////////////////////////////////////////////////////////////
 
-			        //throttle =  (drone->ps3_lstick_y  * PWM_FLY_MAX);
-			        pitch    =  (drone->ps3_rstick_y * PWM_FLY_MAX);
-			        roll     =  (drone->ps3_rstick_x * PWM_FLY_MAX);
-			        yaw      =  (drone->ps3_lstick_x  * PWM_FLY_MAX);
-                               
-                                float pid_rate_roll = drone->gyro_x * 1500;
-                                roll -= pid_rate_roll;
+		float throttle=0;
+		float pitch=0;
+		float roll=0;
+		float yaw=0;
+
+		throttle =  (drone->ps3_lstick_y  * PWM_FLY_INTERVAL);
+		pitch    =  (drone->ps3_rstick_y * PWM_FLY_INTERVAL);
+		roll     =  (drone->ps3_rstick_x * PWM_FLY_INTERVAL);
+		yaw      =  (drone->ps3_lstick_x  * PWM_FLY_INTERVAL);
+
+		//float pid_rate_roll = drone->gyro_x * 1500;
+		//roll -= pid_rate_roll;
 
 
-				//mix table
-				if(takeoff){
-					drone->motor_dutyns_target[MOTOR_FL] = motor_clamp(throttle - pitch + roll + yaw,PWM_FLY_MIN);
-					drone->motor_dutyns_target[MOTOR_RL] = motor_clamp(throttle + pitch + roll - yaw,PWM_FLY_MIN);
-					drone->motor_dutyns_target[MOTOR_FR] = motor_clamp(throttle - pitch - roll - yaw,PWM_FLY_MIN);
-					drone->motor_dutyns_target[MOTOR_RR] = motor_clamp(throttle + pitch - roll + yaw,PWM_FLY_MIN);
-				} else {
-					drone->motor_dutyns_target[MOTOR_FL] = 0;
-					drone->motor_dutyns_target[MOTOR_RL] = 0;
-					drone->motor_dutyns_target[MOTOR_FR] = 0;
-					drone->motor_dutyns_target[MOTOR_RR] = 0;
-				}
+		//mix table
+		if(takeoff){
+			drone->motor_dutyns_target[MOTOR_FL] = motor_clamp(PWM_FLY_MIN+ throttle - pitch + roll + yaw,PWM_FLY_MIN);
+			drone->motor_dutyns_target[MOTOR_RL] = motor_clamp(PWM_FLY_MIN+ throttle + pitch + roll - yaw,PWM_FLY_MIN);
+			drone->motor_dutyns_target[MOTOR_FR] = motor_clamp(PWM_FLY_MIN+ throttle - pitch - roll - yaw,PWM_FLY_MIN);
+			drone->motor_dutyns_target[MOTOR_RR] = motor_clamp(PWM_FLY_MIN+ throttle + pitch - roll + yaw,PWM_FLY_MIN);
+		} else {
+			drone->motor_dutyns_target[MOTOR_FL] = 0;
+			drone->motor_dutyns_target[MOTOR_RL] = 0;
+			drone->motor_dutyns_target[MOTOR_FR] = 0;
+			drone->motor_dutyns_target[MOTOR_RR] = 0;
+		}
 
-                                printf("x=%f  roll=%f pid_rate_roll=%f m=%d|%d|%d|%d\r\n",drone->gyro_x,roll,pid_rate_roll,
-					drone->motor_dutyns_target[MOTOR_FL],
-					drone->motor_dutyns_target[MOTOR_RL],
-					drone->motor_dutyns_target[MOTOR_FR],
-					drone->motor_dutyns_target[MOTOR_RR]
-                                    );
+		printf("x=%f  roll=%f pid_rate_roll=%f m=%d|%d|%d|%d\r\n",drone->gyro_x,roll,pid_rate_roll,
+				drone->motor_dutyns_target[MOTOR_FL],
+				drone->motor_dutyns_target[MOTOR_RL],
+				drone->motor_dutyns_target[MOTOR_FR],
+				drone->motor_dutyns_target[MOTOR_RR]
+		);
 
 
 
@@ -772,7 +777,7 @@ void* task_bluetooth_ps3(void* arg){
 		if(e.number==2  && e.type==2) drone->ps3_rstick_x=(float)e.value/32768.0;
 		if(e.number==3  && e.type==2) drone->ps3_rstick_y=(float)e.value/-32768.0;
 
-                //if(e.type==2) continue;
+		//if(e.type==2) continue;
 
 		printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
 
@@ -853,19 +858,19 @@ int main(int argc,char** argv){
 	//
 	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
 
-        pthread_attr_t attr;
-        struct sched_param schedParam;
-       
-        pthread_attr_init(&attr);
+	pthread_attr_t attr;
+	struct sched_param schedParam;
 
-        // EXPLICIT=usar do atributo, INHERIT=usar da thread criadora
-        pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_init(&attr);
 
-        // 
-        //pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
-        pthread_attr_setschedpolicy(&attr,SCHED_RR);
-        schedParam.sched_priority=sched_get_priority_max(SCHED_RR);
-        pthread_attr_setschedparam(&attr,&schedParam);
+	// EXPLICIT=usar do atributo, INHERIT=usar da thread criadora
+	pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+
+	//
+	//pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+	pthread_attr_setschedpolicy(&attr,SCHED_RR);
+	schedParam.sched_priority=sched_get_priority_max(SCHED_RR);
+	pthread_attr_setschedparam(&attr,&schedParam);
 
 
 	//
