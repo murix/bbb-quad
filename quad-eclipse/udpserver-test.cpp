@@ -878,15 +878,30 @@ int main(int argc,char** argv){
 	//
 	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
 
+        pthread_attr_t attr;
+        struct sched_param schedParam;
+       
+        pthread_attr_init(&attr);
+
+        // EXPLICIT=usar do atributo, INHERIT=usar da thread criadora
+        pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+
+        // 
+        //pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+        pthread_attr_setschedpolicy(&attr,SCHED_RR);
+        schedParam.sched_priority=sched_get_priority_max(SCHED_RR);
+        pthread_attr_setschedparam(&attr,&schedParam);
+
+
 	//
-	pthread_create(&id_adc                          , 0, task_adc                          , &drone_data);
-	pthread_create(&id_imu                          , 0, task_imu                          , &drone_data);
-	pthread_create(&id_motors                       , 0, task_motors                       , &drone_data);
-	pthread_create(&id_rx_joystick_and_tx_telemetric, 0, task_rx_joystick_and_tx_telemetric, &drone_data);
-	pthread_create(&id_pilot                        , 0, task_pilot                        , &drone_data);
-	pthread_create(&id_ps3                          , 0, task_bluetooth_ps3                , &drone_data);
-	pthread_create(&id_gps                          , 0, task_gps                          , &drone_data);
-	pthread_create(&id_spi                          , 0, task_spi_cc1101                   , &drone_data);
+	pthread_create(&id_adc                          , &attr, task_adc                          , &drone_data);
+	pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
+	pthread_create(&id_motors                       , &attr, task_motors                       , &drone_data);
+	pthread_create(&id_rx_joystick_and_tx_telemetric, &attr, task_rx_joystick_and_tx_telemetric, &drone_data);
+	pthread_create(&id_pilot                        , &attr, task_pilot                        , &drone_data);
+	pthread_create(&id_ps3                          , &attr, task_bluetooth_ps3                , &drone_data);
+	pthread_create(&id_gps                          , &attr, task_gps                          , &drone_data);
+	pthread_create(&id_spi                          , &attr, task_spi_cc1101                   , &drone_data);
 
 	/////////////////////////////////////////////////////123456789012345
 	pthread_setname_np(id_adc                          ,"adc-vbat       ");

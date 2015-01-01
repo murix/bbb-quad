@@ -38,6 +38,7 @@
 ms5611::ms5611(int fd){
 	this->fd=fd;
 	P0=0;
+        H_EMA_ALPHA=0.01;
 	init();
 	update();
 
@@ -251,8 +252,7 @@ void ms5611::update(){
 
 
 		//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
-		double alpha=0.01;
-		H_EMA= (alpha * H) + (1.0 - alpha) * H_EMA;
+		H_EMA= (H_EMA_ALPHA * H) + (1.0 - H_EMA_ALPHA) * H_EMA;
 
 
 		this->state=START_D2;

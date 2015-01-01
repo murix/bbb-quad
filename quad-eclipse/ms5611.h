@@ -52,6 +52,7 @@ public:
 	double P0;
 	double H;
 	double H_EMA;
+        double H_EMA_ALPHA;
 };
 
 

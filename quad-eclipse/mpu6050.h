@@ -171,6 +171,7 @@ public:
 	double to_degrees(double radians);
 	double to_radian(double degree);
 
+        double gyro_ema_alpha;
 	double t_back;
 	double t_now;
 	double t_diff;

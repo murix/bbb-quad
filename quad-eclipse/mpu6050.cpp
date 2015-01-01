@@ -32,6 +32,7 @@ mpu6050::mpu6050(int fd){
 	this->fd=fd;
 	this->tc=0;
 
+        this->gyro_ema_alpha=0.02;
 	this->gyro_off[0]=0;
 	this->gyro_off[1]=0;
 	this->gyro_off[2]=0;
@@ -67,14 +68,14 @@ void mpu6050::gyro_calibration(int samples){
 	//sum
 	for(int i=0;i<samples;i++){
 		update();
-		this->gyro_off[0]+=gyro_raw[0];
-		this->gyro_off[1]+=gyro_raw[1];
-		this->gyro_off[2]+=gyro_raw[2];
+		this->gyro_off[0] = gyro_ema_alpha*gyro_raw[0]+(1.0-gyro_ema_alpha)*gyro_off[0];
+		this->gyro_off[1] = gyro_ema_alpha*gyro_raw[1]+(1.0-gyro_ema_alpha)*gyro_off[1];
+		this->gyro_off[2] = gyro_ema_alpha*gyro_raw[2]+(1.0-gyro_ema_alpha)*gyro_off[2];
 	}
 	//avg
-	this->gyro_off[0] /= (float) samples;
-	this->gyro_off[1] /= (float) samples;
-	this->gyro_off[2] /= (float) samples;
+	//this->gyro_off[0] /= (float) samples;
+	//this->gyro_off[1] /= (float) samples;
+	//this->gyro_off[2] /= (float) samples;
 
 	//
 	gyro_integrate_reset();
@@ -233,17 +234,17 @@ void mpu6050::update(){
 	gyro_raw[1]=vs[5]/MPU6050_GFS_DIV_2000;
 	gyro_raw[2]=vs[6]/MPU6050_GFS_DIV_2000;
 
-
+        //degrees
 	gyro[0]=gyro_raw[0]-gyro_off[0];
 	gyro[1]=gyro_raw[1]-gyro_off[1];
 	gyro[2]=gyro_raw[2]-gyro_off[2];
 
-	//radian = speed * time
+	//step(rads) = speed(rad/s) * time(s)
 	gyro_step[0]=to_radian(gyro[0])*t_diff;
 	gyro_step[1]=to_radian(gyro[1])*t_diff;
 	gyro_step[2]=to_radian(gyro[2])*t_diff;
 
-	//radian
+	//estimated angles in radians
 	gyro_integrate[0] += gyro_step[0]; //
 	gyro_integrate[1] += gyro_step[1]; //
 	gyro_integrate[2] += gyro_step[2];
@@ -262,7 +263,7 @@ void mpu6050::update(){
 	accn=sqrt(pow(acc[0],2)+pow(acc[1],2)+pow(acc[2],2));
 
 
-	//
+	//estimated angles in radians
 	acc_pitch=atan2(-acc[0],sqrt(pow(acc[1],2)+pow(acc[2],2)));
 	acc_roll =atan2(acc[1],sqrt(pow(acc[0],2)+pow(acc[2],2)));
 
@@ -271,6 +272,7 @@ void mpu6050::update(){
 	alpha=fabs(acc[2]); //alpha em funcao da gravidade no eixo z
 	if(alpha>0.98) alpha=0.98;
 
+        //estimated angles in radians
 	fusion_pitch = alpha*(fusion_pitch + gyro_step[1] ) + (1-alpha)*acc_pitch;
 	fusion_roll  = alpha*(fusion_roll  + gyro_step[0] ) + (1-alpha)*acc_roll;
 
