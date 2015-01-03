@@ -20,7 +20,7 @@ void adc_monitor::update(void){
 
         fseek(fd,0,SEEK_SET);
 
-        int ret = fscanf(fd,"%f",&vbat_raw);
+        fscanf(fd,"%f",&vbat_raw);
 
         vbat=((vbat_raw/1000.0)*(5.0/0.265));
 
