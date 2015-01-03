@@ -507,12 +507,12 @@ void *task_pilot(void *arg)
 			drone->motor_dutyns_target[MOTOR_RR] = 0;
 		}
 
-		printf("x=%f  roll=%f pid_rate_roll=%f m=%d|%d|%d|%d\r\n",drone->gyro_x,roll,pid_rate_roll,
-				drone->motor_dutyns_target[MOTOR_FL],
-				drone->motor_dutyns_target[MOTOR_RL],
-				drone->motor_dutyns_target[MOTOR_FR],
-				drone->motor_dutyns_target[MOTOR_RR]
-		);
+		//printf("x=%f  roll=%f pid_rate_roll=%f m=%d|%d|%d|%d\r\n",drone->gyro_x,roll,pid_rate_roll,
+		//		drone->motor_dutyns_target[MOTOR_FL],
+		//		drone->motor_dutyns_target[MOTOR_RL],
+		//		drone->motor_dutyns_target[MOTOR_FR],
+		//		drone->motor_dutyns_target[MOTOR_RR]
+		//);
 
 
 
