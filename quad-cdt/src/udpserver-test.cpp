@@ -195,7 +195,7 @@ typedef struct {
 } drone_t;
 
 
-
+#define VBAT_STABLE 9.5
 
 
 void *task_adc(void *arg){
@@ -237,7 +237,9 @@ void *task_adc(void *arg){
 #define PWM_FAILSAFE         500000
 #define PWM_FLY_ARM          900000
 #define PWM_CALIB_MIN       1000000
-#define PWM_FLY_MIN         1070000
+//#define PWM_FLY_MIN       1070000
+#define PWM_FLY_MIN         1130000
+//#define PWM_FLY_MAX         1430000
 #define PWM_FLY_MAX         1900000
 #define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
 #define PWM_CALIB_MAX       1950000
@@ -298,7 +300,7 @@ void *task_motors(void *arg){
 			for(int ch=0;ch<8;ch++){
 				bool need_change=false;
 				//
-				if(drone->motor_dutyns_now[ch] < drone->motor_dutyns_target[ch] && drone->vbat > 9){
+				if(drone->motor_dutyns_now[ch] < drone->motor_dutyns_target[ch] && drone->vbat > VBAT_STABLE){
 					drone->motor_dutyns_now[ch] += PWM_STEP_PER_CYCLE;
 					if(drone->motor_dutyns_now[ch]>PWM_FLY_MAX) drone->motor_dutyns_now[ch]=PWM_FLY_MAX;
 					need_change=true;
@@ -397,7 +399,7 @@ void *task_imu(void *arg){
 
 		///////////////////////////////////////////////
 
-		drone->mag_x=mag.mag[0];
+ 		drone->mag_x=mag.mag[0];
 		drone->mag_y=mag.mag[1];
 		drone->mag_z=mag.mag[2];
 		drone->mag_n=mag.magn;
@@ -444,6 +446,10 @@ void *task_pilot(void *arg)
 	bool takeoff=false;
 
 
+	float ga_error=0;
+	float ga_error_bak=0;
+	float pid_rate_kp = 30000;
+
 	while(1){
 
 		//-------------
@@ -486,13 +492,42 @@ void *task_pilot(void *arg)
 		float yaw=0;
 
 		throttle =  (drone->ps3_lstick_y  * PWM_FLY_INTERVAL);
-		pitch    =  (drone->ps3_rstick_y * PWM_FLY_INTERVAL);
-		roll     =  (drone->ps3_rstick_x * PWM_FLY_INTERVAL);
-		yaw      =  (drone->ps3_lstick_x  * PWM_FLY_INTERVAL);
+		pitch    = 0;// (drone->ps3_rstick_y * PWM_FLY_INTERVAL);
+		roll     = 0;// (drone->ps3_rstick_x * PWM_FLY_INTERVAL);
+		yaw      = 0;// (drone->ps3_lstick_x  * PWM_FLY_INTERVAL);
 
-		//float pid_rate_roll = drone->gyro_x * 1500;
-		//roll -= pid_rate_roll;
+		//1500=pouco
+		//2000=pouco
+		//3000=pouco
 
+		//y = pitch
+		//x = roll
+
+		float pid_rate_target=0;
+		float pid_rate_input= drone->gyro_x;
+		float pid_rate_error= pid_rate_target-pid_rate_input;
+		//
+		pid_rate_kp = 1;
+		float pid_rate_output = pid_rate_error*pid_rate_kp;
+		//roll += pid_rate_output;
+
+		ga_error_bak=ga_error;
+		ga_error = pow(pid_rate_error,2);
+
+		float ga_diff=ga_error-ga_error_bak;
+
+        if(ga_diff > 0.002 ){
+        	//pid_rate_kp+=10;
+        }
+        if(ga_diff < -0.002 ){
+        	//pid_rate_kp-=10;
+        }
+
+        printf("kp=%f error=%f ga_error=%f ga_diff=%f\r\n",pid_rate_kp,pid_rate_error,ga_error,ga_diff);
+
+
+		roll += pid_rate_output;
+		//pitch += pid_rate_output;
 
 		//mix table
 		if(takeoff){
