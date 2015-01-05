@@ -174,11 +174,13 @@ namespace beaglebone_quadcopter
 
 
         bool controle_conectado = false;
-
+       
 
         int rxcount = 0;
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+
+            string fromdrone = "";
 
             while (true)
             {
@@ -224,7 +226,7 @@ namespace beaglebone_quadcopter
                     string ip = Properties.Settings.Default.ip;
                   
 
-                    string fromdrone = sendrecv(ip,jsonjoy.ToString(), 200);
+                    fromdrone = sendrecv(ip,jsonjoy.ToString(), 200);
                     if (fromdrone.Length > 0)
                     {
                         //Console.WriteLine(fromdrone);
@@ -239,47 +241,48 @@ namespace beaglebone_quadcopter
                         drone.motor_rr = (double)json["motor_rr"];
 
 
-                        drone.gyro_pitch = (float)json["pitch_gyro"];
-                        drone.gyro_roll = (float)json["roll_gyro"];
-                        drone.gyro_yaw = (float)json["yaw_gyro"];
+                        drone.gyro_pitch = (double)json["pitch_gyro"];
+                        drone.gyro_roll = (double)json["roll_gyro"];
+                        drone.gyro_yaw = (double)json["yaw_gyro"];
 
-                        drone.fusion_pitch = (float)json["fusion_pitch"];
-                        drone.fusion_roll = (float)json["fusion_roll"];
+                        drone.fusion_pitch = (double)json["fusion_pitch"];
+                        drone.fusion_roll = (double)json["fusion_roll"];
 
-                        drone.acc_pitch = (float)json["pitch_acc"];
-                        drone.acc_roll = (float)json["roll_acc"];
-
-
-
-                        drone.baro_hema = (float)json["baro_hema"];
-                        drone.baro_h = (float)json["baro_h"];
-                        drone.baro_t = (float)json["baro_t"];
-                        drone.baro_p = (float)json["baro_p"];
-
-                        drone.i2c_hz = (float)json["i2c_hz"];
-                        drone.adc_hz = (float)json["adc_hz"];
-                        drone.pru_hz = (float)json["pru_hz"];
-                        drone.pilot_hz = (float)json["pilot_hz"];
-
-                        drone.gyrox = (float)json["gyro_x"] ;
-                        drone.gyroy = (float)json["gyro_y"] ;
-                        drone.gyroz = (float)json["gyro_z"] ;
-
-                        drone.accx = (float)json["acc_x"];
-                        drone.accy = (float)json["acc_y"];
-                        drone.accz = (float)json["acc_z"];
-
-                        drone.magx = (float)json["mag_x"];
-                        drone.magy = (float)json["mag_y"];
-                        drone.magz = (float)json["mag_z"];
-
-                        drone.mag_head = (float)json["mag_head"];
+                        drone.acc_pitch = (double)json["pitch_acc"];
+                        drone.acc_roll = (double)json["roll_acc"];
 
 
-                        drone.pilot_pitch = (float)json["pilot_pitch"];
-                        drone.pilot_roll = (float)json["pilot_roll"];
 
-                        drone.mpu6050_temp = (float)json["mpu6050_temp"]-1.2;
+                        drone.baro_hema = (double)json["baro_hema"];
+                        drone.baro_h = (double)json["baro_h"];
+                        drone.baro_t = (double)json["baro_t"];
+                        drone.baro_p = (double)json["baro_p"];
+
+                        drone.i2c_hz = (double)json["i2c_hz"];
+                        drone.adc_hz = (double)json["adc_hz"];
+                        drone.pru_hz = (double)json["pru_hz"];
+                        drone.pilot_hz = (double)json["pilot_hz"];
+
+                        drone.gyrox = (double)json["gyro_x"] ;
+                        drone.gyroy = (double)json["gyro_y"] ;
+                        drone.gyroz = (double)json["gyro_z"] ;
+
+                        drone.accx = (double)json["acc_x"];
+                        drone.accy = (double)json["acc_y"];
+                        drone.accz = (double)json["acc_z"];
+
+                        drone.magx = (double)json["mag_x"];
+                        drone.magy = (double)json["mag_y"];
+                        drone.magz = (double)json["mag_z"];
+
+                        drone.mag_head = (double)json["mag_head"];
+
+
+                        drone.pilot_pitch = (double)json["pilot_pitch"];
+                        drone.pilot_roll = (double)json["pilot_roll"];
+                        drone.pilot_yaw = (double)json["pilot_yaw"];
+
+                        drone.mpu6050_temp = (double)json["mpu6050_temp"]-1.2;
 
                         //Console.WriteLine(fusion_pitch);
                        // Console.WriteLine(fusion_roll);
@@ -297,6 +300,7 @@ namespace beaglebone_quadcopter
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(fromdrone);
                     Console.WriteLine(ex.ToString());
                 }
 
@@ -488,8 +492,8 @@ namespace beaglebone_quadcopter
 
             GL.MatrixMode(MatrixMode.Projection);
 
-            float aspect_ratio = Width / (float)Height;
-            Matrix4 perpective = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect_ratio, 1, 64);
+            double aspect_ratio = Width / (double)Height;
+            Matrix4 perpective = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4,(float) aspect_ratio, 1, 64);
             GL.LoadMatrix(ref perpective);
         }
 
@@ -510,9 +514,13 @@ namespace beaglebone_quadcopter
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref lookat2);
 
-            GL.Rotate((float)(drone.pilot_roll  * 180.0 / Math.PI), Vector3.UnitX);
+            OpenTK.Quaternion quad = new Quaternion();
+            
+            //GL.Rotate()
+
             GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitZ);
-           // GL.Rotate((float)(drone.gyro_yaw * 180.0 / Math.PI), Vector3.UnitY);
+            GL.Rotate((float)(-drone.pilot_yaw * 180.0 / Math.PI), Vector3.UnitY);
+            GL.Rotate((float)(-drone.pilot_roll * 180.0 / Math.PI), Vector3.UnitX);
             
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);

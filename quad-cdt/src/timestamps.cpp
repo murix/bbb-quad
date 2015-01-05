@@ -13,7 +13,7 @@
 #include "timestamps.h"
 
 
-double start_time = 0;
+static double start_time = 0;
 //
 unsigned long micros(void){
 	struct timeval start;

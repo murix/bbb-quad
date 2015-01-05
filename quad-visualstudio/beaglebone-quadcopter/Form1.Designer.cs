@@ -75,6 +75,7 @@
             this.chart_rtt = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_motor = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textBox_ip = new System.Windows.Forms.TextBox();
             this.chart_vbat = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.timer_charts = new System.Windows.Forms.Timer(this.components);
             this.button_controle = new System.Windows.Forms.Button();
@@ -90,7 +91,6 @@
             this.chart_gps = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_roll = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_yaw = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.textBox_ip = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.chart_rtt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_motor)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -154,6 +154,14 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "IP";
             // 
+            // textBox_ip
+            // 
+            this.textBox_ip.Location = new System.Drawing.Point(6, 14);
+            this.textBox_ip.Name = "textBox_ip";
+            this.textBox_ip.Size = new System.Drawing.Size(100, 20);
+            this.textBox_ip.TabIndex = 19;
+            this.textBox_ip.TextChanged += new System.EventHandler(this.textBox_ip_TextChanged);
+            // 
             // chart_vbat
             // 
             chartArea3.Name = "ChartArea1";
@@ -208,7 +216,7 @@
             series4.Legend = "Legend1";
             series4.Name = "Series1";
             this.chart_baro_h.Series.Add(series4);
-            this.chart_baro_h.Size = new System.Drawing.Size(498, 86);
+            this.chart_baro_h.Size = new System.Drawing.Size(498, 106);
             this.chart_baro_h.TabIndex = 8;
             this.chart_baro_h.Text = "chart3";
             // 
@@ -218,7 +226,7 @@
             this.chart_baro_t.ChartAreas.Add(chartArea5);
             legend5.Name = "Legend1";
             this.chart_baro_t.Legends.Add(legend5);
-            this.chart_baro_t.Location = new System.Drawing.Point(1008, 115);
+            this.chart_baro_t.Location = new System.Drawing.Point(1008, 135);
             this.chart_baro_t.Name = "chart_baro_t";
             series5.ChartArea = "ChartArea1";
             series5.Legend = "Legend1";
@@ -234,7 +242,7 @@
             this.chart_baro_p.ChartAreas.Add(chartArea6);
             legend6.Name = "Legend1";
             this.chart_baro_p.Legends.Add(legend6);
-            this.chart_baro_p.Location = new System.Drawing.Point(1008, 237);
+            this.chart_baro_p.Location = new System.Drawing.Point(1008, 257);
             this.chart_baro_p.Name = "chart_baro_p";
             series6.ChartArea = "ChartArea1";
             series6.Legend = "Legend1";
@@ -266,7 +274,7 @@
             this.chart_speed.ChartAreas.Add(chartArea8);
             legend8.Name = "Legend1";
             this.chart_speed.Legends.Add(legend8);
-            this.chart_speed.Location = new System.Drawing.Point(1008, 353);
+            this.chart_speed.Location = new System.Drawing.Point(1008, 373);
             this.chart_speed.Name = "chart_speed";
             series8.ChartArea = "ChartArea1";
             series8.Legend = "Legend1";
@@ -282,7 +290,7 @@
             this.chart_accel.ChartAreas.Add(chartArea9);
             legend9.Name = "Legend1";
             this.chart_accel.Legends.Add(legend9);
-            this.chart_accel.Location = new System.Drawing.Point(1008, 478);
+            this.chart_accel.Location = new System.Drawing.Point(1008, 498);
             this.chart_accel.Name = "chart_accel";
             series9.ChartArea = "ChartArea1";
             series9.Legend = "Legend1";
@@ -314,7 +322,7 @@
             this.chart_mag.ChartAreas.Add(chartArea11);
             legend11.Name = "Legend1";
             this.chart_mag.Legends.Add(legend11);
-            this.chart_mag.Location = new System.Drawing.Point(1008, 600);
+            this.chart_mag.Location = new System.Drawing.Point(1008, 620);
             this.chart_mag.Name = "chart_mag";
             series11.ChartArea = "ChartArea1";
             series11.Legend = "Legend1";
@@ -372,19 +380,11 @@
             this.chart_yaw.TabIndex = 18;
             this.chart_yaw.Text = "chart3";
             // 
-            // textBox_ip
-            // 
-            this.textBox_ip.Location = new System.Drawing.Point(6, 14);
-            this.textBox_ip.Name = "textBox_ip";
-            this.textBox_ip.Size = new System.Drawing.Size(100, 20);
-            this.textBox_ip.TabIndex = 19;
-            this.textBox_ip.TextChanged += new System.EventHandler(this.textBox_ip_TextChanged);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1518, 733);
+            this.ClientSize = new System.Drawing.Size(1518, 757);
             this.Controls.Add(this.chart_yaw);
             this.Controls.Add(this.chart_roll);
             this.Controls.Add(this.chart_gps);

@@ -37,8 +37,6 @@
 
 ms5611::ms5611(int fd){
 	this->fd=fd;
-	P0=0;
-        H_EMA_ALPHA=0.01;
 	init();
 	update();
 
@@ -208,20 +206,22 @@ void ms5611::update(){
 		//Calculate temperature compensated pressure
 		OFF=C[2]*pow(2,16)+dT*C[4]/pow(2,7);
 		SENS=C[1]*pow(2,15)+dT*C[3]/pow(2,8);
-		//
-
 		///////////////////////////////////////////////////
 		//second order
 		double t2,off2,sens2;
+		// menor que 20.0C
 		if(T<2000){
 			t2=pow(dT,2)/pow(2,31);
 			off2=5*pow(T-2000,2)/pow(2,1);
 			sens2=5*pow(T-2000,2)/pow(2,2);
+			//menor que 15.0C
 			if(T<-1500){
 				off2=off2+7*pow(T+1500,2);
 				sens2=sens2+11*pow(T+1500,2)/pow(2,1);
 			}
-		} else {
+		}
+		// maior que 20.0C
+		else {
 			t2=0;
 			off2=0;
 			sens2=0;
@@ -230,48 +230,17 @@ void ms5611::update(){
 		OFF-=off2;
 		SENS-=sens2;
 		///////////////////////////////////////////////////
-
-
+		//calcule pressure
 		P=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));
-
 		///////////////////////////////////////////////////
-
 		T/=100.0;
 		P/=100.0;
-
-		if(P0==0){
-			P0=P;
-		}
-
-                //
-                if(P>P0){
-                   P0=P;
-                }
-
-		H=altimeter(P0,P,T);
-
-
-		//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
-		H_EMA= (H_EMA_ALPHA * H) + (1.0 - H_EMA_ALPHA) * H_EMA;
-
-
 		this->state=START_D2;
+		return;
 	}
 
 }
 
-
-double ms5611::altimeter(double p0,double p,double t){
-	//R=gas constant=8.31432
-	//T=air temperature in measured kelvin
-	//g=earth gravity=9.80665
-	//M=molar mass of the gas=0.0289644
-	double R=8.31432;
-	double TK=t+273.15;
-	double g=9.80665;
-	double M=0.0289644;
-	return ((R*TK)/(g*M))*log(p0/p);
-}
 
 
 

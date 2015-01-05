@@ -71,7 +71,7 @@ SOFTWARE.
 #include "bbb-adc.h"
 #include "pru-pwm-cpp.h"
 #include "timestamps.h"
-
+#include "freeimu_linux.h"
 
 
 
@@ -139,8 +139,10 @@ typedef struct {
 	//
 	float pilot_offset_pitch;
 	float pilot_offset_roll;
+	float pilot_offset_yaw;
 	float pilot_pitch;
 	float pilot_roll;
+	float pilot_yaw;
 
 	//
 	float vbat;
@@ -195,7 +197,22 @@ typedef struct {
 } drone_t;
 
 
-#define VBAT_STABLE 9.5
+#define VBAT_STABLE 8.0
+#define SLEEP_1_SECOND (1000*1000)
+
+
+double altimeter(double p0,double p,double t){
+	//R=gas constant=8.31432
+	//T=air temperature in measured kelvin
+	//g=earth gravity=9.80665
+	//M=molar mass of the gas=0.0289644
+	double R=8.31432;
+	double TK=t+273.15;
+	double g=9.80665;
+	double M=0.0289644;
+	return ((R*TK)/(g*M))*log(p0/p);
+}
+
 
 
 void *task_adc(void *arg){
@@ -281,6 +298,11 @@ void *task_motors(void *arg){
 	double t_now=get_timestamp_in_seconds();;
 	double t_diff=0;
 
+	double vbat_prev=0;
+	double vbat_now=0;
+	double vbat_diff=0;
+    uint32_t pwm_step=PWM_STEP_PER_CYCLE;
+
 	while(1){
 
 		//-------------
@@ -294,6 +316,10 @@ void *task_motors(void *arg){
 
 		////////////////////////////////////
 
+		vbat_prev=vbat_now;
+		vbat_now=drone->vbat;
+		vbat_diff= vbat_now-vbat_prev;
+
 
 		//incremental PWM
 		if(drone->motor_cmd==MOTOR_CMD_NORMAL){
@@ -301,7 +327,16 @@ void *task_motors(void *arg){
 				bool need_change=false;
 				//
 				if(drone->motor_dutyns_now[ch] < drone->motor_dutyns_target[ch] && drone->vbat > VBAT_STABLE){
-					drone->motor_dutyns_now[ch] += PWM_STEP_PER_CYCLE;
+
+					//printf("vbat_diff=%f\r\n",vbat_diff);
+					//queda maior 0.1V
+					if(vbat_diff<-0.1){
+						pwm_step--; //-1us
+						if(pwm_step<1) pwm_step=1;
+						printf("queda maior 0.1v -> pwm_step=%d\r\n",pwm_step);
+					}
+
+					drone->motor_dutyns_now[ch] += pwm_step;
 					if(drone->motor_dutyns_now[ch]>PWM_FLY_MAX) drone->motor_dutyns_now[ch]=PWM_FLY_MAX;
 					need_change=true;
 				}
@@ -346,7 +381,7 @@ void *task_motors(void *arg){
 
 		// wait pwm complete duty
 		usleep(PWM_CYCLE_IN_US);
-		//usleep(5000);
+
 	}
 
 }
@@ -364,53 +399,71 @@ void *task_imu(void *arg){
 	//
 	ms5611 baro(i2c.fd);
 	//
+
+	double t_back=get_timestamp_in_seconds();;
+	double t_now=get_timestamp_in_seconds();;
+	double t_diff=0;
+
+	drone->gyro_pitch=0;
+	drone->gyro_roll=0;
+	drone->gyro_yaw=0;
+	drone->baro_hema=0;
+
+
+	FreeIMU freeimu;
+	double euler[3];
+	double to_radian_per_second = M_PI/180.0;
+
 	while(1){
-		//usleep(1000);
+
+		///////////////////////////////////////
+		t_back=t_now;
+		t_now=get_timestamp_in_seconds();
+		t_diff=t_now-t_back;
+		drone->i2c_hz = 1.0 / t_diff;
+		///////////////////////////////////////
 
 		mpu.update();
 		mag.update();
 		baro.update();
 
+		freeimu.getEulerRad(euler,
+				mpu.acc_g_x,mpu.acc_g_y,mpu.acc_g_z,
+				mpu.gyro_degrees_x*to_radian_per_second,mpu.gyro_degrees_y*to_radian_per_second,mpu.gyro_degrees_z*to_radian_per_second,
+				mag.mag_x,mag.mag_y,mag.mag_z);
+
 		////////////////////////////////////////////////
+		drone->acc_x=mpu.acc_g_x;
+		drone->acc_y=mpu.acc_g_y;
+		drone->acc_z=mpu.acc_g_z;
+		drone->gyro_x=mpu.gyro_degrees_x*to_radian_per_second;
+		drone->gyro_y=mpu.gyro_degrees_y*to_radian_per_second;
+		drone->gyro_z=mpu.gyro_degrees_z*to_radian_per_second;
+		drone->mpu6050_temp=mpu.temperate_celcius;
+ 		drone->mag_x=mag.mag_x;
+		drone->mag_y=mag.mag_y;
+		drone->mag_z=mag.mag_z;
+		drone->mag_n=0;
+		drone->mag_heading=0;
 
-		drone->i2c_hz = 1.0/mpu.t_diff;
 
-		////////////////////////////////////////////////
-		drone->acc_x=mpu.acc[0];
-		drone->acc_y=mpu.acc[1];
-		drone->acc_z=mpu.acc[2];
-		drone->acc_n=mpu.accn;
-		drone->acc_pitch=mpu.acc_pitch;
-		drone->acc_roll=mpu.acc_roll;
-
-		drone->gyro_x=mpu.gyro[0];
-		drone->gyro_y=mpu.gyro[1];
-		drone->gyro_z=mpu.gyro[2];
-
-		drone->gyro_pitch=mpu.gyro_integrate[1];
-		drone->gyro_roll=mpu.gyro_integrate[0];
-
-		drone->gyro_yaw=mpu.gyro_integrate[2];
-
-		drone->fusion_pitch=mpu.fusion_pitch;
-		drone->fusion_roll=mpu.fusion_roll;
-
-		drone->mpu6050_temp=mpu.tc;
-
+		////////////////////////////////////////////////////
+		drone->gyro_roll =euler[2];
+		drone->gyro_pitch=euler[1];
+		drone->gyro_yaw  =euler[0];
+		drone->acc_pitch   =0;
+		drone->acc_roll    =0;
+		drone->fusion_pitch=0;
+		drone->fusion_roll =0;
 		///////////////////////////////////////////////
 
- 		drone->mag_x=mag.mag[0];
-		drone->mag_y=mag.mag[1];
-		drone->mag_z=mag.mag[2];
-		drone->mag_n=mag.magn;
-		drone->mag_heading=mag.heading;
 
 		///////////////////////////////////////////////
-		drone->baro_p0=baro.P0;
+		drone->baro_p0=0;
 		drone->baro_p=baro.P;
 		drone->baro_t=baro.T;
-		drone->baro_h=baro.H;
-		drone->baro_hema=baro.H_EMA;
+		drone->baro_h=altimeter(1100,drone->baro_p,drone->baro_t);
+		drone->baro_hema=drone->baro_h;//(drone->baro_hema*0.99)+(0.01*drone->baro_h);
 
 		//////////////////////////////////////////////////
 	}
@@ -469,21 +522,24 @@ void *task_pilot(void *arg)
 
 		/////////////////////////////////////////////////////////////////////////////
 		if(drone->ps3_start){
-			printf("ps3 takeoff\r\n");
+			//printf("ps3 takeoff\r\n");
 			takeoff=true;
 		}
 		if(drone->ps3_select){
-			printf("ps3 landing\r\n");
+			//printf("ps3 landing\r\n");
 			takeoff=false;
 		}
 		///////////////////////////////////////////////////////////////////////////
 		if(drone->ps3_triangle){
-			printf("ps3 trim\r\n");
-			drone->pilot_offset_pitch=drone->fusion_pitch;
-			drone->pilot_offset_roll=drone->fusion_roll;
+			//printf("ps3 trim\r\n");
+			drone->pilot_offset_pitch=drone->gyro_pitch;
+			drone->pilot_offset_roll=drone->gyro_roll;
+			drone->pilot_offset_yaw=drone->gyro_yaw;
 		}
-		drone->pilot_pitch = drone->fusion_pitch - drone->pilot_offset_pitch;
-		drone->pilot_roll  = drone->fusion_roll  - drone->pilot_offset_roll;
+		//
+		drone->pilot_pitch = drone->gyro_pitch - drone->pilot_offset_pitch;
+		drone->pilot_roll  = drone->gyro_roll  - drone->pilot_offset_roll;
+		drone->pilot_yaw   = drone->gyro_yaw   - drone->pilot_offset_yaw;
 		////////////////////////////////////////////////////////////////////////////
 
 		float throttle=0;
@@ -493,7 +549,7 @@ void *task_pilot(void *arg)
 
 		throttle =  (drone->ps3_lstick_y  * PWM_FLY_INTERVAL);
 		pitch    = 0;// (drone->ps3_rstick_y * PWM_FLY_INTERVAL);
-		roll     = 0;// (drone->ps3_rstick_x * PWM_FLY_INTERVAL);
+		roll     = (drone->ps3_rstick_x * PWM_FLY_INTERVAL);
 		yaw      = 0;// (drone->ps3_lstick_x  * PWM_FLY_INTERVAL);
 
 		//1500=pouco
@@ -507,7 +563,7 @@ void *task_pilot(void *arg)
 		float pid_rate_input= drone->gyro_x;
 		float pid_rate_error= pid_rate_target-pid_rate_input;
 		//
-		pid_rate_kp = 1;
+		pid_rate_kp = 1000;
 		float pid_rate_output = pid_rate_error*pid_rate_kp;
 		//roll += pid_rate_output;
 
@@ -523,7 +579,7 @@ void *task_pilot(void *arg)
         	//pid_rate_kp-=10;
         }
 
-        printf("kp=%f error=%f ga_error=%f ga_diff=%f\r\n",pid_rate_kp,pid_rate_error,ga_error,ga_diff);
+       // printf("kp=%f error=%f ga_error=%f ga_diff=%f\r\n",pid_rate_kp,pid_rate_error,ga_error,ga_diff);
 
 
 		roll += pid_rate_output;
@@ -570,7 +626,6 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 	bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
 
-	int rxcount=0;
 	int rxerror=0;
 	for (;;)
 	{
@@ -585,7 +640,7 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 			continue;
 		}
 		mesg[rxlen] = 0;
-		printf("packet[%d] from %s:%d len=%d\r\n",rxcount++,inet_ntoa(cliaddr.sin_addr),ntohs(cliaddr.sin_port),rxlen);
+		//printf("packet[%d] from %s:%d len=%d\r\n",rxcount++,inet_ntoa(cliaddr.sin_addr),ntohs(cliaddr.sin_port),rxlen);
 
 		// packet must be a valid json -> contain joystick data
 		Json::Value root;
@@ -677,6 +732,7 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 
 		telemetric_json["pilot_pitch"]=drone->pilot_pitch;
 		telemetric_json["pilot_roll"]=drone->pilot_roll;
+		telemetric_json["pilot_yaw"]=drone->pilot_yaw;
 
 		//
 		telemetric_json["motor_fl"]=drone->motor_dutyns_now[MOTOR_FL];
@@ -814,7 +870,7 @@ void* task_bluetooth_ps3(void* arg){
 
 		//if(e.type==2) continue;
 
-		printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
+		//printf("ps3 type=%d number=%d value=%d time=%u\r\n",e.type,e.number,e.value,e.time);
 
 
 
@@ -843,11 +899,13 @@ int main(int argc,char** argv){
 	// reboot automatico em 2 segundos apos um kernel panic
 	system("sysctl -w kernel.panic=2");
 
+
+
 #if 0
 	//
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep BB-I2C1")){
 		system("echo BB-I2C1 > /sys/devices/bone_capemgr.9/slots");
-		usleep(1000*1000);
+		usleep(SLEEP_1_SECOND);
 	}
 #endif
 
@@ -857,28 +915,28 @@ int main(int argc,char** argv){
 		printf("load SPI\r\n");
 		system("echo ADAFRUIT-SPI0 > /sys/devices/bone_capemgr.9/slots");
 		//system("echo BB-SPIDEV0 > /sys/devices/bone_capemgr.9/slots");
-		usleep(1000*1000);
+		usleep(SLEEP_1_SECOND);
 	}
 
 	//load pru
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep bone_pru0_out")){
 		printf("load PRU\r\n");
 		system("echo bone_pru0_out > /sys/devices/bone_capemgr.9/slots");
-		usleep(1000*1000);
+		usleep(SLEEP_1_SECOND);
 	}
 
 	//load adc
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep cape-bone-iio")){
 		printf("load ADC\r\n");
 		system("echo cape-bone-iio > /sys/devices/bone_capemgr.9/slots");
-		usleep(1000*1000);
+		usleep(SLEEP_1_SECOND);
 	}
 
 	//load usart4
 	if(system("cat /sys/devices/bone_capemgr.9/slots | grep BB-UART4")){
 		printf("load UART4\r\n");
 		system("echo BB-UART4 > /sys/devices/bone_capemgr.9/slots");
-		usleep(1000*1000);
+		usleep(SLEEP_1_SECOND);
 	}
 
 	//
@@ -894,7 +952,7 @@ int main(int argc,char** argv){
 	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
 
 	pthread_attr_t attr;
-	struct sched_param schedParam;
+
 
 	pthread_attr_init(&attr);
 
@@ -902,11 +960,17 @@ int main(int argc,char** argv){
 	pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
 
 	//
-	//pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+#if 1
+	pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+	struct sched_param schedParam;
+	schedParam.sched_priority=sched_get_priority_max(SCHED_FIFO);
+	pthread_attr_setschedparam(&attr,&schedParam);
+#else
 	pthread_attr_setschedpolicy(&attr,SCHED_RR);
+	struct sched_param schedParam;
 	schedParam.sched_priority=sched_get_priority_max(SCHED_RR);
 	pthread_attr_setschedparam(&attr,&schedParam);
-
+#endif
 
 	//
 	pthread_create(&id_adc                          , &attr, task_adc                          , &drone_data);

@@ -49,10 +49,6 @@ public:
 	double dT; // difference between actual and measured temperature
 	double OFF; // offset at actual temperature
 	double SENS; // sensitivity at actual temperature
-	double P0;
-	double H;
-	double H_EMA;
-        double H_EMA_ALPHA;
 };
 
 

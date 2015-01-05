@@ -24,25 +24,13 @@
 
 #include "hmc5883.h"
 
-/*
-Below is an example of a (power-on) initialization process for “single-measurement mode”:
-1. Write CRA (00) – send 0x3C 0x00 0x70 (8-average, 15 Hz default or any other rate, normal measurement)
-2. Write CRB (01) – send 0x3C 0x01 0xA0 (Gain=5, or any other desired gain)
-3. For each measurement query:
-Write Mode (02) – send 0x3C 0x02 0x01 (Single-measurement mode)
-Wait 6 ms or monitor status register or DRDY hardware interrupt pin
-Send 0x3D 0x06 (Read all 6 bytes. If gain is changed then this data set is using previous gain)
-Convert three 16-bit 2’s compliment hex values to decimal values and assign to X, Z, Y, respectively.
- */
-
-
 
 hmc5883::hmc5883(int fd){
 	this->fd=fd;
 	configure();
-	mag[0]=0;
-	mag[1]=0;
-	mag[2]=0;
+	mag_x=0;
+	mag_y=0;
+	mag_z=0;
 }
 
 #define REG_CONFIG_A 0 //Configuration Register A Read/Write
@@ -62,10 +50,10 @@ hmc5883::hmc5883(int fd){
 
 void hmc5883::update(){
 	if(is_ready()){
-		mag[0]= read16(REG_X_MSB,REG_X_LSB)/1090.0;
-		mag[1]= read16(REG_Y_MSB,REG_Y_LSB)/1090.0;
-		mag[2]= read16(REG_Z_MSB,REG_Z_LSB)/1090.0;
-		calculate_heading();
+		mag_x= read16(REG_X_MSB,REG_X_LSB)/1090.0;
+		mag_y= read16(REG_Y_MSB,REG_Y_LSB)/1090.0;
+		mag_z= read16(REG_Z_MSB,REG_Z_LSB)/1090.0;
+
 	}
 }
 
@@ -131,27 +119,5 @@ double hmc5883::read16(int reg_msb,int reg_lsb){
 	return fvalue;
 }
 
-void hmc5883::calculate_heading(){
-
-	magn=sqrt(pow(mag[0],2)+pow(mag[1],2)+pow(mag[2],2));
-	if(mag[0] <0&&mag[1]==0) heading=0;
-	if(mag[0] <0&&mag[1]<0)  heading=-asin(mag[1]/magn);
-	if(mag[0]==0&&mag[1]<0)  heading=M_PI/2;
-	if(mag[0] >0&&mag[1]<0)  heading=M_PI/2+asin(mag[0]/magn);
-	if(mag[0] >0&&mag[1]==0) heading=M_PI;
-	if(mag[0] >0&&mag[1]>0)  heading=M_PI+asin(mag[1]/magn);
-	if(mag[0]==0&&mag[1]>0)  heading=3*M_PI/2;
-	if(mag[0] <0&&mag[1]>0)  heading=3*M_PI/2-asin(mag[0]/magn);
-
-	//
-	heading*=-1;
-}
-
-double hmc5883::to_degrees(double radians){
-	return radians*(180.0/M_PI);
-}
-double hmc5883::to_radian(double degree){
-	return degree * M_PI/180;
-}
 
 
