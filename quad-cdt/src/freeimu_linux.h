@@ -44,6 +44,8 @@ public:
 	void gravityCompensateAcc(double * acc, double * q);
 	//
 	void arr3_rad_to_deg(double * arr);
+
+	void quaternation_to_euler_rad(double* q,double* angles);
 };
 
 

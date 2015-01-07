@@ -194,6 +194,8 @@ typedef struct {
 	float  ps3_rstick_y;
 	int    ps3_accel[4];
 
+	double q[4];
+    double euler[3];
 } drone_t;
 
 
@@ -411,7 +413,6 @@ void *task_imu(void *arg){
 
 
 	FreeIMU freeimu;
-	double euler[3];
 	double to_radian_per_second = M_PI/180.0;
 
 	while(1){
@@ -427,10 +428,14 @@ void *task_imu(void *arg){
 		mag.update();
 		baro.update();
 
-		freeimu.getEulerRad(euler,
+		//
+		freeimu.getQ(drone->q,
 				mpu.acc_g_x,mpu.acc_g_y,mpu.acc_g_z,
 				mpu.gyro_degrees_x*to_radian_per_second,mpu.gyro_degrees_y*to_radian_per_second,mpu.gyro_degrees_z*to_radian_per_second,
 				mag.mag_x,mag.mag_y,mag.mag_z);
+
+		//
+		freeimu.quaternation_to_euler_rad(drone->q,drone->euler);
 
 		////////////////////////////////////////////////
 		drone->acc_x=mpu.acc_g_x;
@@ -448,9 +453,9 @@ void *task_imu(void *arg){
 
 
 		////////////////////////////////////////////////////
-		drone->gyro_roll =euler[2];
-		drone->gyro_pitch=euler[1];
-		drone->gyro_yaw  =euler[0];
+		drone->gyro_roll =drone->euler[2];
+		drone->gyro_pitch=drone->euler[1];
+		drone->gyro_yaw  =drone->euler[0];
 		drone->acc_pitch   =0;
 		drone->acc_roll    =0;
 		drone->fusion_pitch=0;
@@ -740,7 +745,14 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 		telemetric_json["motor_rl"]=drone->motor_dutyns_now[MOTOR_RL];
 		telemetric_json["motor_rr"]=drone->motor_dutyns_now[MOTOR_RR];
 
+		telemetric_json["q0"]=drone->q[0];
+		telemetric_json["q1"]=drone->q[1];
+		telemetric_json["q2"]=drone->q[2];
+		telemetric_json["q3"]=drone->q[3];
 
+		telemetric_json["e0"]=drone->euler[0];
+		telemetric_json["e1"]=drone->euler[1];
+		telemetric_json["e2"]=drone->euler[2];
 
 		//
 		std::string txt = telemetric_json.toStyledString();

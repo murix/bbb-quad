@@ -7,6 +7,11 @@ namespace beaglebone_quadcopter
 {
     public class drone_data
     {
+
+        public double e0 = 0;
+        public double e1 = 0;
+        public double e2 = 0;
+
         //
         public double gyro_pitch = 0;
         public double gyro_roll = 0;

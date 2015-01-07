@@ -282,6 +282,10 @@ namespace beaglebone_quadcopter
                         drone.pilot_roll = (double)json["pilot_roll"];
                         drone.pilot_yaw = (double)json["pilot_yaw"];
 
+                        drone.e0 = (double)json["e0"];
+                        drone.e1 = (double)json["e1"];
+                        drone.e2 = (double)json["e2"];
+
                         drone.mpu6050_temp = (double)json["mpu6050_temp"]-1.2;
 
                         //Console.WriteLine(fusion_pitch);
@@ -510,7 +514,7 @@ namespace beaglebone_quadcopter
 
         private void Render()
         {
-            Matrix4 lookat2 = Matrix4.LookAt(new Vector3(-12,0,0), Vector3.Zero, Vector3.UnitY);
+            Matrix4 lookat2 = Matrix4.LookAt(new Vector3(12,0,0), Vector3.Zero, Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref lookat2);
 
@@ -518,10 +522,17 @@ namespace beaglebone_quadcopter
             
             //GL.Rotate()
 
-            GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitZ);
-            GL.Rotate((float)(-drone.pilot_yaw * 180.0 / Math.PI), Vector3.UnitY);
-            GL.Rotate((float)(-drone.pilot_roll * 180.0 / Math.PI), Vector3.UnitX);
-            
+            //rotateZ(-Euler[2]);
+            //rotateX(-Euler[1]);
+            //rotateY(-Euler[0]);
+
+            //GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitZ);
+            //GL.Rotate((float)(-drone.pilot_yaw * 180.0 / Math.PI), Vector3.UnitY);
+            //GL.Rotate((float)(-drone.pilot_roll * 180.0 / Math.PI), Vector3.UnitX);
+
+            GL.Rotate((float)(-drone.e2 * 180.0 / Math.PI), Vector3.UnitZ);
+            GL.Rotate((float)(-drone.e1 * 180.0 / Math.PI), Vector3.UnitX);
+            GL.Rotate((float)(-drone.e0 * 180.0 / Math.PI), Vector3.UnitY);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 

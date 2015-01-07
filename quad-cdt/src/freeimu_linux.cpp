@@ -233,10 +233,16 @@ void FreeIMU::getEulerRad(double * angles,double ax,double ay,double az, double 
 
 	getQ(q,ax,ay,az,gx,gy,gz,mx,my,mz);
 
+	quaternation_to_euler_rad(q,angles);
+}
+
+
+void FreeIMU::quaternation_to_euler_rad(double* q,double* angles){
 	angles[0] = atan2(2 * q[1] * q[2] - 2 * q[0] * q[3], 2 * q[0]*q[0] + 2 * q[1] * q[1] - 1);   // psi -
 	angles[1] = -asin(2 * q[1] * q[3] + 2 * q[0] * q[2]);                                        // theta -
 	angles[2] = atan2(2 * q[2] * q[3] - 2 * q[0] * q[1], 2 * q[0] * q[0] + 2 * q[3] * q[3] - 1); // phi -
 }
+
 
 
 /**
