@@ -445,7 +445,7 @@ void task_imu(void *arg){
 		previous = now;
                 now = rt_timer_read();
 		/////////////////////////////////////
-		
+		//usleep( (1000*1000) / 1000 );
 		
 		///////////////////////////////////////
 		t_back=t_now;
@@ -1039,22 +1039,24 @@ int main(int argc,char** argv){
          *            function argument
          */
         rt_task_start(&i2c_task, &task_imu, &drone_data);
-
-
-
 	//
-	pthread_create(&id_adc                          , NULL, task_adc                          , &drone_data);
 	//pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
+	//pthread_setname_np(id_imu                          ,"i2c-sensors    ");
+
+        //
+	pthread_create(&id_adc                          , NULL, task_adc                          , &drone_data);
+
 	pthread_create(&id_motors                       , NULL, task_motors                       , &drone_data);
-	pthread_create(&id_rx_joystick_and_tx_telemetric, NULL, task_rx_joystick_and_tx_telemetric, &drone_data);
 	pthread_create(&id_pilot                        , NULL, task_pilot                        , &drone_data);
 	pthread_create(&id_ps3                          , NULL, task_bluetooth_ps3                , &drone_data);
 	pthread_create(&id_gps                          , NULL, task_gps                          , &drone_data);
+
+        //network tasks are not realtime
 	pthread_create(&id_spi                          , NULL, task_spi_cc1101                   , &drone_data);
+	pthread_create(&id_rx_joystick_and_tx_telemetric, NULL, task_rx_joystick_and_tx_telemetric, &drone_data);
 
 	/////////////////////////////////////////////////////123456789012345
 	pthread_setname_np(id_adc                          ,"adc-vbat       ");
-	//pthread_setname_np(id_imu                          ,"i2c-sensors    ");
 	pthread_setname_np(id_motors                       ,"pru-pwm-motors ");
 	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"joy-telemetric ");
 	pthread_setname_np(id_pilot                        ,"pilot-pid      ");
