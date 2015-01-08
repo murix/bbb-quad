@@ -849,16 +849,16 @@ void* task_bluetooth_ps3(void* arg){
 		///////////////////////////////////////
 		if(fd==-1){
 			drone->ps3_init_ok=false;
-			printf("ps3 try connect...\r\n");
+			//printf("ps3 try connect...\r\n");
 			fd=open("/dev/input/js0", O_RDONLY);
 			if(fd==-1){
-				printf("ps3 joy not connected\r\n");
+				//printf("ps3 joy not connected\r\n");
 				drone->ps3_init_ok=false;
 				usleep(1000*1000);
 				continue;
 			}
 			else {
-				printf("ps3 joy connected ok\r\n");
+				//printf("ps3 joy connected ok\r\n");
 				drone->ps3_init_ok=true;
 			}
 		}
