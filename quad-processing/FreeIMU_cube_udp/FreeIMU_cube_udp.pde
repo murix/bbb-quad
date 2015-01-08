@@ -10,6 +10,7 @@ import processing.opengl.*;
 float [] q = new float [4];
 float [] hq = null;
 float [] Euler = new float [3]; // psi, theta, phi
+float i2c_hz = 0;
 
 PFont font;
 final int VIEW_SIZE_X = 800, VIEW_SIZE_Y = 600;
@@ -43,6 +44,7 @@ void sendrecv() {
           q[1]=json.getFloat("q1");
           q[2]=json.getFloat("q2");        
           q[3]=json.getFloat("q3");
+          i2c_hz=json.getFloat("i2c_hz");
         
           clientSocket.close();
         } 
@@ -154,7 +156,7 @@ void draw() {
   
   textFont(font, 20);
   textAlign(LEFT, TOP);
-  text("Quaternion:\n" + q[0] + "\n" + q[1] + "\n" + q[2] + "\n" + q[3], 20, 20);
+  text("Quaternion:\n" + q[0] + "\n" + q[1] + "\n" + q[2] + "\n" + q[3]+"\ni2c_hz:"+i2c_hz, 20, 20);
   text("Euler Angles:\nYaw (psi)  : " + degrees(Euler[0]) + "\nPitch (theta): " + degrees(Euler[1]) + "\nRoll (phi)  : " + degrees(Euler[2]), 200, 20);
   
   drawCube();

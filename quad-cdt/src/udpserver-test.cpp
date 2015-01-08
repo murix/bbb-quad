@@ -55,6 +55,10 @@ SOFTWARE.
 //#include <wctype.h> //(since C95)	Wide character classification and mapping utilities
 
 /////////////////////-------- SYSTEM LIBRARIES
+
+//
+#include <sys/mman.h>
+
 //socket
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -899,6 +903,9 @@ void* task_gps(void *arg){
 
 int main(int argc,char** argv){
 
+        /* Avoids memory swapping for this program */
+        mlockall(MCL_CURRENT|MCL_FUTURE);
+	
 	// gera panic se kernel travar por 10 segundos
 	system("sysctl -w kernel.hung_task_timeout_secs=10");
 	system("sysctl -w kernel.hung_task_panic=1");
