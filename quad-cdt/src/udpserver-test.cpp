@@ -67,6 +67,12 @@ SOFTWARE.
 //json
 #include <jsoncpp/json/json.h>
 
+// xenomai
+#include <native/task.h>
+#include <native/timer.h>
+
+RT_TASK i2c_task;
+
 ///////////////////////---- PROJECT LIBRARIES
 #include "bbb_i2c.h"
 #include "mpu6050.h"
@@ -393,6 +399,8 @@ void *task_motors(void *arg){
 }
 
 void *task_imu(void *arg){
+  
+  
 	drone_t* drone=(drone_t*) arg;
 
 	//
@@ -419,8 +427,25 @@ void *task_imu(void *arg){
 	FreeIMU freeimu;
 	double to_radian_per_second = M_PI/180.0;
 
+	/////////////////////////////////////////////////
+	RTIME now, previous;
+        /*
+         * Arguments: &task (NULL=self),
+         *            start time,
+         *            period (here: 1 s)
+         */
+        rt_task_set_periodic(NULL, TM_NOW, 1000000000);
+        previous = rt_timer_read();	
+	////////////////////////////////////////////////
+	
 	while(1){
-
+	        //////////////////////////////////////
+                rt_task_wait_period(NULL);
+		previous = now;
+                now = rt_timer_read();
+		/////////////////////////////////////
+		
+		
 		///////////////////////////////////////
 		t_back=t_now;
 		t_now=get_timestamp_in_seconds();
@@ -900,9 +925,16 @@ void* task_gps(void *arg){
 	}
 }
 
+void catch_signal(int sig)
+{
+  
+}
 
 int main(int argc,char** argv){
 
+        signal(SIGTERM, catch_signal);
+        signal(SIGINT, catch_signal);
+	
         /* Avoids memory swapping for this program */
         mlockall(MCL_CURRENT|MCL_FUTURE);
 	
@@ -991,9 +1023,27 @@ int main(int argc,char** argv){
 	pthread_attr_setschedparam(&attr,&schedParam);
 #endif
 
+        ///////////////////////////////////////////////
+        /*
+         * Arguments: &task,
+         *            name,
+         *            stack size (0=default),
+         *            priority,
+         *            mode (FPU, start suspended, ...)
+         */
+        rt_task_create(&i2c_task, "i2c_task", 0, 99, 0);
+        /*
+         * Arguments: &task,
+         *            task function,
+         *            function argument
+         */
+        rt_task_start(&i2c_task, &task_imu, &drone_data);
+
+
+
 	//
 	pthread_create(&id_adc                          , &attr, task_adc                          , &drone_data);
-	pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
+	//pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
 	pthread_create(&id_motors                       , &attr, task_motors                       , &drone_data);
 	pthread_create(&id_rx_joystick_and_tx_telemetric, &attr, task_rx_joystick_and_tx_telemetric, &drone_data);
 	pthread_create(&id_pilot                        , &attr, task_pilot                        , &drone_data);
@@ -1003,7 +1053,7 @@ int main(int argc,char** argv){
 
 	/////////////////////////////////////////////////////123456789012345
 	pthread_setname_np(id_adc                          ,"adc-vbat       ");
-	pthread_setname_np(id_imu                          ,"i2c-sensors    ");
+	//pthread_setname_np(id_imu                          ,"i2c-sensors    ");
 	pthread_setname_np(id_motors                       ,"pru-pwm-motors ");
 	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"joy-telemetric ");
 	pthread_setname_np(id_pilot                        ,"pilot-pid      ");
@@ -1014,7 +1064,7 @@ int main(int argc,char** argv){
 	printf("Wait for all threads\r\n");
 	//
 	pthread_join(id_adc,NULL);
-	pthread_join(id_imu,NULL);
+	//pthread_join(id_imu,NULL);
 	pthread_join(id_motors,NULL);
 	pthread_join(id_rx_joystick_and_tx_telemetric,NULL);
 	pthread_join(id_pilot,NULL);
