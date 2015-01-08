@@ -55,6 +55,11 @@ SOFTWARE.
 //#include <wctype.h> //(since C95)	Wide character classification and mapping utilities
 
 /////////////////////-------- SYSTEM LIBRARIES
+
+//
+#include <sys/mman.h>
+#include <signal.h>
+
 //socket
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -62,6 +67,12 @@ SOFTWARE.
 #include <arpa/inet.h>
 //json
 #include <jsoncpp/json/json.h>
+
+// xenomai
+#include <xenomai/native/task.h>
+#include <xenomai/native/timer.h>
+
+RT_TASK i2c_task;
 
 ///////////////////////---- PROJECT LIBRARIES
 #include "bbb_i2c.h"
@@ -388,7 +399,9 @@ void *task_motors(void *arg){
 
 }
 
-void *task_imu(void *arg){
+void task_imu(void *arg){
+  
+  
 	drone_t* drone=(drone_t*) arg;
 
 	//
@@ -415,8 +428,25 @@ void *task_imu(void *arg){
 	FreeIMU freeimu;
 	double to_radian_per_second = M_PI/180.0;
 
+	/////////////////////////////////////////////////
+	RTIME now, previous;
+        /*
+         * Arguments: &task (NULL=self),
+         *            start time,
+         *            period (here: 1 s)
+         */
+        rt_task_set_periodic(NULL, TM_NOW, 1000000000 / 300);
+        previous = rt_timer_read();	
+	////////////////////////////////////////////////
+	
 	while(1){
-
+	        //////////////////////////////////////
+                rt_task_wait_period(NULL);
+		previous = now;
+                now = rt_timer_read();
+		/////////////////////////////////////
+		//usleep( (1000*1000) / 1000 );
+		
 		///////////////////////////////////////
 		t_back=t_now;
 		t_now=get_timestamp_in_seconds();
@@ -820,16 +850,16 @@ void* task_bluetooth_ps3(void* arg){
 		///////////////////////////////////////
 		if(fd==-1){
 			drone->ps3_init_ok=false;
-			printf("ps3 try connect...\r\n");
+			//printf("ps3 try connect...\r\n");
 			fd=open("/dev/input/js0", O_RDONLY);
 			if(fd==-1){
-				printf("ps3 joy not connected\r\n");
+				//printf("ps3 joy not connected\r\n");
 				drone->ps3_init_ok=false;
 				usleep(1000*1000);
 				continue;
 			}
 			else {
-				printf("ps3 joy connected ok\r\n");
+				//printf("ps3 joy connected ok\r\n");
 				drone->ps3_init_ok=true;
 			}
 		}
@@ -896,9 +926,19 @@ void* task_gps(void *arg){
 	}
 }
 
+void catch_signal(int sig)
+{
+  
+}
 
 int main(int argc,char** argv){
 
+        //signal(SIGTERM, catch_signal);
+        //signal(SIGINT, catch_signal);
+	
+        /* Avoids memory swapping for this program */
+        mlockall(MCL_CURRENT|MCL_FUTURE);
+	
 	// gera panic se kernel travar por 10 segundos
 	system("sysctl -w kernel.hung_task_timeout_secs=10");
 	system("sysctl -w kernel.hung_task_panic=1");
@@ -972,7 +1012,7 @@ int main(int argc,char** argv){
 	pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
 
 	//
-#if 1
+#if 0
 	pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
 	struct sched_param schedParam;
 	schedParam.sched_priority=sched_get_priority_max(SCHED_FIFO);
@@ -984,19 +1024,39 @@ int main(int argc,char** argv){
 	pthread_attr_setschedparam(&attr,&schedParam);
 #endif
 
+        ///////////////////////////////////////////////
+        /*
+         * Arguments: &task,
+         *            name,
+         *            stack size (0=default),
+         *            priority,
+         *            mode (FPU, start suspended, ...)
+         */
+        rt_task_create(&i2c_task, "i2c_task", 0, 99, 0);
+        /*
+         * Arguments: &task,
+         *            task function,
+         *            function argument
+         */
+        rt_task_start(&i2c_task, &task_imu, &drone_data);
 	//
-	pthread_create(&id_adc                          , &attr, task_adc                          , &drone_data);
-	pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
-	pthread_create(&id_motors                       , &attr, task_motors                       , &drone_data);
-	pthread_create(&id_rx_joystick_and_tx_telemetric, &attr, task_rx_joystick_and_tx_telemetric, &drone_data);
-	pthread_create(&id_pilot                        , &attr, task_pilot                        , &drone_data);
-	pthread_create(&id_ps3                          , &attr, task_bluetooth_ps3                , &drone_data);
-	pthread_create(&id_gps                          , &attr, task_gps                          , &drone_data);
-	pthread_create(&id_spi                          , &attr, task_spi_cc1101                   , &drone_data);
+	//pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
+	//pthread_setname_np(id_imu                          ,"i2c-sensors    ");
+
+        //
+	pthread_create(&id_adc                          , NULL, task_adc                          , &drone_data);
+
+	pthread_create(&id_motors                       , NULL, task_motors                       , &drone_data);
+	pthread_create(&id_pilot                        , NULL, task_pilot                        , &drone_data);
+	pthread_create(&id_ps3                          , NULL, task_bluetooth_ps3                , &drone_data);
+	pthread_create(&id_gps                          , NULL, task_gps                          , &drone_data);
+
+        //network tasks are not realtime
+	pthread_create(&id_spi                          , NULL, task_spi_cc1101                   , &drone_data);
+	pthread_create(&id_rx_joystick_and_tx_telemetric, NULL, task_rx_joystick_and_tx_telemetric, &drone_data);
 
 	/////////////////////////////////////////////////////123456789012345
 	pthread_setname_np(id_adc                          ,"adc-vbat       ");
-	pthread_setname_np(id_imu                          ,"i2c-sensors    ");
 	pthread_setname_np(id_motors                       ,"pru-pwm-motors ");
 	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"joy-telemetric ");
 	pthread_setname_np(id_pilot                        ,"pilot-pid      ");
@@ -1007,7 +1067,7 @@ int main(int argc,char** argv){
 	printf("Wait for all threads\r\n");
 	//
 	pthread_join(id_adc,NULL);
-	pthread_join(id_imu,NULL);
+	//pthread_join(id_imu,NULL);
 	pthread_join(id_motors,NULL);
 	pthread_join(id_rx_joystick_and_tx_telemetric,NULL);
 	pthread_join(id_pilot,NULL);
