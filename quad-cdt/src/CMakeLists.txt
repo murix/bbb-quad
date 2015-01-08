@@ -5,7 +5,9 @@ cmake_minimum_required (VERSION 2.6)
 
 project (bbb-multicopter)
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_FLAGS "-std=c++0x -O0 -g0 -I/usr/include/xenomai -D_GNU_SOURCE -D_REENTRANT -D__XENO__")
+#include_directories(/usr/src/linux-headers-3.8.13-xenomai-r69/include/xenomai /usr/src/linux-headers-3.8.13-xenomai-r69/arch/arm/include)
+
 
 # cc1101 spi tap
 #add_executable(test-spi-cc1101-tap cc1101_linux.cpp)
@@ -36,5 +38,5 @@ set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 # udp server
        add_executable(test-udp-json udpserver-test.cpp freeimu_linux.cpp bbb_i2c.cpp mpu6050.cpp timestamps.cpp hmc5883.cpp ms5611.cpp bbb-adc.cpp pru.cpp pru-pwm-cpp.cpp)
-target_link_libraries(test-udp-json pthread jsoncpp prussdrv)
+target_link_libraries(test-udp-json native xenomai rt  pthread jsoncpp prussdrv )
 

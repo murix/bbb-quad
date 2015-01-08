@@ -58,6 +58,7 @@ SOFTWARE.
 
 //
 #include <sys/mman.h>
+#include <signal.h>
 
 //socket
 #include <sys/types.h>
@@ -68,8 +69,8 @@ SOFTWARE.
 #include <jsoncpp/json/json.h>
 
 // xenomai
-#include <native/task.h>
-#include <native/timer.h>
+#include <xenomai/native/task.h>
+#include <xenomai/native/timer.h>
 
 RT_TASK i2c_task;
 
@@ -398,7 +399,7 @@ void *task_motors(void *arg){
 
 }
 
-void *task_imu(void *arg){
+void task_imu(void *arg){
   
   
 	drone_t* drone=(drone_t*) arg;
@@ -434,7 +435,7 @@ void *task_imu(void *arg){
          *            start time,
          *            period (here: 1 s)
          */
-        rt_task_set_periodic(NULL, TM_NOW, 1000000000);
+        rt_task_set_periodic(NULL, TM_NOW, 1000000000 / 300);
         previous = rt_timer_read();	
 	////////////////////////////////////////////////
 	
@@ -932,8 +933,8 @@ void catch_signal(int sig)
 
 int main(int argc,char** argv){
 
-        signal(SIGTERM, catch_signal);
-        signal(SIGINT, catch_signal);
+        //signal(SIGTERM, catch_signal);
+        //signal(SIGINT, catch_signal);
 	
         /* Avoids memory swapping for this program */
         mlockall(MCL_CURRENT|MCL_FUTURE);
