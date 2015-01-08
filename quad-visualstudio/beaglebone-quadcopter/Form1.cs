@@ -115,17 +115,17 @@ namespace beaglebone_quadcopter
 
             chart_pitch.Series.Clear();
             chart_pitch.Series.Add(drone.serie_gyro_pitch);
-            chart_pitch.Series.Add(drone.serie_acc_pitch);
-            chart_pitch.Series.Add(drone.serie_fusion_pitch);
+            //chart_pitch.Series.Add(drone.serie_acc_pitch);
+            //chart_pitch.Series.Add(drone.serie_fusion_pitch);
 
             chart_roll.Series.Clear();
             chart_roll.Series.Add(drone.serie_gyro_roll);
-            chart_roll.Series.Add(drone.serie_acc_roll);
-            chart_roll.Series.Add(drone.serie_fusion_roll);
+            //chart_roll.Series.Add(drone.serie_acc_roll);
+            //chart_roll.Series.Add(drone.serie_fusion_roll);
 
             chart_yaw.Series.Clear();
             chart_yaw.Series.Add(drone.serie_gyro_yaw);
-            chart_yaw.Series.Add(drone.serie_mag_head);
+            //chart_yaw.Series.Add(drone.serie_mag_head);
 
 
             backgroundWorker_joystick.RunWorkerAsync();
@@ -186,6 +186,8 @@ namespace beaglebone_quadcopter
             {
                 try
                 {
+                    Thread.Sleep((int)(1000.0 / 60.0));
+
                     //atenção com versao do slimdx no nuget, verifique se o runtime é 4.0 e instale tambem o slimdx runtime 4.0
                     //se a versão do runtime for 2.0 é preciso adicionar no app.config <startup useLegacyV2RuntimeActivationPolicy="true">
                     Gamepad_State_SlimDX joy = new Gamepad_State_SlimDX(SlimDX.XInput.UserIndex.One);
@@ -295,7 +297,6 @@ namespace beaglebone_quadcopter
                     }
 
 
-                    Thread.Sleep((int)( 1000.0 / 60.0));
 
                    
                       
