@@ -51,7 +51,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="cc1101-test.cpp|pru-motor-test.cpp|MahonyAHRS.c|MadgwickAHRS.c|bbb-adc-test.cpp|bbb-gps.cpp|sixpair.c|pru-pwm-fw.asm|ms5611-test.cpp|mpu6050-test.cpp|hmc5883-test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="pso.cpp|cc1101-test.cpp|pru-motor-test.cpp|MahonyAHRS.c|MadgwickAHRS.c|bbb-adc-test.cpp|bbb-gps.cpp|sixpair.c|pru-pwm-fw.asm|ms5611-test.cpp|mpu6050-test.cpp|hmc5883-test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
