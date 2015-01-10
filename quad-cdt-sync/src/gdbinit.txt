@@ -1,0 +1,9 @@
+
+set sysroot z:/
+
+#set solib-search-path 
+
+show solib-search-path
+
+
+
