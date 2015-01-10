@@ -83,7 +83,7 @@ RT_TASK i2c_task;
 #include "pru-pwm-cpp.h"
 #include "timestamps.h"
 #include "freeimu_linux.h"
-
+#include "cc1101_linux.h"
 
 
 typedef struct {
@@ -206,7 +206,7 @@ typedef struct {
 	int    ps3_accel[4];
 
 	double q[4];
-    double euler[3];
+	double euler[3];
 } drone_t;
 
 
@@ -259,6 +259,9 @@ void *task_adc(void *arg){
 		usleep(1500);
 
 	}
+
+	/* the function must return something - NULL will do */
+	return NULL;
 }
 
 
@@ -314,7 +317,7 @@ void *task_motors(void *arg){
 	double vbat_prev=0;
 	double vbat_now=0;
 	double vbat_diff=0;
-    uint32_t pwm_step=PWM_STEP_PER_CYCLE;
+	uint32_t pwm_step=PWM_STEP_PER_CYCLE;
 
 	while(1){
 
@@ -396,12 +399,13 @@ void *task_motors(void *arg){
 		usleep(PWM_CYCLE_IN_US);
 
 	}
-
+	/* the function must return something - NULL will do */
+	return NULL;
 }
 
 void task_imu(void *arg){
-  
-  
+
+
 	drone_t* drone=(drone_t*) arg;
 
 	//
@@ -429,24 +433,24 @@ void task_imu(void *arg){
 	double to_radian_per_second = M_PI/180.0;
 
 	/////////////////////////////////////////////////
-	RTIME now, previous;
-        /*
-         * Arguments: &task (NULL=self),
-         *            start time,
-         *            period (here: 1 s)
-         */
-        rt_task_set_periodic(NULL, TM_NOW, 1000000000 / 300);
-        previous = rt_timer_read();	
+	//RTIME now, previous;
+	/*
+	 * Arguments: &task (NULL=self),
+	 *            start time,
+	 *            period (here: 1 s)
+	 */
+	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / 300);
+	//previous = rt_timer_read();
 	////////////////////////////////////////////////
-	
+
 	while(1){
-	        //////////////////////////////////////
-                rt_task_wait_period(NULL);
-		previous = now;
-                now = rt_timer_read();
+		//////////////////////////////////////
+		rt_task_wait_period(NULL);
+		//previous = now;
+		//now = rt_timer_read();
 		/////////////////////////////////////
 		//usleep( (1000*1000) / 1000 );
-		
+
 		///////////////////////////////////////
 		t_back=t_now;
 		t_now=get_timestamp_in_seconds();
@@ -475,7 +479,7 @@ void task_imu(void *arg){
 		drone->gyro_y=mpu.gyro_degrees_y*to_radian_per_second;
 		drone->gyro_z=mpu.gyro_degrees_z*to_radian_per_second;
 		drone->mpu6050_temp=mpu.temperate_celcius;
- 		drone->mag_x=mag.mag_x;
+		drone->mag_x=mag.mag_x;
 		drone->mag_y=mag.mag_y;
 		drone->mag_z=mag.mag_z;
 		drone->mag_n=0;
@@ -607,14 +611,14 @@ void *task_pilot(void *arg)
 
 		float ga_diff=ga_error-ga_error_bak;
 
-        if(ga_diff > 0.002 ){
-        	//pid_rate_kp+=10;
-        }
-        if(ga_diff < -0.002 ){
-        	//pid_rate_kp-=10;
-        }
+		if(ga_diff > 0.002 ){
+			//pid_rate_kp+=10;
+		}
+		if(ga_diff < -0.002 ){
+			//pid_rate_kp-=10;
+		}
 
-       // printf("kp=%f error=%f ga_error=%f ga_diff=%f\r\n",pid_rate_kp,pid_rate_error,ga_error,ga_diff);
+		// printf("kp=%f error=%f ga_error=%f ga_diff=%f\r\n",pid_rate_kp,pid_rate_error,ga_error,ga_diff);
 
 
 		roll += pid_rate_output;
@@ -643,6 +647,10 @@ void *task_pilot(void *arg)
 
 
 	}
+
+	/* the function must return something - NULL will do */
+	return NULL;
+
 }
 
 
@@ -792,14 +800,16 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 
 	}
 
+	/* the function must return something - NULL will do */
 	return NULL;
 }
 
 void* task_spi_cc1101(void* arg){
-	for (;;)
-	{
-		usleep(10000);
-	}
+
+	spidev_cc1101_worker("172.31.200.1");
+
+	/* the function must return something - NULL will do */
+	return NULL;
 }
 
 void* task_bluetooth_ps3(void* arg){
@@ -917,6 +927,9 @@ void* task_bluetooth_ps3(void* arg){
 
 
 	}
+
+	/* the function must return something - NULL will do */
+	return NULL;
 }
 
 void* task_gps(void *arg){
@@ -924,21 +937,23 @@ void* task_gps(void *arg){
 	{
 		usleep(10000);
 	}
+	/* the function must return something - NULL will do */
+	return NULL;
 }
 
 void catch_signal(int sig)
 {
-  
+
 }
 
 int main(int argc,char** argv){
 
-        //signal(SIGTERM, catch_signal);
-        //signal(SIGINT, catch_signal);
-	
-        /* Avoids memory swapping for this program */
-        mlockall(MCL_CURRENT|MCL_FUTURE);
-	
+	//signal(SIGTERM, catch_signal);
+	//signal(SIGINT, catch_signal);
+
+	/* Avoids memory swapping for this program */
+	mlockall(MCL_CURRENT|MCL_FUTURE);
+
 	// gera panic se kernel travar por 10 segundos
 	system("sysctl -w kernel.hung_task_timeout_secs=10");
 	system("sysctl -w kernel.hung_task_panic=1");
@@ -1000,8 +1015,9 @@ int main(int argc,char** argv){
 	drone_t drone_data;
 	memset (&drone_data,0,sizeof(drone_data));
 
-	//
-	pthread_t id_adc,id_imu,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
+	//,id_imu
+
+	pthread_t id_adc,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
 
 	pthread_attr_t attr;
 
@@ -1024,26 +1040,26 @@ int main(int argc,char** argv){
 	pthread_attr_setschedparam(&attr,&schedParam);
 #endif
 
-        ///////////////////////////////////////////////
-        /*
-         * Arguments: &task,
-         *            name,
-         *            stack size (0=default),
-         *            priority,
-         *            mode (FPU, start suspended, ...)
-         */
-        rt_task_create(&i2c_task, "i2c_task", 0, 99, 0);
-        /*
-         * Arguments: &task,
-         *            task function,
-         *            function argument
-         */
-        rt_task_start(&i2c_task, &task_imu, &drone_data);
+	///////////////////////////////////////////////
+	/*
+	 * Arguments: &task,
+	 *            name,
+	 *            stack size (0=default),
+	 *            priority,
+	 *            mode (FPU, start suspended, ...)
+	 */
+	rt_task_create(&i2c_task, "i2c_task", 0, 99, 0);
+	/*
+	 * Arguments: &task,
+	 *            task function,
+	 *            function argument
+	 */
+	rt_task_start(&i2c_task, &task_imu, &drone_data);
 	//
 	//pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
 	//pthread_setname_np(id_imu                          ,"i2c-sensors    ");
 
-        //
+	//
 	pthread_create(&id_adc                          , NULL, task_adc                          , &drone_data);
 
 	pthread_create(&id_motors                       , NULL, task_motors                       , &drone_data);
@@ -1051,7 +1067,7 @@ int main(int argc,char** argv){
 	pthread_create(&id_ps3                          , NULL, task_bluetooth_ps3                , &drone_data);
 	pthread_create(&id_gps                          , NULL, task_gps                          , &drone_data);
 
-        //network tasks are not realtime
+	//network tasks are not realtime
 	pthread_create(&id_spi                          , NULL, task_spi_cc1101                   , &drone_data);
 	pthread_create(&id_rx_joystick_and_tx_telemetric, NULL, task_rx_joystick_and_tx_telemetric, &drone_data);
 

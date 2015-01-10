@@ -25,8 +25,10 @@ unsigned long micros(void){
 		seconds = start.tv_sec + start.tv_usec/1000000.0;
 	}
 	double micros = (seconds-start_time)*1000000.0;
-	unsigned long ret = micros;
+
+	//unsigned long ret = micros;
 	//printf("micros %lu\r\n",ret);
+
 	return micros;
 }
 
