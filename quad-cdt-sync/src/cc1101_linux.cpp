@@ -1262,8 +1262,8 @@ void spidev_cc1101_reset(context_spi_t* spidev_data){
 				printf("SIDLE cb=%02x\r\n",cb);
 				return;
 			}
-			//wait 1us
-			usleep(100);
+			//wait 1ms
+			usleep(1000);
 
 			if(get_timestamp_in_seconds()-start>10){
 				break;

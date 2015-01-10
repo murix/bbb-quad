@@ -75,7 +75,7 @@ SOFTWARE.
 #include <xenomai/native/task.h>
 #include <xenomai/native/timer.h>
 
-RT_TASK i2c_task;
+
 
 ///////////////////////---- PROJECT LIBRARIES
 #include "bbb_i2c.h"
@@ -88,6 +88,10 @@ RT_TASK i2c_task;
 #include "freeimu_linux.h"
 #include "cc1101_linux.h"
 
+
+#define VBAT_STABLE 8.0
+#define SLEEP_1_SECOND (1000*1000)
+#define TASK_RT_HZ   250
 
 typedef struct {
 	// ARM: float and uint32_t are thread safe
@@ -213,8 +217,7 @@ typedef struct {
 } drone_t;
 
 
-#define VBAT_STABLE 8.0
-#define SLEEP_1_SECOND (1000*1000)
+
 
 
 double altimeter(double p0,double p,double t){
@@ -231,7 +234,7 @@ double altimeter(double p0,double p,double t){
 
 
 
-void *task_adc(void *arg){
+void task_rt_adc(void *arg){
 
 	drone_t* drone=(drone_t*) arg;
 	adc_monitor adc;
@@ -242,7 +245,9 @@ void *task_adc(void *arg){
 	double t_now=get_timestamp_in_seconds();;
 	double t_diff=0;
 
+	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / TASK_RT_HZ);
 	while(1){
+		rt_task_wait_period(NULL);
 
 		//-------------
 		t_back=t_now;
@@ -259,12 +264,11 @@ void *task_adc(void *arg){
 		adc.update();
 		drone->vbat=adc.vbat;
 
-		usleep(1500);
+
 
 	}
 
-	/* the function must return something - NULL will do */
-	return NULL;
+
 }
 
 
@@ -287,7 +291,7 @@ void *task_adc(void *arg){
 #define MOTOR_CMD_CALIB_MIN 1
 #define MOTOR_CMD_CALIB_MAX 2
 
-void *task_motors(void *arg){
+void task_rt_motor(void *arg){
 	drone_t* drone=(drone_t*) arg;
 
 
@@ -322,7 +326,10 @@ void *task_motors(void *arg){
 	double vbat_diff=0;
 	uint32_t pwm_step=PWM_STEP_PER_CYCLE;
 
+
+	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / TASK_RT_HZ);
 	while(1){
+		rt_task_wait_period(NULL);
 
 		//-------------
 		t_back=t_now;
@@ -402,11 +409,10 @@ void *task_motors(void *arg){
 		usleep(PWM_CYCLE_IN_US);
 
 	}
-	/* the function must return something - NULL will do */
-	return NULL;
+
 }
 
-void task_imu(void *arg){
+void task_rt_i2c(void *arg){
 
 
 	drone_t* drone=(drone_t*) arg;
@@ -435,24 +441,11 @@ void task_imu(void *arg){
 	FreeIMU freeimu;
 	double to_radian_per_second = M_PI/180.0;
 
-	/////////////////////////////////////////////////
-	//RTIME now, previous;
-	/*
-	 * Arguments: &task (NULL=self),
-	 *            start time,
-	 *            period (here: 1 s)
-	 */
-	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / 300);
-	//previous = rt_timer_read();
-	////////////////////////////////////////////////
 
+	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / TASK_RT_HZ);
 	while(1){
-		//////////////////////////////////////
 		rt_task_wait_period(NULL);
-		//previous = now;
-		//now = rt_timer_read();
-		/////////////////////////////////////
-		//usleep( (1000*1000) / 1000 );
+
 
 		///////////////////////////////////////
 		t_back=t_now;
@@ -525,7 +518,7 @@ float motor_clamp(float a,float b){
 	}
 }
 
-void *task_pilot(void *arg)
+void task_rt_pid(void *arg)
 {
 	drone_t* drone=(drone_t*) arg;
 
@@ -545,7 +538,9 @@ void *task_pilot(void *arg)
 	float ga_error_bak=0;
 	float pid_rate_kp = 30000;
 
+	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / TASK_RT_HZ);
 	while(1){
+		rt_task_wait_period(NULL);
 
 		//-------------
 		t_back=t_now;
@@ -556,9 +551,7 @@ void *task_pilot(void *arg)
 
 		drone->pilot_hz = 1.0 / t_diff;
 
-		///////////////////////////////////
 
-		usleep(2500);
 
 
 
@@ -651,13 +644,12 @@ void *task_pilot(void *arg)
 
 	}
 
-	/* the function must return something - NULL will do */
-	return NULL;
+
 
 }
 
 
-void *task_rx_joystick_and_tx_telemetric(void *arg)
+void task_nonrt_udp(void *arg)
 {
 	drone_t* drone=(drone_t*) arg;
 
@@ -803,19 +795,17 @@ void *task_rx_joystick_and_tx_telemetric(void *arg)
 
 	}
 
-	/* the function must return something - NULL will do */
-	return NULL;
+
 }
 
-void* task_spi_cc1101(void* arg){
+void task_nonrt_spi(void* arg){
 
 	spidev_cc1101_worker("172.31.200.1");
 
-	/* the function must return something - NULL will do */
-	return NULL;
+
 }
 
-void* task_bluetooth_ps3(void* arg){
+void task_nonrt_ps3(void* arg){
 
 	drone_t* drone=(drone_t*) arg;
 
@@ -931,11 +921,10 @@ void* task_bluetooth_ps3(void* arg){
 
 	}
 
-	/* the function must return something - NULL will do */
-	return NULL;
+
 }
 
-void* task_gps(void *arg){
+void task_nonrt_gps(void *arg){
 
 	drone_t* drone=(drone_t*) arg;
 
@@ -964,8 +953,8 @@ void* task_gps(void *arg){
 					char* txt=unix_to_iso8601(gps_data.fix.time,buff,sizeof(buff));
 					printf("%s(+-%.2lf)\r\n",txt,gps_data.fix.ept);
 
-					drone->gps_lat=gps_data.fix.latitude;
-					drone->gps_long=gps_data.fix.longitude;
+					if(isfinite(gps_data.fix.latitude)) drone->gps_lat=gps_data.fix.latitude;
+					if(isfinite(gps_data.fix.longitude)) drone->gps_long=gps_data.fix.longitude;
 				}
 			}
 		}
@@ -974,8 +963,7 @@ void* task_gps(void *arg){
 
 
 	}
-	/* the function must return something - NULL will do */
-	return NULL;
+
 }
 
 void catch_signal(int sig)
@@ -1053,81 +1041,40 @@ int main(int argc,char** argv){
 	drone_t drone_data;
 	memset (&drone_data,0,sizeof(drone_data));
 
-	//,id_imu
+	RT_TASK adc_task;
+	RT_TASK gps_task;
+	RT_TASK i2c_task;
+	RT_TASK motor_task;
+	RT_TASK pid_task;
+	RT_TASK ps3_task;
+	RT_TASK spi_task;
+	RT_TASK udp_task;
 
-	pthread_t id_adc,id_motors,id_rx_joystick_and_tx_telemetric,id_pilot,id_ps3,id_gps,id_spi;
+	rt_task_create(&adc_task  , "adc_task"  , 0, 95, 0);
+	rt_task_create(&i2c_task  , "i2c_task"  , 0, 99, 0);
+	rt_task_create(&motor_task, "motor_task", 0, 97, 0);
+	rt_task_create(&pid_task  , "pid_task"  , 0, 96, 0);
 
-	pthread_attr_t attr;
+	rt_task_create(&gps_task  , "gps_task"  , 0, 85, 0);
+	rt_task_create(&ps3_task  , "ps3_task"  , 0, 85, 0);
+	rt_task_create(&spi_task  , "spi_task"  , 0, 85, 0);
+	rt_task_create(&udp_task  , "udp_task"  , 0, 85, 0);
 
+	rt_task_start(&adc_task  , &task_rt_adc  , &drone_data);
+	rt_task_start(&i2c_task  , &task_rt_i2c  , &drone_data);
+	rt_task_start(&motor_task, &task_rt_motor, &drone_data);
+	rt_task_start(&pid_task  , &task_rt_pid  , &drone_data);
 
-	pthread_attr_init(&attr);
+	rt_task_start(&gps_task  , &task_nonrt_gps  , &drone_data);
+	rt_task_start(&ps3_task  , &task_nonrt_ps3  , &drone_data);
+	rt_task_start(&spi_task  , &task_nonrt_spi  , &drone_data);
+	rt_task_start(&udp_task  , &task_nonrt_udp  , &drone_data);
 
-	// EXPLICIT=usar do atributo, INHERIT=usar da thread criadora
-	pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
-
-	//
-#if 0
-	pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
-	struct sched_param schedParam;
-	schedParam.sched_priority=sched_get_priority_max(SCHED_FIFO);
-	pthread_attr_setschedparam(&attr,&schedParam);
-#else
-	pthread_attr_setschedpolicy(&attr,SCHED_RR);
-	struct sched_param schedParam;
-	schedParam.sched_priority=sched_get_priority_max(SCHED_RR);
-	pthread_attr_setschedparam(&attr,&schedParam);
-#endif
-
-	///////////////////////////////////////////////
-	/*
-	 * Arguments: &task,
-	 *            name,
-	 *            stack size (0=default),
-	 *            priority,
-	 *            mode (FPU, start suspended, ...)
-	 */
-	rt_task_create(&i2c_task, "i2c_task", 0, 99, 0);
-	/*
-	 * Arguments: &task,
-	 *            task function,
-	 *            function argument
-	 */
-	rt_task_start(&i2c_task, &task_imu, &drone_data);
-	//
-	//pthread_create(&id_imu                          , &attr, task_imu                          , &drone_data);
-	//pthread_setname_np(id_imu                          ,"i2c-sensors    ");
-
-	//
-	pthread_create(&id_adc                          , NULL, task_adc                          , &drone_data);
-
-	pthread_create(&id_motors                       , NULL, task_motors                       , &drone_data);
-	pthread_create(&id_pilot                        , NULL, task_pilot                        , &drone_data);
-	pthread_create(&id_ps3                          , NULL, task_bluetooth_ps3                , &drone_data);
-	pthread_create(&id_gps                          , NULL, task_gps                          , &drone_data);
-
-	//network tasks are not realtime
-	pthread_create(&id_spi                          , NULL, task_spi_cc1101                   , &drone_data);
-	pthread_create(&id_rx_joystick_and_tx_telemetric, NULL, task_rx_joystick_and_tx_telemetric, &drone_data);
-
-	/////////////////////////////////////////////////////123456789012345
-	pthread_setname_np(id_adc                          ,"adc-vbat       ");
-	pthread_setname_np(id_motors                       ,"pru-pwm-motors ");
-	pthread_setname_np(id_rx_joystick_and_tx_telemetric,"joy-telemetric ");
-	pthread_setname_np(id_pilot                        ,"pilot-pid      ");
-	pthread_setname_np(id_ps3                          ,"bluetooth-ps3  ");
-	pthread_setname_np(id_gps                          ,"usart-gps      ");
-	pthread_setname_np(id_spi                          ,"spi-cc1101-tap ");
 
 	printf("Wait for all threads\r\n");
-	//
-	pthread_join(id_adc,NULL);
-	//pthread_join(id_imu,NULL);
-	pthread_join(id_motors,NULL);
-	pthread_join(id_rx_joystick_and_tx_telemetric,NULL);
-	pthread_join(id_pilot,NULL);
-	pthread_join(id_ps3,NULL);
-	pthread_join(id_gps,NULL);
-	pthread_join(id_spi,NULL);
+	while(1){
+		usleep(SLEEP_1_SECOND);
+	}
 
 
 	return 0;
