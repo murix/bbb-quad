@@ -288,7 +288,7 @@ namespace beaglebone_quadcopter
                         drone.e1 = (double)json["e1"];
                         drone.e2 = (double)json["e2"];
 
-                        drone.mpu6050_temp = (double)json["mpu6050_temp"]-1.2;
+                        drone.mpu6050_temp = (double)json["mpu6050_temp"];
 
                         //Console.WriteLine(fusion_pitch);
                        // Console.WriteLine(fusion_roll);
