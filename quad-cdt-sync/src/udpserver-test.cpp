@@ -49,12 +49,13 @@ SOFTWARE.
 #include <string.h>	//String handling
 //#include <tgmath.h> //(since C99)	Type-generic math (macros wrapping math.h and complex.h)
 //#include <threads.h> //(since C11)	Thread library
-//#include <time.h> //Time/date utilities
+#include <time.h> //Time/date utilities
 //#include <uchar.h> //(since C11)	UTF-16 and UTF-32 character utilities
 //#include <wchar.h> //(since C95)	Extended multibyte and wide character utilities
 //#include <wctype.h> //(since C95)	Wide character classification and mapping utilities
 
 /////////////////////-------- SYSTEM LIBRARIES
+
 
 //
 #include <sys/mman.h>
@@ -67,6 +68,8 @@ SOFTWARE.
 #include <arpa/inet.h>
 //json
 #include <jsoncpp/json/json.h>
+//
+#include <gps.h>
 
 // xenomai
 #include <xenomai/native/task.h>
@@ -933,9 +936,43 @@ void* task_bluetooth_ps3(void* arg){
 }
 
 void* task_gps(void *arg){
+
+	drone_t* drone=(drone_t*) arg;
+
+
 	for (;;)
 	{
-		usleep(10000);
+
+		struct gps_data_t gps_data;
+		gps_open("localhost", "2947", &gps_data);
+		gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+		while(1){
+			/* Put this in a loop with a call to a high resolution sleep () in it. */
+			if (gps_waiting (&gps_data, 500)) {
+				if (gps_read (&gps_data) == -1) {
+					perror("gps-read-error\r\n");
+				} else {
+
+					printf("mode=%d ",gps_data.fix.mode);
+					printf("alt=%.2lfm(+-%.2lfm) ",gps_data.fix.altitude,gps_data.fix.epv);
+					printf("vspeed=%.2lfm/s(+-%.2lfm/s) ",gps_data.fix.climb,gps_data.fix.epc);
+					printf("gspeed=%.2lfm/s(+-%.2lfm/s) ",gps_data.fix.speed,gps_data.fix.eps);
+					printf("north=%.2lfdeg(+-%.2lfdeg) ",gps_data.fix.track,gps_data.fix.epd);
+					printf("lat=%.2lfdeg(+-%.2lfm) ",gps_data.fix.latitude,gps_data.fix.epy);
+					printf("long=%.2lfdeg(+-%.2lfm) ",gps_data.fix.longitude,gps_data.fix.epx);
+					char buff[30];
+					char* txt=unix_to_iso8601(gps_data.fix.time,buff,sizeof(buff));
+					printf("%s(+-%.2lf)\r\n",txt,gps_data.fix.ept);
+
+					drone->gps_lat=gps_data.fix.latitude;
+					drone->gps_long=gps_data.fix.longitude;
+				}
+			}
+		}
+		gps_stream(&gps_data, WATCH_DISABLE, NULL);
+		gps_close (&gps_data);
+
+
 	}
 	/* the function must return something - NULL will do */
 	return NULL;
@@ -943,8 +980,9 @@ void* task_gps(void *arg){
 
 void catch_signal(int sig)
 {
-
+    printf("catch_signal=%d\r\n",sig);
 }
+
 
 int main(int argc,char** argv){
 
