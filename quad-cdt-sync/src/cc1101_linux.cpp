@@ -1248,7 +1248,7 @@ void spidev_cc1101_reset(context_spi_t* spidev_data){
 	while(1){
 
 		// send reset
-		printf("SRES cb=%02x\r\n",spidev_cc1101_cmd(spidev_data,CC1101_SRES));
+		//printf("CC1101 SRES cb=%02x\r\n",spidev_cc1101_cmd(spidev_data,CC1101_SRES));
 
 		double start=get_timestamp_in_seconds();
 		long count_resets=0;
@@ -1271,7 +1271,7 @@ void spidev_cc1101_reset(context_spi_t* spidev_data){
 			count_resets++;
 		}
 
-		printf("CC1101 cannot be idle after %ld tries -> do reset strobe\r\n",count_resets);
+		//printf("CC1101 cannot be idle after %ld tries -> do reset strobe\r\n",count_resets);
 
 	}
 
