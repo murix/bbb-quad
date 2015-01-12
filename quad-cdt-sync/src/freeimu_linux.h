@@ -13,7 +13,6 @@ class FreeIMU
 {
 private:
 	// quaternion of sensor frame relative to auxiliary frame
-	double q0, q1, q2, q3;
 	// integration magnetic field
 	double integralFBx,  integralFBy, integralFBz;
 	// sample period expressed in seconds
@@ -30,6 +29,7 @@ private:
 public:
 	//
 	FreeIMU();
+	double q0, q1, q2, q3;
 
 
 
@@ -38,8 +38,8 @@ public:
 	// Magnetometer - any unit
 	void getQ(double * q,double ax,double ay,double az, double gx,double gy,double gz, double mx,double my,double mz);
 	void getEulerRad(double * angles,double ax,double ay,double az, double gx,double gy,double gz, double mx,double my,double mz);
-	void getEuler(double * angles,double ax,double ay,double az, double gx,double gy,double gz, double mx,double my,double mz);
-	void getYawPitchRoll(double * ypr,double ax,double ay,double az, double gx2,double gy2,double gz2, double mx,double my,double mz);
+	void getEulerDegree(double * angles,double ax,double ay,double az, double gx,double gy,double gz, double mx,double my,double mz);
+	void getYawPitchRollDegree(double * ypr,double ax,double ay,double az, double gx2,double gy2,double gz2, double mx,double my,double mz);
 	void getYawPitchRollRad(double * ypr,double ax,double ay,double az, double gx2,double gy2,double gz2, double mx,double my,double mz);
 
 	//

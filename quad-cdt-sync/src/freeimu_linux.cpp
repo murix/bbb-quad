@@ -275,7 +275,7 @@ void FreeIMU::quaternation_to_euler_rad(double* q,double* angles){
  *
  * @param angles three doubles array which will be populated by the Euler angles in degrees
  */
-void FreeIMU::getEuler(double * angles,double ax,double ay,double az, double gx,double gy,double gz, double mx,double my,double mz) {
+void FreeIMU::getEulerDegree(double * angles,double ax,double ay,double az, double gx,double gy,double gz, double mx,double my,double mz) {
 	getEulerRad(angles,ax,ay,az,gx,gy,gz,mx,my,mz);
 	arr3_rad_to_deg(angles);
 }
@@ -318,7 +318,7 @@ void FreeIMU::getYawPitchRollRad(double * ypr,double ax,double ay,double az, dou
  *
  * @param ypr three doubles array which will be populated by Yaw, Pitch and Roll angles in degrees
  */
-void FreeIMU::getYawPitchRoll(double * ypr,double ax,double ay,double az, double gx2,double gy2,double gz2, double mx,double my,double mz) {
+void FreeIMU::getYawPitchRollDegree(double * ypr,double ax,double ay,double az, double gx2,double gy2,double gz2, double mx,double my,double mz) {
 	getYawPitchRollRad(ypr,ax,ay,az,gx2,gy2,gz2,mx,my,mz);
 	arr3_rad_to_deg(ypr);
 }

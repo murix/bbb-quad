@@ -11,32 +11,12 @@ namespace beaglebone_quadcopter
         public double e0 = 0;
         public double e1 = 0;
         public double e2 = 0;
-
         //
-        public double gyro_pitch = 0;
-        public double gyro_roll = 0;
-        public double gyro_yaw = 0;
-        public murix_series serie_gyro_pitch = new murix_series("gyro_pitch (degree)");
-        public murix_series serie_gyro_roll = new murix_series("gyro_roll (degree)");
-        public murix_series serie_gyro_yaw = new murix_series("gyro_yaw");
-
-        //
-        public double fusion_pitch = 0;
-        public double fusion_roll = 0;
-        public murix_series serie_fusion_pitch = new murix_series("fusion_pitch (degree)");
-        public murix_series serie_fusion_roll = new murix_series("fusion_roll (degree)");
-
-        //
-        public double acc_pitch = 0;
-        public double acc_roll = 0;
-        public murix_series serie_acc_pitch = new murix_series("acc_pitch (degree)");
-        public murix_series serie_acc_roll = new murix_series("acc_roll (degree)");
+        public murix_series serie_euler0 = new murix_series("e0");
+        public murix_series serie_euler1 = new murix_series("e1");
+        public murix_series serie_euler2 = new murix_series("e2");
 
 
-        //
-        public double pilot_pitch = 0;
-        public double pilot_roll = 0;
-        public double pilot_yaw = 0;
 
 
         public double gps_lat = 0;
@@ -51,11 +31,9 @@ namespace beaglebone_quadcopter
         public double magx = 0.0;
         public double magy = 0.0;
         public double magz = 0.0;
-        public double mag_head = 0;
         public murix_series serie_magx = new murix_series("magx (gauss)");
         public murix_series serie_magy = new murix_series("magy (gauss)");
         public murix_series serie_magz = new murix_series("magz (gauss)");
-        public murix_series serie_mag_head = new murix_series("mag_head (degree)");
 
 
         public double accx = 0.0;
@@ -93,15 +71,12 @@ namespace beaglebone_quadcopter
 
         public double baro_p = 0.0;
         public double baro_h = 0.0;
-        public double baro_hema = 0.0;
         public double baro_t = 0.0;
-        public murix_series serie_baro_p = new murix_series("baro_p (hpa)");
+        public murix_series serie_baro_p = new murix_series("baro_p");
         public murix_series serie_baro_h = new murix_series("baro_h");
-        public murix_series serie_baro_hema = new murix_series("baro_hema (meters)");
-        public murix_series serie_baro_t = new murix_series("baro_t (celcius)");
+        public murix_series serie_baro_t = new murix_series("baro_t");
 
-
-
+        //
         public double i2c_hz = 0;
         public double pru_hz = 0;
         public double adc_hz = 0;

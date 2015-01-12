@@ -298,14 +298,9 @@ class drone_t {
 public:
 
 	drone_t(){
-		q[0]=0;
-		q[1]=0;
-		q[2]=0;
-		q[3]=0;
-
-		euler[0]=0;
-		euler[1]=0;
-		euler[2]=0;
+		euler_degree[0]=0;
+		euler_degree[1]=0;
+		euler_degree[2]=0;
 
 		gps_lat=0;
 		gps_long=0;
@@ -325,8 +320,7 @@ public:
 	ms5611 baro;
 	FreeIMU freeimu;
 
-	double q[4];
-	double euler[3];
+	double euler_degree[3];
 	//
 	float gps_lat;
 	float gps_long;
@@ -474,19 +468,17 @@ void task_rt_i2c(void *arg){
 		drone->baro.update(drone->i2c);
 
 		// update quaternion
-		drone->freeimu.getQ(drone->q,
-				drone->acc_gyro.acc_g_x,
-				drone->acc_gyro.acc_g_y,
-				drone->acc_gyro.acc_g_z,
-				drone->acc_gyro.gyro_radians_x,
-				drone->acc_gyro.gyro_radians_y,
-				drone->acc_gyro.gyro_radians_z,
+		drone->freeimu.getEulerDegree(drone->euler_degree,
+				(double)drone->acc_gyro.acc_g_x,
+				(double)drone->acc_gyro.acc_g_y,
+				(double)drone->acc_gyro.acc_g_z,
+				(double)drone->acc_gyro.gyro_radians_x,
+				(double)drone->acc_gyro.gyro_radians_y,
+				(double)drone->acc_gyro.gyro_radians_z,
 				drone->mag.mag_x,
 				drone->mag.mag_y,
 				drone->mag.mag_z);
 
-		// update euler angles
-		drone->freeimu.quaternation_to_euler_rad(drone->q,drone->euler);
 
 		//////////////////////////////////////////////////
 	}
@@ -703,14 +695,14 @@ void task_nonrt_udp(void *arg)
 		telemetric_json["motor_rl"]=drone->motors.dutyns_now[MOTOR_RL];
 		telemetric_json["motor_rr"]=drone->motors.dutyns_now[MOTOR_RR];
 
-		telemetric_json["q0"]=drone->q[0];
-		telemetric_json["q1"]=drone->q[1];
-		telemetric_json["q2"]=drone->q[2];
-		telemetric_json["q3"]=drone->q[3];
+		telemetric_json["q0"]=drone->freeimu.q0;
+		telemetric_json["q1"]=drone->freeimu.q1;
+		telemetric_json["q2"]=drone->freeimu.q2;
+		telemetric_json["q3"]=drone->freeimu.q3;
 
-		telemetric_json["e0"]=drone->euler[0];
-		telemetric_json["e1"]=drone->euler[1];
-		telemetric_json["e2"]=drone->euler[2];
+		telemetric_json["e0"]=drone->euler_degree[0];
+		telemetric_json["e1"]=drone->euler_degree[1];
+		telemetric_json["e2"]=drone->euler_degree[2];
 
 		//
 		std::string txt = telemetric_json.toStyledString();

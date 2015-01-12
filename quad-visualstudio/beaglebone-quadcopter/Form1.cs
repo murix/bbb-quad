@@ -114,19 +114,19 @@ namespace beaglebone_quadcopter
             chart_mag.Series.Add(drone.serie_magz);
 
             chart_pitch.Series.Clear();
-            chart_pitch.Series.Add(drone.serie_gyro_pitch);
+            chart_pitch.Series.Add(drone.serie_euler0);
             //chart_pitch.Series.Add(drone.serie_acc_pitch);
             //chart_pitch.Series.Add(drone.serie_fusion_pitch);
 
             chart_roll.Series.Clear();
-            chart_roll.Series.Add(drone.serie_gyro_roll);
+            chart_roll.Series.Add(drone.serie_euler1);
             //chart_roll.Series.Add(drone.serie_acc_roll);
             //chart_roll.Series.Add(drone.serie_fusion_roll);
 
 
 
             chart_yaw.Series.Clear();
-            chart_yaw.Series.Add(drone.serie_gyro_yaw);
+            chart_yaw.Series.Add(drone.serie_euler2);
             //chart_yaw.Series.Add(drone.serie_mag_head);
 
 
@@ -239,63 +239,44 @@ namespace beaglebone_quadcopter
 
                         JObject json = JObject.Parse(fromdrone);
 
+                        drone.e0 = (double)json["e0"];
+                        drone.e1 = (double)json["e1"];
+                        drone.e2 = (double)json["e2"];
+
+                        //
+                        drone.gyrox = (double)json["gyro_x"];
+                        drone.gyroy = (double)json["gyro_y"];
+                        drone.gyroz = (double)json["gyro_z"];
+                        drone.accx = (double)json["acc_x"];
+                        drone.accy = (double)json["acc_y"];
+                        drone.accz = (double)json["acc_z"];
+                        drone.mpu6050_temp = (double)json["mpu6050_temp"];
+
+                        //
+                        drone.magx = (double)json["mag_x"];
+                        drone.magy = (double)json["mag_y"];
+                        drone.magz = (double)json["mag_z"];
+
+                        //
+                        drone.baro_h = (double)json["baro_h"];
+                        drone.baro_t = (double)json["baro_t"];
+                        drone.baro_p = (double)json["baro_p"];
+
+                        //
                         drone.vbat = (double)json["vbat"];
 
+                        //
                         drone.motor_fl = (double)json["motor_fl"];
                         drone.motor_fr = (double)json["motor_fr"];
                         drone.motor_rl = (double)json["motor_rl"];
                         drone.motor_rr = (double)json["motor_rr"];
 
-
-                        drone.gyro_pitch = (double)json["pitch_gyro"];
-                        drone.gyro_roll = (double)json["roll_gyro"];
-                        drone.gyro_yaw = (double)json["yaw_gyro"];
-
-                        drone.fusion_pitch = (double)json["fusion_pitch"];
-                        drone.fusion_roll = (double)json["fusion_roll"];
-
-                        drone.acc_pitch = (double)json["pitch_acc"];
-                        drone.acc_roll = (double)json["roll_acc"];
-
-
-
-                        drone.baro_hema = (double)json["baro_hema"];
-                        drone.baro_h = (double)json["baro_h"];
-                        drone.baro_t = (double)json["baro_t"];
-                        drone.baro_p = (double)json["baro_p"];
-
+                        //
                         drone.i2c_hz = (double)json["i2c_hz"];
                         drone.adc_hz = (double)json["adc_hz"];
                         drone.pru_hz = (double)json["pru_hz"];
                         drone.pilot_hz = (double)json["pilot_hz"];
 
-                        drone.gyrox = (double)json["gyro_x"] ;
-                        drone.gyroy = (double)json["gyro_y"] ;
-                        drone.gyroz = (double)json["gyro_z"] ;
-
-                        drone.accx = (double)json["acc_x"];
-                        drone.accy = (double)json["acc_y"];
-                        drone.accz = (double)json["acc_z"];
-
-                        drone.magx = (double)json["mag_x"];
-                        drone.magy = (double)json["mag_y"];
-                        drone.magz = (double)json["mag_z"];
-
-                        drone.mag_head = (double)json["mag_head"];
-
-
-                        drone.pilot_pitch = (double)json["pilot_pitch"];
-                        drone.pilot_roll = (double)json["pilot_roll"];
-                        drone.pilot_yaw = (double)json["pilot_yaw"];
-
-                        drone.e0 = (double)json["e0"];
-                        drone.e1 = (double)json["e1"];
-                        drone.e2 = (double)json["e2"];
-
-                        drone.mpu6050_temp = (double)json["mpu6050_temp"];
-
-                        //Console.WriteLine(fusion_pitch);
-                       // Console.WriteLine(fusion_roll);
 
                         rxcount++;
                     }
@@ -332,6 +313,10 @@ namespace beaglebone_quadcopter
                 drone.serie_vbat.circular_append_y(drone.vbat, items);
                 drone.serie_rtt.circular_append_y(drone.rtt, items);
 
+                drone.serie_euler0.circular_append_y(drone.e0, items);
+                drone.serie_euler1.circular_append_y(drone.e1, items);
+                drone.serie_euler2.circular_append_y(drone.e2, items);
+
                 drone.serie_motor_fl.circular_append_y(drone.motor_fl / 1000.0, items);
                 drone.serie_motor_fr.circular_append_y(drone.motor_fr / 1000.0, items);
                 drone.serie_motor_rl.circular_append_y(drone.motor_rl / 1000.0, items);
@@ -340,7 +325,6 @@ namespace beaglebone_quadcopter
                 drone.serie_baro_p.circular_append_y(drone.baro_p, items);
                 drone.serie_baro_t.circular_append_y(drone.baro_t, items);
                 drone.serie_baro_h.circular_append_y(drone.baro_h, items);
-                drone.serie_baro_hema.circular_append_y(drone.baro_hema, items);
 
                 drone.serie_adc_hz.circular_append_y(drone.adc_hz, items);
                 drone.serie_pru_hz.circular_append_y(drone.pru_hz, items);
@@ -367,18 +351,8 @@ namespace beaglebone_quadcopter
 
                 ///////////////////////////////////////////////////////////////////
 
-                drone.serie_gyro_pitch.circular_append_y(drone.gyro_pitch * 180.0 / Math.PI, items);
-                drone.serie_acc_pitch.circular_append_y(drone.acc_pitch * 180.0 / Math.PI, items);
-                drone.serie_fusion_pitch.circular_append_y(drone.fusion_pitch * 180.0 / Math.PI, items);
 
 
-                drone.serie_gyro_roll.circular_append_y(drone.gyro_roll * 180.0 / Math.PI, items);
-                drone.serie_acc_roll.circular_append_y(drone.acc_roll * 180.0 / Math.PI, items);
-                drone.serie_fusion_roll.circular_append_y(drone.fusion_roll * 180.0 / Math.PI, items);
-
-                drone.serie_gyro_yaw.circular_append_y(drone.gyro_yaw * 180.0 / Math.PI, items);
-
-                drone.serie_mag_head.circular_append_y(drone.mag_head * 180.0 / Math.PI, items);
 
 
                 ////////////////////////////////////////////////////////////////////////////////
@@ -560,19 +534,10 @@ namespace beaglebone_quadcopter
 
             OpenTK.Quaternion quad = new Quaternion();
             
-            //GL.Rotate()
 
-            //rotateZ(-Euler[2]);
-            //rotateX(-Euler[1]);
-            //rotateY(-Euler[0]);
-
-            //GL.Rotate((float)(-drone.pilot_pitch * 180.0 / Math.PI), Vector3.UnitZ);
-            //GL.Rotate((float)(-drone.pilot_yaw * 180.0 / Math.PI), Vector3.UnitY);
-            //GL.Rotate((float)(-drone.pilot_roll * 180.0 / Math.PI), Vector3.UnitX);
-
-            GL.Rotate((float)(-drone.e2 * 180.0 / Math.PI), Vector3.UnitZ);
-            GL.Rotate((float)(-drone.e1 * 180.0 / Math.PI), Vector3.UnitX);
-            GL.Rotate((float)(-drone.e0 * 180.0 / Math.PI), Vector3.UnitY);
+            GL.Rotate((float)(-drone.e2 ), Vector3.UnitZ);
+            GL.Rotate((float)(-drone.e1 ), Vector3.UnitX);
+            GL.Rotate((float)(-drone.e0 ), Vector3.UnitY);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
