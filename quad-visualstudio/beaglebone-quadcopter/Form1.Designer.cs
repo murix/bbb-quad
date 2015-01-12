@@ -91,6 +91,7 @@
             this.chart_gps = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_roll = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart_yaw = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.trackBar1 = new System.Windows.Forms.TrackBar();
             ((System.ComponentModel.ISupportInitialize)(this.chart_rtt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_motor)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -106,6 +107,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart_gps)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_roll)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_yaw)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
             // backgroundWorker_joystick
@@ -380,11 +382,22 @@
             this.chart_yaw.TabIndex = 18;
             this.chart_yaw.Text = "chart3";
             // 
+            // trackBar1
+            // 
+            this.trackBar1.Location = new System.Drawing.Point(562, 676);
+            this.trackBar1.Maximum = 100;
+            this.trackBar1.Minimum = 1;
+            this.trackBar1.Name = "trackBar1";
+            this.trackBar1.Size = new System.Drawing.Size(104, 45);
+            this.trackBar1.TabIndex = 20;
+            this.trackBar1.Value = 10;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1518, 757);
+            this.Controls.Add(this.trackBar1);
             this.Controls.Add(this.chart_yaw);
             this.Controls.Add(this.chart_roll);
             this.Controls.Add(this.chart_gps);
@@ -422,7 +435,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.chart_gps)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_roll)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_yaw)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -448,6 +463,7 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_roll;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_yaw;
         private System.Windows.Forms.TextBox textBox_ip;
+        private System.Windows.Forms.TrackBar trackBar1;
     }
 }
 

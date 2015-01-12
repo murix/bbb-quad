@@ -8,7 +8,7 @@
 #ifndef BBB_I2C_H_
 #define BBB_I2C_H_
 
-class bbb_i2c{
+class i2c_linux{
 public:
 	int fd;
 	void open();

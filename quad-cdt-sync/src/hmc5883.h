@@ -8,6 +8,7 @@
 #ifndef HMC5883_CPP_
 #define HMC5883_CPP_
 
+#include "i2c_linux.h"
 
 class hmc5883 {
 public:
@@ -15,17 +16,14 @@ public:
 	double mag_y;
 	double mag_z;
 
-	int fd;
+	hmc5883();
+	void configure(i2c_linux i2c);
+	void update(i2c_linux i2c);
 
-
-	hmc5883(int fd);
-	void update();
-	void set_addr();
-	void configure();
-	bool is_ready();
-	double read16(int reg_msb,int reg_lsb);
-
-
+private:
+	void set_addr(i2c_linux i2c);
+	bool is_ready(i2c_linux i2c);
+	double read16(i2c_linux i2c,int reg_msb,int reg_lsb);
 
 
 };

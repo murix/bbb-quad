@@ -18,7 +18,7 @@ namespace beaglebone_quadcopter
         public double gyro_yaw = 0;
         public murix_series serie_gyro_pitch = new murix_series("gyro_pitch (degree)");
         public murix_series serie_gyro_roll = new murix_series("gyro_roll (degree)");
-        public murix_series serie_gyro_yaw = new murix_series("gyro_yaw (degree)");
+        public murix_series serie_gyro_yaw = new murix_series("gyro_yaw");
 
         //
         public double fusion_pitch = 0;
@@ -96,7 +96,7 @@ namespace beaglebone_quadcopter
         public double baro_hema = 0.0;
         public double baro_t = 0.0;
         public murix_series serie_baro_p = new murix_series("baro_p (hpa)");
-        public murix_series serie_baro_h = new murix_series("baro_h (meters)");
+        public murix_series serie_baro_h = new murix_series("baro_h");
         public murix_series serie_baro_hema = new murix_series("baro_hema (meters)");
         public murix_series serie_baro_t = new murix_series("baro_t (celcius)");
 

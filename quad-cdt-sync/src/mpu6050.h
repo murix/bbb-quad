@@ -8,10 +8,10 @@
 #ifndef MPU6050_H_
 #define MPU6050_H_
 
+#include "i2c_linux.h"
 
 class mpu6050 {
 public:
-	int fd;
 
 	float acc_g_x;
 	float acc_g_y;
@@ -21,11 +21,15 @@ public:
 	float gyro_degrees_y;
 	float gyro_degrees_z;
 
+	float gyro_radians_x;
+	float gyro_radians_y;
+	float gyro_radians_z;
+
 	float temperate_celcius;
 
-	mpu6050(int fd);
-	void init();
-	void update();
+	mpu6050();
+	void configure(i2c_linux i2c);
+	void update(i2c_linux i2c);
 
 };
 

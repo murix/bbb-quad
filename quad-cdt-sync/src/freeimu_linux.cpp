@@ -33,6 +33,13 @@ FreeIMU::FreeIMU() {
 	lastUpdate = get_timestamp_in_seconds();
 	now = get_timestamp_in_seconds();
 
+	linear_speed[0]=0;
+	linear_speed[1]=0;
+	linear_speed[2]=0;
+
+	linear_position[0]=0;
+	linear_position[1]=0;
+	linear_position[2]=0;
 }
 
 
@@ -188,6 +195,23 @@ void FreeIMU::getQ(double * q,double ax,double ay,double az, double gx,double gy
 	q[1] = q1;
 	q[2] = q2;
 	q[3] = q3;
+
+	//remove gravity from accelerometer
+	gravityCompensateAcc(linear_acc,q);
+
+	// http://www.freescale.com/files/sensors/doc/app_note/AN3397.pdf
+	// http://developer.android.com/reference/android/hardware/SensorEvent.html
+
+    // first integration of acceleration to get speed
+	linear_speed[0]+= linear_acc[0]*period;
+	linear_speed[1]+= linear_acc[1]*period;
+	linear_speed[2]+= linear_acc[2]*period;
+
+    // second integration of acceleration to get position
+	linear_position[0]+= linear_speed[0]*period;
+	linear_position[1]+= linear_speed[1]*period;
+	linear_position[2]+= linear_speed[2]*period;
+
 }
 
 
@@ -206,17 +230,16 @@ double FreeIMU::getBaroAlt(double sea_press,double temp,double press) {
  * @param q the quaternion orientation of the sensor board with respect to the world
  */
 void FreeIMU::gravityCompensateAcc(double * acc, double * q) {
-	double g[3];
 
 	// get expected direction of gravity in the sensor frame
-	g[0] = 2 * (q[1] * q[3] - q[0] * q[2]);
-	g[1] = 2 * (q[0] * q[1] + q[2] * q[3]);
-	g[2] = q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3];
+	gravity[0] = 2 * (q[1] * q[3] - q[0] * q[2]);
+	gravity[1] = 2 * (q[0] * q[1] + q[2] * q[3]);
+	gravity[2] = q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3];
 
 	// compensate accelerometer readings with the expected direction of gravity
-	acc[0] = acc[0] - g[0];
-	acc[1] = acc[1] - g[1];
-	acc[2] = acc[2] - g[2];
+	acc[0] = acc[0] - gravity[0];
+	acc[1] = acc[1] - gravity[1];
+	acc[2] = acc[2] - gravity[2];
 }
 
 

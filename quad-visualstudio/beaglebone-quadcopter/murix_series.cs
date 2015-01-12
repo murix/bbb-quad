@@ -13,8 +13,9 @@ namespace beaglebone_quadcopter
         public murix_series(string name)
             : base(name)
         {
-            this.ChartType = SeriesChartType.Line;
+            this.ChartType = SeriesChartType.StepLine;
             // this.XValueType = ChartValueType.Time;
+           // this.XValueType = ChartValueType.DateTime;
         }
         public void circular_append_y(double value, int max_items)
         {

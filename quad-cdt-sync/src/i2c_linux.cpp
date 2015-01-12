@@ -15,9 +15,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "bbb_i2c.h"
+#include "i2c_linux.h"
 
-void bbb_i2c::open(){
+void i2c_linux::open(){
 
 
 

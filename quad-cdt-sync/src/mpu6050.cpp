@@ -5,8 +5,10 @@
  *      Author: root
  */
 
-//i2c defines
-#include "i2c-dev.h"
+//apt-get install libi2c-dev
+#include <linux/i2c-dev.h>
+
+
 //ioctl
 #include <sys/ioctl.h>
 //swap
@@ -168,8 +170,7 @@
 #include "mpu6050.h"
 #include "timestamps.h"
 
-mpu6050::mpu6050(int fd){
-	this->fd=fd;
+mpu6050::mpu6050(){
 	this->temperate_celcius=0;
 	this->acc_g_x=0;
 	this->acc_g_y=0;
@@ -178,14 +179,12 @@ mpu6050::mpu6050(int fd){
 	this->gyro_degrees_y=0;
 	this->gyro_degrees_z=0;
 
-	//
-	init();
 }
 
 
-void mpu6050::init(){
+void mpu6050::configure(i2c_linux i2c){
 	//
-	if(ioctl(fd,I2C_SLAVE,0x68)<0){
+	if(ioctl(i2c.fd,I2C_SLAVE,0x68)<0){
 		perror("i2c slave mpu6050 Failed");
 		exit(1);
 	}
@@ -198,23 +197,23 @@ void mpu6050::init(){
 	//4.3 Register 26 – Configuration
 
 	// MPU6050_REG_CONFIG = FSYNC DISABLE, configure DLPF
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_260HZ_DELAY_0_US_GYRO_256HZ_DELAY_980US_FS_8KHZ);
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_184HZ_DELAY_2000_US_GYRO_188HZ_DELAY_1900US_FS_1KHZ);
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_94HZ_DELAY_3000_US_GYRO_98HZ_DELAY_2800US_FS_1KHZ);
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_44HZ_DELAY_4900_US_GYRO_42HZ_DELAY_4800US_FS_1KHZ);
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_21HZ_DELAY_8500_US_GYRO_20HZ_DELAY_8300US_FS_1KHZ);
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_10HZ_DELAY_13800_US_GYRO_10HZ_DELAY_13400US_FS_1KHZ);
-	//i2c_smbus_write_byte_data(fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_5HZ_DELAY_19000_US_GYRO_5HZ_DELAY_18600US_FS_1KHZ);
+	i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_260HZ_DELAY_0_US_GYRO_256HZ_DELAY_980US_FS_8KHZ);
+	//i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_184HZ_DELAY_2000_US_GYRO_188HZ_DELAY_1900US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_94HZ_DELAY_3000_US_GYRO_98HZ_DELAY_2800US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_44HZ_DELAY_4900_US_GYRO_42HZ_DELAY_4800US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_21HZ_DELAY_8500_US_GYRO_20HZ_DELAY_8300US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_10HZ_DELAY_13800_US_GYRO_10HZ_DELAY_13400US_FS_1KHZ);
+	//i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_CONFIG,MPU6050_DLPF_CFG_ACCEL_5HZ_DELAY_19000_US_GYRO_5HZ_DELAY_18600US_FS_1KHZ);
 
 
 	//4.4 Register 27 – Gyroscope Configuration
 
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_GYRO_CONFIG, MPU6050_GFS_SEL_2000 << 3);
+	i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_GYRO_CONFIG, MPU6050_GFS_SEL_2000 << 3);
 
 
 	//4.5 Register 28 – Accelerometer Configuration
 
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_ACCEL_CONFIG, MPU6050_AFS_SEL_16G << 3);
+	i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_ACCEL_CONFIG, MPU6050_AFS_SEL_16G << 3);
 
 
 	//4.6 Register 35 – FIFO Enable
@@ -237,7 +236,7 @@ void mpu6050::init(){
 
 	//INT_PIN_CFG = int_level zero, int_open zero, latch_int_en zero,
 	// int_rd_clear zero, fsync_int_level zero, fsync_en zero, i2c_by_pass_en enabled
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_INT_PIN_CFG,0x02);
+	i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_INT_PIN_CFG,0x02);
 
 
 	//4.15 Register 56 – Interrupt Enable
@@ -282,12 +281,12 @@ void mpu6050::init(){
 
 	//MPU6050_REG_USER_CTRL = fifo disabled, i2c master disabled (enabled i2c pass throught),
 	//i2c primary enable, not fifo reset, not i2c mst reset, not reset signal path
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_USER_CTRL,0x00);
+	i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_USER_CTRL,0x00);
 
 	//4.28 Register 107 – Power Management 1
 
 	//MPU6050_REG_PWR_MGMT_1 = disable sleep, cycle not used, temp enabled, clk=internal 8mhz
-	i2c_smbus_write_byte_data(fd,MPU6050_REG_PWR_MGMT_1,0x00);
+	i2c_smbus_write_byte_data(i2c.fd,MPU6050_REG_PWR_MGMT_1,0x00);
 
 	//4.29 Register 108 – Power Management 2
 
@@ -297,16 +296,16 @@ void mpu6050::init(){
 
 	//4.32 Register 117 – Who Am I
 
-	while( i2c_smbus_read_byte_data(fd,MPU6050_REG_WHO_AM_I) != MPU6050_REG_WHO_AMI_I_REPLY ){
+	while( i2c_smbus_read_byte_data(i2c.fd,MPU6050_REG_WHO_AM_I) != MPU6050_REG_WHO_AMI_I_REPLY ){
 		printf("mpu6050 who am i error\r\n");
 	}
 
 
 }
 
-void mpu6050::update(){
+void mpu6050::update(i2c_linux i2c){
 	//
-	if(ioctl(fd,I2C_SLAVE,0x68)<0){
+	if(ioctl(i2c.fd,I2C_SLAVE,0x68)<0){
 		perror("i2c slave mpu6050 Failed");
 	}
 
@@ -315,7 +314,7 @@ void mpu6050::update(){
 	int16_t vs[7];
 
 	//read all - accel, temp, gyro
-	i2c_smbus_read_i2c_block_data(fd,MPU6050_REG_ACCEL_XOUT_H,14,(uint8_t*)vu);
+	i2c_smbus_read_i2c_block_data(i2c.fd,MPU6050_REG_ACCEL_XOUT_H,14,(uint8_t*)vu);
 
 	for(int i=0;i<7;i++){
 		vs[i]=(int16_t) __bswap_16(vu[i]);
@@ -329,6 +328,11 @@ void mpu6050::update(){
 	gyro_degrees_x    =vs[4]/MPU6050_GFS_DIV_2000;
 	gyro_degrees_y    =vs[5]/MPU6050_GFS_DIV_2000;
 	gyro_degrees_z    =vs[6]/MPU6050_GFS_DIV_2000;
+
+	float to_radian_per_second = M_PI/180.0;
+	gyro_radians_x = gyro_degrees_x*to_radian_per_second;
+	gyro_radians_y = gyro_degrees_y*to_radian_per_second;
+	gyro_radians_z = gyro_degrees_z*to_radian_per_second;
 
 }
 

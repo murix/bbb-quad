@@ -21,9 +21,17 @@ private:
 	// half the sample period expressed in seconds
 	double sampleFreq;
 
+
+	double gravity[3];
+    double linear_acc[3];
+    double linear_speed[3];
+    double linear_position[3];
+
 public:
 	//
 	FreeIMU();
+
+
 
 	// accelerometer - any unit
 	// gyroscope - must be in rad/s

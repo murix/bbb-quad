@@ -78,7 +78,7 @@ namespace beaglebone_quadcopter
 
             chart_baro_h.Series.Clear();
             chart_baro_h.Series.Add(drone.serie_baro_h);
-            chart_baro_h.Series.Add(drone.serie_baro_hema);
+            //chart_baro_h.Series.Add(drone.serie_baro_hema);
 
             chart_baro_p.Series.Clear();
             chart_baro_p.Series.Add(drone.serie_baro_p);
@@ -123,15 +123,19 @@ namespace beaglebone_quadcopter
             //chart_roll.Series.Add(drone.serie_acc_roll);
             //chart_roll.Series.Add(drone.serie_fusion_roll);
 
+
+
             chart_yaw.Series.Clear();
             chart_yaw.Series.Add(drone.serie_gyro_yaw);
             //chart_yaw.Series.Add(drone.serie_mag_head);
+
 
 
             backgroundWorker_joystick.RunWorkerAsync();
 
             timer_charts.Interval = (int)( 1000.0 / 60.0);
             timer_charts.Start();
+
         }
        
 
@@ -421,6 +425,41 @@ namespace beaglebone_quadcopter
 
                 chart_accel.ChartAreas[0].AxisY.IsStartedFromZero = false;
                 chart_accel.ChartAreas[0].RecalculateAxesScale();
+
+                try
+                {
+                    chart_yaw.DataManipulator.FinancialFormula(FinancialFormula.MovingAverage,trackBar1.Value+"", "gyro_yaw", "gyro_yaw_ma");
+                    chart_yaw.Series["gyro_yaw_ma"].ChartType = SeriesChartType.StepLine;
+                    chart_yaw.DataManipulator.FinancialFormula(FinancialFormula.ExponentialMovingAverage, trackBar1.Value + "", "gyro_yaw", "gyro_yaw_ema");
+                    chart_yaw.Series["gyro_yaw_ema"].ChartType = SeriesChartType.StepLine;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+                try
+                {
+
+
+                    Series up = chart_baro_h.Series.FindByName("Bollinger");
+                    if (up != null) chart_baro_h.Series.Remove(up);
+
+                    chart_baro_h.DataManipulator.FinancialFormula(FinancialFormula.BollingerBands, trackBar1.Value+",2", "baro_h", "Bollinger");
+                    chart_baro_h.Series["Bollinger"].ChartType = SeriesChartType.Range;
+                    chart_baro_h.Series["Bollinger"].Color = System.Drawing.Color.FromArgb(64, System.Drawing.Color.Red);
+
+                    //chart_baro_h.DataManipulator.FinancialFormula(FinancialFormula.Forecasting, "Exponential,40,true,true", "baro_h", "Forecast,UpperError,LowerError");
+                    //chart_baro_h.Series["Forecast"].ChartType = SeriesChartType.StepLine;
+                    //chart_baro_h.Series["UpperError"].ChartType = SeriesChartType.StepLine;
+                    //chart_baro_h.Series["LowerError"].ChartType = SeriesChartType.StepLine;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+
 
                 if (controle_conectado)
                 {

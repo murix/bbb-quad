@@ -6,8 +6,11 @@
  */
 
 
-//i2c defines
-#include "i2c-dev.h"
+//apt-get install libi2c-dev
+#include <linux/i2c-dev.h>
+
+
+
 //ioctl
 #include <sys/ioctl.h>
 //usleep
@@ -35,43 +38,43 @@
 #define CMD_ADC_4096 0x08 // ADC OSR=4096
 #define CMD_PROM_RD 0xA0 // Prom read command
 
-ms5611::ms5611(int fd){
-	this->fd=fd;
-	init();
-	update();
-
+ms5611::ms5611(){
+    P=0;
+    P0=1013.25;
+    H=0;
+    T=0;
 }
 
-void ms5611::i2c_start(){
-	if (ioctl(fd,I2C_SLAVE,ADDR_MS5611) < 0) {
+void ms5611::i2c_start(i2c_linux i2c){
+	if (ioctl(i2c.fd,I2C_SLAVE,ADDR_MS5611) < 0) {
 		perror("i2c slave hmc5883 Failed");
 	}
 }
 
-void ms5611::i2c_send(char cmd)
+void ms5611::i2c_send(i2c_linux i2c,char cmd)
 {
-	i2c_start();
-	write(fd,&cmd,1);
+	i2c_start(i2c);
+	write(i2c.fd,&cmd,1);
 }
 
-void ms5611::i2c_recv(unsigned char* buffer,int buffer_len){
-	i2c_start();
-	read(fd,buffer,buffer_len);
+void ms5611::i2c_recv(i2c_linux i2c,unsigned char* buffer,int buffer_len){
+	i2c_start(i2c);
+	read(i2c.fd,buffer,buffer_len);
 }
 
-void ms5611::cmd_reset(void)
+void ms5611::cmd_reset(i2c_linux i2c)
 {
-	i2c_send(CMD_RESET); // send reset sequence
+	i2c_send(i2c,CMD_RESET); // send reset sequence
 	usleep(3 * 1000); // wait for the reset sequence timing - 3ms
 }
 
 
-unsigned int ms5611::cmd_prom(char coef_num)
+unsigned int ms5611::cmd_prom(i2c_linux i2c,char coef_num)
 {
 	unsigned int rC=0;
-	i2c_send(CMD_PROM_RD+coef_num*2); // send PROM READ command
+	i2c_send(i2c,CMD_PROM_RD+coef_num*2); // send PROM READ command
 	unsigned char b[2];
-	i2c_recv(b,2);
+	i2c_recv(i2c,b,2);
 	rC=256*b[0]+b[1];
 	return rC;
 }
@@ -108,13 +111,13 @@ unsigned char ms5611::crc4(unsigned int n_prom[])
 
 
 
-void ms5611::init(){
+void ms5611::configure(i2c_linux i2c){
 	int i;
 	unsigned char n_crc; // crc value of the prom
 
-	cmd_reset(); // reset IC
+	cmd_reset(i2c); // reset IC
 	for (i=0;i<8;i++){
-		C[i]=cmd_prom(i);
+		C[i]=cmd_prom(i2c,i);
 		printf("ms5611 prom[%d]=%08x (%d)\r\n",i,C[i],C[i]);
 	} // read coefficients
 	n_crc=crc4(C); // calculate the CRC
@@ -124,41 +127,27 @@ void ms5611::init(){
 }
 
 
-unsigned long ms5611::cmd_adc(char cmd)
-{
-	unsigned long temp=0;
-	i2c_send(CMD_ADC_CONV+cmd); // send conversion command
-	switch (cmd & 0x0f) // wait necessary conversion time
-	{
-	case CMD_ADC_256 : usleep(900); break;
-	case CMD_ADC_512 : usleep(3 * 1000); break;
-	case CMD_ADC_1024: usleep(4 * 1000); break;
-	case CMD_ADC_2048: usleep(6 * 1000); break;
-	case CMD_ADC_4096: usleep(10 * 1000); break;
-	}
-	i2c_send(CMD_ADC_READ);
-	unsigned char b[3];
-	i2c_recv(b,3);
-
-	temp=65536*b[0]+256*b[1]+b[2];
-	return temp;
-}
 
 
 
-
-void ms5611::update(){
+void ms5611::update(i2c_linux i2c){
 
 	unsigned char b[3];
 
 	if(this->state==START_D2){
-		i2c_send(CMD_ADC_CONV+CMD_ADC_D2+CMD_ADC_4096);
+		i2c_send(i2c,CMD_ADC_CONV+CMD_ADC_D2+CMD_ADC_4096);
 		this->read_started=get_timestamp_in_seconds();
 		this->state=WAIT_D2;
 		return;
 	}
 	if(this->state==WAIT_D2){
 		//wait 10ms without block
+        //case CMD_ADC_256 : usleep(900); break;
+	    //case CMD_ADC_512 : usleep(3 * 1000); break;
+	    //case CMD_ADC_1024: usleep(4 * 1000); break;
+	    //case CMD_ADC_2048: usleep(6 * 1000); break;
+	    //case CMD_ADC_4096: usleep(10 * 1000); break;
+
 		if(get_timestamp_in_seconds()-this->read_started<0.01){
 			this->state=WAIT_D2;
 		}
@@ -168,20 +157,25 @@ void ms5611::update(){
 		return;
 	}
 	if(this->state==READ_D2){
-		i2c_send(CMD_ADC_READ);
-		i2c_recv(b,3);
+		i2c_send(i2c,CMD_ADC_READ);
+		i2c_recv(i2c,b,3);
 		D2 = 65536*b[0]+256*b[1]+b[2];
 		this->state=START_D1;
 		return;
 	}
 	if(this->state==START_D1){
-		i2c_send(CMD_ADC_CONV+CMD_ADC_D1+CMD_ADC_4096);
+		i2c_send(i2c,CMD_ADC_CONV+CMD_ADC_D1+CMD_ADC_4096);
 		this->read_started=get_timestamp_in_seconds();
 		this->state=WAIT_D1;
 		return;
 	}
 	if(this->state==WAIT_D1){
 		//wait 10ms without block
+        //case CMD_ADC_256 : usleep(900); break;
+	    //case CMD_ADC_512 : usleep(3 * 1000); break;
+	    //case CMD_ADC_1024: usleep(4 * 1000); break;
+	    //case CMD_ADC_2048: usleep(6 * 1000); break;
+	    //case CMD_ADC_4096: usleep(10 * 1000); break;
 		if(get_timestamp_in_seconds()-this->read_started<0.01){
 			this->state=WAIT_D1;
 		}
@@ -191,8 +185,8 @@ void ms5611::update(){
 		return;
 	}
 	if(this->state==READ_D1){
-		i2c_send(CMD_ADC_READ);
-		i2c_recv(b,3);
+		i2c_send(i2c,CMD_ADC_READ);
+		i2c_recv(i2c,b,3);
 		D1 = 65536*b[0]+256*b[1]+b[2];
 		this->state=COMPUTE_ALL;
 		return;
@@ -235,12 +229,24 @@ void ms5611::update(){
 		///////////////////////////////////////////////////
 		T/=100.0;
 		P/=100.0;
+		H=altimeter(P0,P,T);
 		this->state=START_D2;
 		return;
 	}
 
 }
 
+double ms5611::altimeter(double p0,double p,double t){
+	//R=gas constant=8.31432
+	//T=air temperature in measured kelvin
+	//g=earth gravity=9.80665
+	//M=molar mass of the gas=0.0289644
+	double R=8.31432;
+	double TK=t+273.15;
+	double g=9.80665;
+	double M=0.0289644;
+	return ((R*TK)/(g*M))*log(p0/p);
+}
 
 
 
