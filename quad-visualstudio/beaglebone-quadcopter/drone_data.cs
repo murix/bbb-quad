@@ -8,13 +8,13 @@ namespace beaglebone_quadcopter
     public class drone_data
     {
 
-        public double e0 = 0;
-        public double e1 = 0;
-        public double e2 = 0;
+        public double euler_degree0 = 0;
+        public double euler_degree1 = 0;
+        public double euler_degree2 = 0;
         //
-        public murix_series serie_euler0 = new murix_series("e0");
-        public murix_series serie_euler1 = new murix_series("e1");
-        public murix_series serie_euler2 = new murix_series("e2");
+        public murix_series serie_euler0 = new murix_series("euler[0]");
+        public murix_series serie_euler1 = new murix_series("euler[1]");
+        public murix_series serie_euler2 = new murix_series("euler[2]");
 
 
 

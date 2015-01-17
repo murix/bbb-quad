@@ -239,9 +239,9 @@ namespace beaglebone_quadcopter
 
                         JObject json = JObject.Parse(fromdrone);
 
-                        drone.e0 = (double)json["e0"];
-                        drone.e1 = (double)json["e1"];
-                        drone.e2 = (double)json["e2"];
+                        drone.euler_degree0 = (double)json["e0"];
+                        drone.euler_degree1 = (double)json["e1"];
+                        drone.euler_degree2 = (double)json["e2"];
 
                         //
                         drone.gyrox = (double)json["gyro_x"];
@@ -313,9 +313,9 @@ namespace beaglebone_quadcopter
                 drone.serie_vbat.circular_append_y(drone.vbat, items);
                 drone.serie_rtt.circular_append_y(drone.rtt, items);
 
-                drone.serie_euler0.circular_append_y(drone.e0, items);
-                drone.serie_euler1.circular_append_y(drone.e1, items);
-                drone.serie_euler2.circular_append_y(drone.e2, items);
+                drone.serie_euler0.circular_append_y(drone.euler_degree0, items);
+                drone.serie_euler1.circular_append_y(drone.euler_degree1, items);
+                drone.serie_euler2.circular_append_y(drone.euler_degree2, items);
 
                 drone.serie_motor_fl.circular_append_y(drone.motor_fl / 1000.0, items);
                 drone.serie_motor_fr.circular_append_y(drone.motor_fr / 1000.0, items);
@@ -535,9 +535,9 @@ namespace beaglebone_quadcopter
             OpenTK.Quaternion quad = new Quaternion();
             
 
-            GL.Rotate((float)(-drone.e2 ), Vector3.UnitZ);
-            GL.Rotate((float)(-drone.e1 ), Vector3.UnitX);
-            GL.Rotate((float)(-drone.e0 ), Vector3.UnitY);
+            GL.Rotate((float)(-drone.euler_degree2 ), Vector3.UnitZ);
+            GL.Rotate((float)(-drone.euler_degree1 ), Vector3.UnitX);
+            GL.Rotate((float)(-drone.euler_degree0 ), Vector3.UnitY);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
