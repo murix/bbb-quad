@@ -58,7 +58,7 @@ SOFTWARE.
 #include "murix_pid.h"
 
 
-#define VBAT_STABLE 8.0
+#define VBAT_STABLE 9.0
 #define SLEEP_1_SECOND (1000*1000)
 #define TASK_RT_HZ   250
 
@@ -173,21 +173,24 @@ public:
 
 
 
-//
+/////////////////////////////////////////////
 #define PWM_HZ                  400
 #define PWM_FAILSAFE         500000
+/////////////////////////////////////////////
 #define PWM_FLY_ARM          900000
+/////////////////////////////////////////////
 #define PWM_CALIB_MIN       1000000
-//#define PWM_FLY_MIN       1070000
-#define PWM_FLY_MIN         1130000
-//#define PWM_FLY_MAX         1430000
+#define PWM_FLY_MIN         1070000
 #define PWM_FLY_MAX         1900000
-#define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
 #define PWM_CALIB_MAX       1950000
-#define PWM_STEP_PER_CYCLE    10000
+//////////////////////////////////////////////
+#define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
+#define PWM_STEP_PER_CYCLE    (PWM_FLY_INTERVAL/1000)
+/////////////////////////////////////////////
 #define PWM_NS_PER_SEC     (1000*1000*1000)
 #define PWM_CYCLE_IN_NS    (PWM_NS_PER_SEC/PWM_HZ)
 #define PWM_CYCLE_IN_US    (PWM_CYCLE_IN_NS/1000)
+/////////////////////////////////////////////
 
 typedef enum {
 	MOTOR_CMD_NORMAL,
@@ -333,15 +336,7 @@ public:
 	float pilot_hz;
 
 
-	murix_pid roll_rate;
-	murix_pid roll_angle;
-
-	murix_pid pitch_rate;
-	murix_pid pitch_angle;
-
-	murix_pid yaw_rate;
-	murix_pid yaw_angle;
-
+	murix_controller pids[6];
 
 	motor_t motors;
 
@@ -352,7 +347,12 @@ public:
 };
 
 
-
+#define PID_YAW_RATE    1
+#define PID_YAW_ANGLE   2
+#define PID_ROLL_RATE   3
+#define PID_ROLL_ANGLE  4
+#define PID_PITCH_RATE  5
+#define PID_PITCH_ANGLE 6
 
 
 
@@ -503,33 +503,23 @@ void task_rt_pid(void *arg)
 {
 	drone_t* drone=(drone_t*) arg;
 
-
-
-	//---------
 	double t_back=get_timestamp_in_seconds();;
 	double t_now=get_timestamp_in_seconds();;
 	double t_diff=0;
 
+
+
 	bool takeoff=false;
-
-	//
-	drone->roll_rate.error_max=2000;
-	drone->roll_rate.error_min=-2000;
-	//
-	drone->roll_rate.target=0;
-	drone->roll_rate.feedback=0;
-	//
-	drone->roll_rate.kp=2;
-	drone->roll_rate.ki=0;
-	drone->roll_rate.kd=0;
-
-
+	bool mode_stable=false;
+	bool mode_acrobatic=false;
+	drone->roll_rate.setpoint=0;
 
 	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / TASK_RT_HZ);
 	while(1){
 		rt_task_wait_period(NULL);
 
-		//-------------
+		///////////////////////////////////
+
 		t_back=t_now;
 		t_now=get_timestamp_in_seconds();
 		t_diff=t_now-t_back;
@@ -538,26 +528,23 @@ void task_rt_pid(void *arg)
 
 		drone->pilot_hz = 1.0 / t_diff;
 
-
-		drone->roll_rate.feedback=drone->acc_gyro.gyro_degrees_x;
-		drone->roll_rate.update();
-
-
-
 		/////////////////////////////////////////////////////////////////////////////
 		if(drone->ps3_joy.button_start){
-			//printf("ps3 takeoff\r\n");
 			takeoff=true;
 		}
 		if(drone->ps3_joy.button_select){
-			//printf("ps3 landing\r\n");
 			takeoff=false;
 		}
 		///////////////////////////////////////////////////////////////////////////
-		if(drone->ps3_joy.button_triangle){
-
-
+		if(drone->ps3_joy.button_x){
+			mode_stable=true;
+			mode_acrobatic=false;
 		}
+		if(drone->ps3_joy.button_ball){
+			mode_stable=false;
+			mode_acrobatic=true;
+		}
+		////////////////////////////////////////////////////////////////////////////
 
 		float throttle=0;
 		float pitch=0;
@@ -569,6 +556,19 @@ void task_rt_pid(void *arg)
 		roll     =  (drone->ps3_joy.rstick_x  * PWM_FLY_INTERVAL);
 		yaw      =  (drone->ps3_joy.lstick_x  * PWM_FLY_INTERVAL);
 
+		if(mode_acrobatic){
+			//set desired rate in degree/s
+			drone->pids[PID_PITCH_RATE].setpoint=drone->ps3_joy.rstick_y  * 200;
+			drone->pids[PID_ROLL_RATE].setpoint=drone->ps3_joy.rstick_x  * 200;
+			drone->pids[PID_YAW_RATE].setpoint=drone->ps3_joy.lstick_x  * 200;
+
+		}
+
+		if(mode_stable){
+
+
+		}
+
 
 		//mix table
 		if(takeoff){
@@ -577,10 +577,15 @@ void task_rt_pid(void *arg)
 			drone->motors.dutyns_target[MOTOR_FR] = mixer_clamp(PWM_FLY_MIN+ throttle - pitch - roll - yaw,PWM_FLY_MIN);
 			drone->motors.dutyns_target[MOTOR_RR] = mixer_clamp(PWM_FLY_MIN+ throttle + pitch - roll + yaw,PWM_FLY_MIN);
 		} else {
+			// motors off
 			drone->motors.dutyns_target[MOTOR_FL] = 0;
 			drone->motors.dutyns_target[MOTOR_RL] = 0;
 			drone->motors.dutyns_target[MOTOR_FR] = 0;
 			drone->motors.dutyns_target[MOTOR_RR] = 0;
+			// set target yaw to sensor yaw - on takeoff
+
+			// reset PID integrals while on the ground
+
 		}
 
 

@@ -10,8 +10,13 @@
 
 #include "i2c_linux.h"
 
+
 class mpu6050 {
+private:
+
+
 public:
+
 
 	float acc_g_x;
 	float acc_g_y;

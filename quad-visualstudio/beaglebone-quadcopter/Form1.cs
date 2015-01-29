@@ -247,6 +247,7 @@ namespace beaglebone_quadcopter
                         drone.gyrox = (double)json["gyro_x"];
                         drone.gyroy = (double)json["gyro_y"];
                         drone.gyroz = (double)json["gyro_z"];
+
                         drone.accx = (double)json["acc_x"];
                         drone.accy = (double)json["acc_y"];
                         drone.accz = (double)json["acc_z"];

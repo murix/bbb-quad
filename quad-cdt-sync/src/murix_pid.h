@@ -25,8 +25,39 @@ SOFTWARE.
 #ifndef MURIX_PID_H_
 #define MURIX_PID_H_
 
+class murix_perceptron {
+public:
+	double* input;
+	double* weight;
+	double sum;
+	double output;
+	double learning_rate;
+	int len;
+	murix_perceptron(int len);
+    double run(double* sample);
+    void train(double error);
+};
+
+class murix_controller {
+public:
+	double feedback;
+	double setpoint;
+	double output;
+	double* sample;
+	murix_perceptron* p;
+
+	murix_controller();
+	double act(double setpoint);
+	void update_feedback(double feedback);
+
+
+};
+
+
 class murix_pid {
 public:
+
+
 
 	murix_pid();
 	void update();

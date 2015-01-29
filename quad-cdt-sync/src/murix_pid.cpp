@@ -25,8 +25,92 @@ SOFTWARE.
 #include "murix_pid.h"
 #include "timestamps.h"
 
+#include <cstdlib>
+
 #define PID_IDX_NOW  0
 #define PID_IDX_PREV 1
+
+
+double fRand(double fMin, double fMax)
+{
+    double f = (double) rand() / double(RAND_MAX);
+    return fMin + f * (fMax - fMin);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+murix_perceptron::murix_perceptron(int len){
+	this->len=len;
+
+	this->input = new double[this->len+1];
+	this->weight = new double[this->len+1];
+	this->sum = 0;
+	this->output = 0;
+	this->learning_rate = 0.05;
+
+    for(int i=0;i<this->len+1;i++){
+    	this->weight[i]=fRand(0,1);
+    }
+}
+
+double murix_perceptron::run(double* sample){
+    for(int i=0;i<this->len;i++){
+    	this->input[i]=sample[i];
+    }
+    this->input[this->len]=1;
+    this->sum=0;
+    for(int i=0;i<this->len+1;i++){
+    	sum+=this->weight[i]*this->input[i];
+    }
+    this->output=this->sum;
+    return this->output;
+}
+
+void murix_perceptron::train(double error){
+    for(int i=0;i<this->len+1;i++){
+    	this->weight[i] += this->learning_rate*error*this->input[i];
+    }
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+murix_controller::murix_controller(){
+	this->setpoint=0;
+	this->feedback=0;
+	this->output=0;
+	this->sample=new double[3];
+	this->p = new murix_perceptron(3);
+}
+
+double murix_controller::act(double setpoint){
+	this->setpoint=setpoint;
+	this->sample[0]=this->setpoint;
+	this->sample[1]=this->feedback;
+	this->sample[2]=this->output;
+
+	this->output = this->p->run(this->sample);
+
+	return this->output;
+}
+
+void murix_controller::update_feedback(double feedback){
+	this->feedback=feedback;
+	this->p->train(this->setpoint-this->feedback);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
 
 murix_pid::murix_pid(){
 
