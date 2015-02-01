@@ -185,7 +185,7 @@ public:
 #define PWM_CALIB_MAX       1950000
 //////////////////////////////////////////////
 #define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
-#define PWM_STEP_PER_CYCLE    (PWM_FLY_INTERVAL/1000)
+#define PWM_STEP_PER_CYCLE    (PWM_FLY_INTERVAL/100)
 /////////////////////////////////////////////
 #define PWM_NS_PER_SEC     (1000*1000*1000)
 #define PWM_CYCLE_IN_NS    (PWM_NS_PER_SEC/PWM_HZ)
@@ -201,7 +201,6 @@ typedef enum {
 class motor_t {
 private:
 	PRUPWM *myPWM;
-	uint32_t pwm_step;
 
 
 
@@ -215,7 +214,6 @@ public:
 	motor_t(){
 		myPWM=NULL;
 		cmd=MOTOR_CMD_NORMAL;
-		pwm_step=PWM_STEP_PER_CYCLE;
 		for(int i=0;i<8;i++){
 			dutyns_now[i]=0;
 			dutyns_target[i]=0;
@@ -248,7 +246,7 @@ public:
 				bool need_change=false;
 				//
 				if(dutyns_now[ch] < dutyns_target[ch] && vbat > VBAT_STABLE){
-					dutyns_now[ch] += pwm_step;
+					dutyns_now[ch] += PWM_STEP_PER_CYCLE;
 					if(dutyns_now[ch]>PWM_FLY_MAX) dutyns_now[ch]=PWM_FLY_MAX;
 					need_change=true;
 				}
@@ -336,7 +334,8 @@ public:
 	float pilot_hz;
 
 
-	murix_controller pids[6];
+	murix_controller pidnn[6];
+	murix_pid        pidclassic[6];
 
 	motor_t motors;
 
@@ -511,8 +510,10 @@ void task_rt_pid(void *arg)
 
 	bool takeoff=false;
 	bool mode_stable=false;
-	bool mode_acrobatic=false;
-	drone->roll_rate.setpoint=0;
+	bool mode_acrobatic=true;
+
+
+
 
 	rt_task_set_periodic(NULL, TM_NOW, 1000000000 / TASK_RT_HZ);
 	while(1){
@@ -537,10 +538,12 @@ void task_rt_pid(void *arg)
 		}
 		///////////////////////////////////////////////////////////////////////////
 		if(drone->ps3_joy.button_x){
+			printf("mode -> stable\r\n");
 			mode_stable=true;
 			mode_acrobatic=false;
 		}
 		if(drone->ps3_joy.button_ball){
+			printf("mode -> acrobatic\r\n");
 			mode_stable=false;
 			mode_acrobatic=true;
 		}
@@ -556,15 +559,47 @@ void task_rt_pid(void *arg)
 		roll     =  (drone->ps3_joy.rstick_x  * PWM_FLY_INTERVAL);
 		yaw      =  (drone->ps3_joy.lstick_x  * PWM_FLY_INTERVAL);
 
-		if(mode_acrobatic){
+		if(mode_acrobatic && takeoff){
 			//set desired rate in degree/s
-			drone->pids[PID_PITCH_RATE].setpoint=drone->ps3_joy.rstick_y  * 200;
-			drone->pids[PID_ROLL_RATE].setpoint=drone->ps3_joy.rstick_x  * 200;
-			drone->pids[PID_YAW_RATE].setpoint=drone->ps3_joy.lstick_x  * 200;
+			drone->pidclassic[PID_PITCH_RATE].target=drone->ps3_joy.rstick_y  * 200;
+			drone->pidclassic[PID_ROLL_RATE].target=drone->ps3_joy.rstick_x  * 200;
+			drone->pidclassic[PID_YAW_RATE].target=drone->ps3_joy.lstick_x  * 200;
+			//feedback
+			drone->pidclassic[PID_PITCH_RATE].feedback=drone->acc_gyro.gyro_degrees_y;
+			drone->pidclassic[PID_ROLL_RATE].feedback=drone->acc_gyro.gyro_degrees_x;
+			drone->pidclassic[PID_YAW_RATE].feedback=drone->acc_gyro.gyro_degrees_z;
+			//configuration
+			drone->pidclassic[PID_ROLL_RATE].error_min=-200;
+			drone->pidclassic[PID_ROLL_RATE].error_max=200;
+			drone->pidclassic[PID_ROLL_RATE].kp=4000;
+			drone->pidclassic[PID_ROLL_RATE].ki=0;
+			drone->pidclassic[PID_ROLL_RATE].kd=0;
+			//calculate
+			drone->pidclassic[PID_PITCH_RATE].update();
+			drone->pidclassic[PID_ROLL_RATE].update();
+			drone->pidclassic[PID_YAW_RATE].update();
+
+			//set desired rate in degree/s
+			drone->pidnn[PID_PITCH_RATE].target=drone->ps3_joy.rstick_y  * 200;
+			drone->pidnn[PID_ROLL_RATE].target=drone->ps3_joy.rstick_x  * 200;
+			drone->pidnn[PID_YAW_RATE].target=drone->ps3_joy.lstick_x  * 200;
+			//feedback
+			drone->pidnn[PID_PITCH_RATE].feedback=drone->acc_gyro.gyro_degrees_y;
+			drone->pidnn[PID_ROLL_RATE].feedback=drone->acc_gyro.gyro_degrees_x;
+			drone->pidnn[PID_YAW_RATE].feedback=drone->acc_gyro.gyro_degrees_z;
+			//calculate
+			drone->pidnn[PID_PITCH_RATE].update();
+			drone->pidnn[PID_ROLL_RATE].update();
+			drone->pidnn[PID_YAW_RATE].update();
+
+			//roll= drone->pidclassic[PID_ROLL_RATE].output;
+			roll= drone->pidnn[PID_ROLL_RATE].output;
+
+			printf("pid PID_ROLL_RATE=%f | %f\r\n",drone->pidclassic[PID_ROLL_RATE].output,drone->pidnn[PID_ROLL_RATE].output);
 
 		}
 
-		if(mode_stable){
+		if(mode_stable && takeoff){
 
 
 		}
@@ -585,6 +620,9 @@ void task_rt_pid(void *arg)
 			// set target yaw to sensor yaw - on takeoff
 
 			// reset PID integrals while on the ground
+			drone->pidclassic[PID_PITCH_RATE].reset_integral();
+			drone->pidclassic[PID_ROLL_RATE].reset_integral();
+			drone->pidclassic[PID_YAW_RATE].reset_integral();
 
 		}
 

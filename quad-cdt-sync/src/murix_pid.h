@@ -41,14 +41,13 @@ public:
 class murix_controller {
 public:
 	double feedback;
-	double setpoint;
+	double target;
 	double output;
 	double* sample;
 	murix_perceptron* p;
 
 	murix_controller();
-	double act(double setpoint);
-	void update_feedback(double feedback);
+	double update();
 
 
 };
@@ -61,6 +60,7 @@ public:
 
 	murix_pid();
 	void update();
+	void reset_integral();
 
 	//
 	//
@@ -70,7 +70,7 @@ public:
 	double feedback;
 	double target;
 	//
-	double actuator;
+	double output;
 	//
 	double kp;
 	double ki;

@@ -26,6 +26,8 @@ SOFTWARE.
 #include "timestamps.h"
 
 #include <cstdlib>
+#include <cstdio>
+#include <cmath>
 
 #define PID_IDX_NOW  0
 #define PID_IDX_PREV 1
@@ -33,8 +35,8 @@ SOFTWARE.
 
 double fRand(double fMin, double fMax)
 {
-    double f = (double) rand() / double(RAND_MAX);
-    return fMin + f * (fMax - fMin);
+	double f = (double) rand() / double(RAND_MAX);
+	return fMin + f * (fMax - fMin);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,30 +51,43 @@ murix_perceptron::murix_perceptron(int len){
 	this->weight = new double[this->len+1];
 	this->sum = 0;
 	this->output = 0;
-	this->learning_rate = 0.05;
+	this->learning_rate = 1e-6;
 
-    for(int i=0;i<this->len+1;i++){
-    	this->weight[i]=fRand(0,1);
-    }
+	for(int i=0;i<this->len+1;i++){
+		this->weight[i]=fRand(-1,1);
+	}
 }
 
 double murix_perceptron::run(double* sample){
-    for(int i=0;i<this->len;i++){
-    	this->input[i]=sample[i];
-    }
-    this->input[this->len]=1;
-    this->sum=0;
-    for(int i=0;i<this->len+1;i++){
-    	sum+=this->weight[i]*this->input[i];
-    }
-    this->output=this->sum;
-    return this->output;
+	for(int i=0;i<this->len;i++){
+		this->input[i]=sample[i];
+	}
+	this->input[this->len]=1;
+
+	for(;;){
+
+		this->sum=0;
+		for(int i=0;i<this->len+1;i++){
+			sum+=this->weight[i]*this->input[i];
+		}
+		//
+		if(isinf(this->sum)){
+			for(int i=0;i<this->len+1;i++){
+				this->weight[i]=fRand(-1,1);
+			}
+		}
+		else {
+			break;
+		}
+	}
+	this->output=this->sum;
+	return this->output;
 }
 
 void murix_perceptron::train(double error){
-    for(int i=0;i<this->len+1;i++){
-    	this->weight[i] += this->learning_rate*error*this->input[i];
-    }
+	for(int i=0;i<this->len+1;i++){
+		this->weight[i] += this->learning_rate*error*this->input[i];
+	}
 }
 
 
@@ -83,28 +98,25 @@ void murix_perceptron::train(double error){
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 murix_controller::murix_controller(){
-	this->setpoint=0;
+	this->target=0;
 	this->feedback=0;
 	this->output=0;
 	this->sample=new double[3];
 	this->p = new murix_perceptron(3);
 }
 
-double murix_controller::act(double setpoint){
-	this->setpoint=setpoint;
-	this->sample[0]=this->setpoint;
+double murix_controller::update(){
+
+	this->sample[0]=this->target;
 	this->sample[1]=this->feedback;
 	this->sample[2]=this->output;
 
 	this->output = this->p->run(this->sample);
+	this->p->train(this->target-this->feedback);
 
 	return this->output;
 }
 
-void murix_controller::update_feedback(double feedback){
-	this->feedback=feedback;
-	this->p->train(this->setpoint-this->feedback);
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +128,7 @@ murix_pid::murix_pid(){
 
 	feedback=0;
 	target=0;
-	actuator=0;
+	output=0;
 
 	kp=0;
 	ki=0;
@@ -136,17 +148,26 @@ murix_pid::murix_pid(){
 	time[PID_IDX_PREV]=0;
 }
 
+void murix_pid::reset_integral(){
+	ierror=0;
+}
+
 void murix_pid::update(){
 
 
-    // time stuff
+	// time stuff
 	time[PID_IDX_PREV] = time[PID_IDX_NOW];
 	time[PID_IDX_NOW]= get_timestamp_in_seconds();
 	dt = time[PID_IDX_NOW]-time[PID_IDX_PREV];
+	if(dt==0){
+		printf("pid dt=0 bug\r\n");
+		return;
+	}
 
 	// proportional term
 	perror[PID_IDX_PREV] = perror[PID_IDX_NOW];
 	perror[PID_IDX_NOW] = target - feedback;
+	//printf("perror[PID_IDX_NOW]=%f\r\n",perror[PID_IDX_NOW]);
 
 	// integral term
 	ierror += perror[PID_IDX_NOW] * dt;
@@ -157,7 +178,7 @@ void murix_pid::update(){
 	derror =  (perror[PID_IDX_NOW]-perror[PID_IDX_PREV])/dt;
 
 	// system action
-    actuator = kp*perror[PID_IDX_NOW]+ki*ierror+kd*derror;
+	output = (kp*perror[PID_IDX_NOW])+(ki*ierror)+(kd*derror);
 
 }
 
