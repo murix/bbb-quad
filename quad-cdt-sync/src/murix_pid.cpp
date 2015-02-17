@@ -28,6 +28,7 @@ SOFTWARE.
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
+#include <time.h>
 
 #define PID_IDX_NOW  0
 #define PID_IDX_PREV 1
@@ -49,10 +50,12 @@ murix_perceptron::murix_perceptron(int len){
 
 	this->input = new double[this->len+1];
 	this->weight = new double[this->len+1];
+	this->wchange = new double[this->len+1];
 	this->sum = 0;
 	this->output = 0;
-	this->learning_rate = 1e-6;
+	this->learning_rate = 0.1;
 
+	srand(time(NULL));
 	for(int i=0;i<this->len+1;i++){
 		this->weight[i]=fRand(-1,1);
 	}
@@ -71,7 +74,8 @@ double murix_perceptron::run(double* sample){
 			sum+=this->weight[i]*this->input[i];
 		}
 		//
-		if(isinf(this->sum)){
+		if(isinf(this->sum)||isnan(this->sum)){
+			srand(time(NULL));
 			for(int i=0;i<this->len+1;i++){
 				this->weight[i]=fRand(-1,1);
 			}
@@ -85,9 +89,30 @@ double murix_perceptron::run(double* sample){
 }
 
 void murix_perceptron::train(double error){
+
+	double sum=0;
 	for(int i=0;i<this->len+1;i++){
-		this->weight[i] += this->learning_rate*error*this->input[i];
+		this->wchange[i] = this->learning_rate*error*this->input[i];
+		sum+=pow(this->wchange[i],2);
 	}
+	double wchange_norm = sqrt(sum);
+    if(wchange_norm==0) wchange_norm=1;
+
+
+    sum=0;
+	for(int i=0;i<this->len+1;i++){
+		this->weight[i] += this->wchange[i]/wchange_norm;
+		sum+=pow(this->weight[i],2);
+	}
+	double wt = sqrt(sum);
+
+	if(wt==0) wt=1;
+
+	for(int i=0;i<this->len+1;i++){
+		this->weight[i]/=wt;
+	}
+
+
 }
 
 
@@ -105,13 +130,16 @@ murix_controller::murix_controller(){
 	this->p = new murix_perceptron(3);
 }
 
-double murix_controller::update(){
+double murix_controller::update(double min_output,double max_output){
 
 	this->sample[0]=this->target;
 	this->sample[1]=this->feedback;
 	this->sample[2]=this->output;
 
 	this->output = this->p->run(this->sample);
+	if(this->output<min_output) this->output=min_output;
+	if(this->output>max_output) this->output=max_output;
+
 	this->p->train(this->target-this->feedback);
 
 	return this->output;

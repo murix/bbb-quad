@@ -58,9 +58,60 @@ SOFTWARE.
 #include "murix_pid.h"
 
 
+/////////////////////////////////////////////
+
 #define VBAT_STABLE 9.0
+
+/////////////////////////////////////////////
+
+
 #define SLEEP_1_SECOND (1000*1000)
 #define TASK_RT_HZ   250
+
+
+/////////////////////////////////////////////
+#define PWM_HZ                  400
+#define PWM_FAILSAFE         500000
+/////////////////////////////////////////////
+#define PWM_FLY_ARM          900000
+/////////////////////////////////////////////
+#define PWM_CALIB_MIN       1000000
+#define PWM_FLY_MIN         1070000
+#define PWM_FLY_MAX         1900000
+#define PWM_CALIB_MAX       1950000
+//////////////////////////////////////////////
+#define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
+#define PWM_STEP_PER_CYCLE    (PWM_FLY_INTERVAL/400)
+/////////////////////////////////////////////
+#define PWM_NS_PER_SEC     (1000*1000*1000)
+#define PWM_CYCLE_IN_NS    (PWM_NS_PER_SEC/PWM_HZ)
+#define PWM_CYCLE_IN_US    (PWM_CYCLE_IN_NS/1000)
+/////////////////////////////////////////////
+
+#define PID_YAW_RATE    1
+#define PID_YAW_ANGLE   2
+#define PID_ROLL_RATE   3
+#define PID_ROLL_ANGLE  4
+#define PID_PITCH_RATE  5
+#define PID_PITCH_ANGLE 6
+
+/////////////////////////////////////////////
+
+#define MOTOR_FR 0
+#define MOTOR_FL 1
+#define MOTOR_RR 5
+#define MOTOR_RL 7
+
+/////////////////////////////////////////////
+
+#define JS_EVENT_BUTTON         0x01    /* button pressed/released */
+#define JS_EVENT_AXIS           0x02    /* joystick moved */
+#define JS_EVENT_INIT           0x80    /* initial state of device */
+
+/////////////////////////////////////////////
+
+
+
 
 class xbox_joy_t {
 public:
@@ -173,24 +224,9 @@ public:
 
 
 
-/////////////////////////////////////////////
-#define PWM_HZ                  400
-#define PWM_FAILSAFE         500000
-/////////////////////////////////////////////
-#define PWM_FLY_ARM          900000
-/////////////////////////////////////////////
-#define PWM_CALIB_MIN       1000000
-#define PWM_FLY_MIN         1070000
-#define PWM_FLY_MAX         1900000
-#define PWM_CALIB_MAX       1950000
-//////////////////////////////////////////////
-#define PWM_FLY_INTERVAL    (PWM_FLY_MAX-PWM_FLY_MIN)
-#define PWM_STEP_PER_CYCLE    (PWM_FLY_INTERVAL/100)
-/////////////////////////////////////////////
-#define PWM_NS_PER_SEC     (1000*1000*1000)
-#define PWM_CYCLE_IN_NS    (PWM_NS_PER_SEC/PWM_HZ)
-#define PWM_CYCLE_IN_US    (PWM_CYCLE_IN_NS/1000)
-/////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////
 
 typedef enum {
 	MOTOR_CMD_NORMAL,
@@ -346,14 +382,6 @@ public:
 };
 
 
-#define PID_YAW_RATE    1
-#define PID_YAW_ANGLE   2
-#define PID_ROLL_RATE   3
-#define PID_ROLL_ANGLE  4
-#define PID_PITCH_RATE  5
-#define PID_PITCH_ANGLE 6
-
-
 
 
 
@@ -483,10 +511,7 @@ void task_rt_i2c(void *arg){
 	}
 }
 
-#define MOTOR_FR 0
-#define MOTOR_FL 1
-#define MOTOR_RR 5
-#define MOTOR_RL 7
+
 
 
 float mixer_clamp(float a,float b){
@@ -560,6 +585,8 @@ void task_rt_pid(void *arg)
 		yaw      =  (drone->ps3_joy.lstick_x  * PWM_FLY_INTERVAL);
 
 		if(mode_acrobatic && takeoff){
+
+			////////////////////////////////////////////////////////////////////////
 			//set desired rate in degree/s
 			drone->pidclassic[PID_PITCH_RATE].target=drone->ps3_joy.rstick_y  * 200;
 			drone->pidclassic[PID_ROLL_RATE].target=drone->ps3_joy.rstick_x  * 200;
@@ -578,24 +605,33 @@ void task_rt_pid(void *arg)
 			drone->pidclassic[PID_PITCH_RATE].update();
 			drone->pidclassic[PID_ROLL_RATE].update();
 			drone->pidclassic[PID_YAW_RATE].update();
+			////////////////////////////////////////////////////////////////////////
+
+
+			drone->pidnn[PID_ROLL_ANGLE].target=drone->ps3_joy.rstick_x  * 80;
+			drone->pidnn[PID_ROLL_ANGLE].feedback=drone->euler_degree[2];
+			double roll_speed_to_angle = drone->pidnn[PID_ROLL_RATE].update(-PWM_FLY_INTERVAL,PWM_FLY_INTERVAL);
+
 
 			//set desired rate in degree/s
 			drone->pidnn[PID_PITCH_RATE].target=drone->ps3_joy.rstick_y  * 200;
-			drone->pidnn[PID_ROLL_RATE].target=drone->ps3_joy.rstick_x  * 200;
+			drone->pidnn[PID_ROLL_RATE].target=roll_speed_to_angle ;//drone->ps3_joy.rstick_x  * 200;
 			drone->pidnn[PID_YAW_RATE].target=drone->ps3_joy.lstick_x  * 200;
 			//feedback
 			drone->pidnn[PID_PITCH_RATE].feedback=drone->acc_gyro.gyro_degrees_y;
 			drone->pidnn[PID_ROLL_RATE].feedback=drone->acc_gyro.gyro_degrees_x;
 			drone->pidnn[PID_YAW_RATE].feedback=drone->acc_gyro.gyro_degrees_z;
 			//calculate
-			drone->pidnn[PID_PITCH_RATE].update();
-			drone->pidnn[PID_ROLL_RATE].update();
-			drone->pidnn[PID_YAW_RATE].update();
+			drone->pidnn[PID_PITCH_RATE].update(-PWM_FLY_INTERVAL,PWM_FLY_INTERVAL);
+			drone->pidnn[PID_ROLL_RATE].update(-PWM_FLY_INTERVAL,PWM_FLY_INTERVAL);
+			drone->pidnn[PID_YAW_RATE].update(-PWM_FLY_INTERVAL,PWM_FLY_INTERVAL);
+			/////////////////////////////////////////////////////////////////////////
 
 			//roll= drone->pidclassic[PID_ROLL_RATE].output;
-			roll= drone->pidnn[PID_ROLL_RATE].output;
+			roll=  drone->pidnn[PID_ROLL_RATE].output;
 
-			printf("pid PID_ROLL_RATE=%f | %f\r\n",drone->pidclassic[PID_ROLL_RATE].output,drone->pidnn[PID_ROLL_RATE].output);
+
+			printf("pid PID_ROLL_RATE=%f | %f | %f | %f| %f\r\n",drone->pidclassic[PID_ROLL_RATE].output,drone->pidnn[PID_ROLL_RATE].output,drone->euler_degree[0],drone->euler_degree[1],drone->euler_degree[2]);
 
 		}
 
@@ -777,9 +813,6 @@ void task_nonrt_ps3(void* arg){
 
 
 
-#define JS_EVENT_BUTTON         0x01    /* button pressed/released */
-#define JS_EVENT_AXIS           0x02    /* joystick moved */
-#define JS_EVENT_INIT           0x80    /* initial state of device */
 
 	struct js_event {
 		uint32_t time;     /* event timestamp in milliseconds */

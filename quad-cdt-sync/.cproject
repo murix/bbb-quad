@@ -21,7 +21,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.2088537863" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
 								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.1153207663" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.964678182" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.other.other.1318522370" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -I/usr/include/xenomai -D_GNU_SOURCE -D_REENTRANT -D__XENO__" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1318522370" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++11 -I/usr/include/xenomai -D_GNU_SOURCE -D_REENTRANT -D__XENO__" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.dialect.std.379577846" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.184189212" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1713669662" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -51,7 +52,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="pso.cpp|cc1101-test.cpp|pru-motor-test.cpp|MahonyAHRS.c|MadgwickAHRS.c|bbb-adc-test.cpp|bbb-gps.cpp|sixpair.c|pru-pwm-fw.asm|ms5611-test.cpp|mpu6050-test.cpp|hmc5883-test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="fann/floatfann.c|fann/fixedfann.c|fann/fann.c|fann/fann_train.c|fann/fann_train_data.c|fann/fann_io.c|fann/fann_error.c|fann/fann_cascade.c|pso.cpp|cc1101-test.cpp|pru-motor-test.cpp|MahonyAHRS.c|MadgwickAHRS.c|bbb-adc-test.cpp|bbb-gps.cpp|sixpair.c|pru-pwm-fw.asm|ms5611-test.cpp|mpu6050-test.cpp|hmc5883-test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

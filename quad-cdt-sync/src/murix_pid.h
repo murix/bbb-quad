@@ -29,6 +29,7 @@ class murix_perceptron {
 public:
 	double* input;
 	double* weight;
+	double* wchange;
 	double sum;
 	double output;
 	double learning_rate;
@@ -47,7 +48,7 @@ public:
 	murix_perceptron* p;
 
 	murix_controller();
-	double update();
+	double update(double min_output,double max_output);
 
 
 };

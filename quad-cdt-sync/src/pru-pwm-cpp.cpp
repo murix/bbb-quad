@@ -31,8 +31,7 @@ PRUPWM::PRUPWM(unsigned int frequency) : PRU(0) {
 }
 
 void PRUPWM::start() {
-	//this->execute("pru-pwm-fw.bin");
-	this->execute("/root/beaglebonequadcopter/quad-cdt-sync/src/pru-pwm-fw.bin");
+	this->execute("/lib/firmware/bone_pru0_out-00A0.bin");
 }
 
 void PRUPWM::setFrequency(unsigned int frequency) {
