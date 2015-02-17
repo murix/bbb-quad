@@ -11,6 +11,15 @@ apt-get install network-manager
 apt-get install libjsoncpp-dev libgps-dev gpsd libi2c-dev  strace mc
 
 
+apt-get install bluez  bluez-hcidump checkinstall libusb-dev libbluetooth-dev joystick
+
+
+git clone https://github.com/murix/qtsixa.git
+cd qtsixa/sixad
+make
+checkinstall
+systemctl enable sixad
+systemctl start sixad
 
 [  180.504540] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
 [  180.512740] Kernel panic - not syncing: hung_task: blocked tasks

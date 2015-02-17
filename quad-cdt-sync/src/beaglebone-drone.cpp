@@ -555,19 +555,21 @@ void task_rt_pid(void *arg)
 		drone->pilot_hz = 1.0 / t_diff;
 
 		/////////////////////////////////////////////////////////////////////////////
-		if(drone->ps3_joy.button_start){
+		if(drone->ps3_joy.button_start && !takeoff){
+			printf("takeoff\r\n");
 			takeoff=true;
 		}
-		if(drone->ps3_joy.button_select){
+		if(drone->ps3_joy.button_select && takeoff){
+			printf("emergency\r\n");
 			takeoff=false;
 		}
 		///////////////////////////////////////////////////////////////////////////
-		if(drone->ps3_joy.button_x){
+		if(drone->ps3_joy.button_x && !mode_stable){
 			printf("mode -> stable\r\n");
 			mode_stable=true;
 			mode_acrobatic=false;
 		}
-		if(drone->ps3_joy.button_ball){
+		if(drone->ps3_joy.button_ball && !mode_acrobatic){
 			printf("mode -> acrobatic\r\n");
 			mode_stable=false;
 			mode_acrobatic=true;
@@ -579,10 +581,7 @@ void task_rt_pid(void *arg)
 		float roll=0;
 		float yaw=0;
 
-		throttle =  (drone->ps3_joy.lstick_y  * PWM_FLY_INTERVAL);
-		pitch    =  (drone->ps3_joy.rstick_y  * PWM_FLY_INTERVAL);
-		roll     =  (drone->ps3_joy.rstick_x  * PWM_FLY_INTERVAL);
-		yaw      =  (drone->ps3_joy.lstick_x  * PWM_FLY_INTERVAL);
+
 
 		if(mode_acrobatic && takeoff){
 
@@ -633,10 +632,19 @@ void task_rt_pid(void *arg)
 
 			printf("pid PID_ROLL_RATE=%f | %f | %f | %f| %f\r\n",drone->pidclassic[PID_ROLL_RATE].output,drone->pidnn[PID_ROLL_RATE].output,drone->euler_degree[0],drone->euler_degree[1],drone->euler_degree[2]);
 
+			throttle =  (drone->ps3_joy.lstick_y  * PWM_FLY_INTERVAL);
+			pitch    =  (drone->ps3_joy.rstick_y  * PWM_FLY_INTERVAL);
+			roll     =  (drone->ps3_joy.rstick_x  * PWM_FLY_INTERVAL);
+			yaw      =  (drone->ps3_joy.lstick_x  * PWM_FLY_INTERVAL);
+
 		}
 
 		if(mode_stable && takeoff){
 
+			throttle =  (drone->ps3_joy.lstick_y  * PWM_FLY_INTERVAL);
+			pitch    =  (drone->ps3_joy.rstick_y  * PWM_FLY_INTERVAL);
+			roll     =  (drone->ps3_joy.rstick_x  * PWM_FLY_INTERVAL);
+			yaw      =  (drone->ps3_joy.lstick_x  * PWM_FLY_INTERVAL);
 
 		}
 
@@ -905,6 +913,7 @@ void task_nonrt_gps(void *arg){
 
 	drone_t* drone=(drone_t*) arg;
 
+	//segfault
 
 	for (;;)
 	{
@@ -926,7 +935,7 @@ void task_nonrt_gps(void *arg){
 					printf("north=%.2lfdeg(+-%.2lfdeg) ",gps_data.fix.track,gps_data.fix.epd);
 					printf("lat=%.2lfdeg(+-%.2lfm) ",gps_data.fix.latitude,gps_data.fix.epy);
 					printf("long=%.2lfdeg(+-%.2lfm) ",gps_data.fix.longitude,gps_data.fix.epx);
-					char buff[30];
+					char buff[256];
 					char* txt=unix_to_iso8601(gps_data.fix.time,buff,sizeof(buff));
 					printf("%s(+-%.2lf)\r\n",txt,gps_data.fix.ept);
 
@@ -1010,8 +1019,11 @@ int main(int argc,char** argv){
 	}
 
 	//
-	system("/etc/init.d/gpsd restart");
+	system("systemctl restart gpsd");
 	system("gpsdctl add /dev/ttyO4");
+	//system("systemctl restart sixad ");
+
+
 
 
 	//
@@ -1041,13 +1053,16 @@ int main(int argc,char** argv){
 	rt_task_start(&motor_task, &task_rt_motor, &drone_data);
 	rt_task_start(&pid_task  , &task_rt_pid  , &drone_data);
 
-	rt_task_start(&gps_task  , &task_nonrt_gps  , &drone_data);
+	//rt_task_start(&gps_task  , &task_nonrt_gps  , &drone_data);
 	rt_task_start(&ps3_task  , &task_nonrt_ps3  , &drone_data);
 	rt_task_start(&spi_task  , &task_nonrt_spi  , &drone_data);
 	rt_task_start(&udp_task  , &task_nonrt_udp  , &drone_data);
 
 
 	printf("Wait for all threads\r\n");
+
+	system("sixad -s");
+
 	while(1){
 		usleep(SLEEP_1_SECOND);
 	}
