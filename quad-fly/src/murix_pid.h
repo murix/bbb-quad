@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#ifndef MURIX_PID_H_
-#define MURIX_PID_H_
+#ifndef QUAD_FLY_SRC_MURIX_PID_H_
+#define QUAD_FLY_SRC_MURIX_PID_H_
 
 class murix_perceptron {
 public:
@@ -89,4 +89,4 @@ private:
 
 
 
-#endif /* MURIX_PID_H_ */
+#endif /* QUAD_FLY_SRC_MURIX_PID_H_ */

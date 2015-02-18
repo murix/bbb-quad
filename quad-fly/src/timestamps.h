@@ -5,11 +5,11 @@
  *      Author: root
  */
 
-#ifndef TIMESTAMPS_H_
-#define TIMESTAMPS_H_
+#ifndef QUAD_FLY_SRC_TIMESTAMPS_H_
+#define QUAD_FLY_SRC_TIMESTAMPS_H_
 
 unsigned long micros(void);
 double get_timestamp_in_seconds(void);
 
 
-#endif /* TIMESTAMPS_H_ */
+#endif /* QUAD_FLY_SRC_TIMESTAMPS_H_ */

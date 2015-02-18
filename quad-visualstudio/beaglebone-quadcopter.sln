@@ -5,8 +5,6 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "beaglebone-quadcopter", "beaglebone-quadcopter\beaglebone-quadcopter.csproj", "{62EE8BF9-2692-41CD-922D-0063E23B88B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "beaglebone-wpf", "beaglebone-wpf\beaglebone-wpf.csproj", "{89E12AFF-4069-4E82-A005-7DBB988F4BD2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{62EE8BF9-2692-41CD-922D-0063E23B88B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62EE8BF9-2692-41CD-922D-0063E23B88B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62EE8BF9-2692-41CD-922D-0063E23B88B9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{89E12AFF-4069-4E82-A005-7DBB988F4BD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{89E12AFF-4069-4E82-A005-7DBB988F4BD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{89E12AFF-4069-4E82-A005-7DBB988F4BD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{89E12AFF-4069-4E82-A005-7DBB988F4BD2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,8 +5,8 @@
  *      Author: murix
  */
 
-#ifndef FREEIMU_LINUX_H_
-#define FREEIMU_LINUX_H_
+#ifndef QUAD_FLY_SRC_FREEIMU_LINUX_H_
+#define QUAD_FLY_SRC_FREEIMU_LINUX_H_
 
 
 class FreeIMU
@@ -59,4 +59,4 @@ public:
 
 
 
-#endif /* FREEIMU_LINUX_H_ */
+#endif /* QUAD_FLY_SRC_FREEIMU_LINUX_H_ */

@@ -5,8 +5,8 @@
  *      Author: root
  */
 
-#ifndef MPU6050_H_
-#define MPU6050_H_
+#ifndef QUAD_FLY_SRC_MPU6050_H_
+#define QUAD_FLY_SRC_MPU6050_H_
 
 #include "i2c_linux.h"
 
@@ -40,4 +40,4 @@ public:
 
 
 
-#endif /* MPU6050_H_ */
+#endif /* QUAD_FLY_SRC_MPU6050_H_ */

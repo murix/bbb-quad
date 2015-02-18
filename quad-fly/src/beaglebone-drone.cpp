@@ -909,6 +909,13 @@ void task_nonrt_ps3(void* arg){
 
 }
 
+void task_nonrt_sixad(void *arg){
+	//for(;;){
+		system("killall -9 sixad sixad-bin");
+		system("sixad -s");
+	//}
+}
+
 void task_nonrt_gps(void *arg){
 
 	drone_t* drone=(drone_t*) arg;
@@ -954,14 +961,28 @@ void task_nonrt_gps(void *arg){
 
 void catch_signal(int sig)
 {
-	printf("catch_signal=%d\r\n",sig);
+	switch(sig){
+	case SIGINT:
+		printf("catch_signal SIGINT (CTRL+C)\r\n");
+
+		break;
+	case SIGQUIT:
+		printf("catch_signal SIGQUIT (CTRL+D)\r\n");
+
+		break;
+	default:
+		printf("catch_signal=%d\r\n",sig);
+		break;
+	}
+
 }
 
 
 int main(int argc,char** argv){
 
-	//signal(SIGTERM, catch_signal);
-	//signal(SIGINT, catch_signal);
+	//signal(SIGINT, catch_signal); //ctrl+c
+	//signal(SIGQUIT, catch_signal); //ctrl+d
+
 
 	/* Avoids memory swapping for this program */
 	mlockall(MCL_CURRENT|MCL_FUTURE);
@@ -1037,6 +1058,7 @@ int main(int argc,char** argv){
 	RT_TASK ps3_task;
 	RT_TASK spi_task;
 	RT_TASK udp_task;
+	RT_TASK sixad_task;
 
 	rt_task_create(&adc_task  , "adc_task"  , 0, 95, 0);
 	rt_task_create(&i2c_task  , "i2c_task"  , 0, 99, 0);
@@ -1047,6 +1069,7 @@ int main(int argc,char** argv){
 	rt_task_create(&ps3_task  , "ps3_task"  , 0, 85, 0);
 	rt_task_create(&spi_task  , "spi_task"  , 0, 85, 0);
 	rt_task_create(&udp_task  , "udp_task"  , 0, 85, 0);
+	rt_task_create(&sixad_task  , "sixad_task"  , 0, 85, 0);
 
 	rt_task_start(&adc_task  , &task_rt_adc  , &drone_data);
 	rt_task_start(&i2c_task  , &task_rt_i2c  , &drone_data);
@@ -1057,11 +1080,11 @@ int main(int argc,char** argv){
 	rt_task_start(&ps3_task  , &task_nonrt_ps3  , &drone_data);
 	rt_task_start(&spi_task  , &task_nonrt_spi  , &drone_data);
 	rt_task_start(&udp_task  , &task_nonrt_udp  , &drone_data);
+	rt_task_start(&sixad_task  , &task_nonrt_sixad  , &drone_data);
 
 
 	printf("Wait for all threads\r\n");
 
-	system("sixad -s");
 
 	while(1){
 		usleep(SLEEP_1_SECOND);
