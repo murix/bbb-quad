@@ -16,6 +16,15 @@ int main () {
 
   printf("build %s %s\r\n",__DATE__,__TIME__);
   for (;;) {
+	    myExample.digitalWrite ("USR0", "HIGH");
+	    usleep(100);
+	    myExample.digitalWrite ("USR0", "LOW");
+	    usleep(100);
+	    myExample.digitalWrite ("USR1", "HIGH");
+	    usleep(100);
+	    myExample.digitalWrite ("USR1", "LOW");
+	    usleep(100);
+
     myExample.digitalWrite ("P8_7", "HIGH");
     usleep(100);
     myExample.digitalWrite ("P8_7", "LOW");
