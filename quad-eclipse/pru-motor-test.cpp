@@ -152,38 +152,50 @@ int main() {
 	   if (c =='u') targetns[6]-=PWM_STEP;
 	   if (c =='i') targetns[7]-=PWM_STEP;
 
-           
+
+             //           
+	     for(int i=0;i<8;i++){
+                errorns[i]=targetns[i]-dutyns[i];
+             }
+
+             float steps=100.0;
+             int step_delay_us=1;
 
            //safety check
-	   for(int i=0;i<8;i++){
+           for(int k=0;k<steps;k++){
 
+	     for(int i=0;i<8;i++){
                 //limit max pwm step to prevent overload fets, battery and power supply
-                errorns[i]=targetns[i]-dutyns[i];
-                for(int k=0;k<100;k++){
-                  dutyns[i]+=errorns[i]/100.0;
-                  usleep(1);
-                }
-                 
-
+                  dutyns[i]+=errorns[i]/steps;
+                  usleep(step_delay_us);
                 // minimum
                 if(dutyns[i]<PWM_FLY_ARM  || targetns[i]<PWM_FLY_ARM){
                    dutyns[i]=PWM_FLY_ARM; 
                    targetns[i]=PWM_FLY_ARM; 
-
                 }
                 // maximum
                 if(dutyns[i]>PWM_CALIB_MAX || targetns[i]>PWM_CALIB_MAX){
                    dutyns[i]=PWM_CALIB_MAX;
                    targetns[i]=PWM_CALIB_MAX;
                 }
-            }
+              }
 
+           printf("dutyns=|");
 	   for(int i=0;i<8;i++){
              printf("|%d",dutyns[i]);
            }
 	   printf("|\r\n");
+           printf("targetns=|");
+	   for(int i=0;i<8;i++){
+             printf("|%d",targetns[i]);
+           }
+	   printf("|\r\n");
 
-	   set_all(myPWM,dutyns);
+
+	      set_all(myPWM,dutyns);
+ 
+            }
+
 	
 	}
 
